@@ -1,7 +1,23 @@
-import type { NextConfig } from "next";
+import withPWAInit from "next-pwa";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const withPWA = withPWAInit({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "api-cache",
+      },
+    },
+  ],
+});
+
+const nextConfig = {
+  reactStrictMode: true,
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
