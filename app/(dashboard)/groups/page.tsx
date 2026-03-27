@@ -1,50 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import jsPDF from "jspdf";
-
-import GroupList from "@/components/groups/GroupList";
-import AddMember from "@/components/groups/AddMember";
-import ExpenseModal from "@/components/groups/ExpenseModal";
-import ExpenseHistory from "@/components/groups/ExpenseHistory";
-import Balances from "@/components/groups/Balances";
-import SettleList from "@/components/groups/SettleList";
-
-import Filters from "@/components/dashboard/Filters";
-import ExpenseSummary from "@/components/dashboard/ExpenseSummary";
-import SpendingPieChart from "@/components/dashboard/SpendingPieChart";
-import MonthlyTrend from "@/components/dashboard/MonthlyTrend";
-import Insights from "@/components/dashboard/Insights";
+import { useRouter } from "next/navigation";
 
 export default function GroupsPage() {
+  const router = useRouter();
   const [groups, setGroups] = useState<any[]>([]);
   const [name, setName] = useState("");
-
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [expenses, setExpenses] = useState<any[]>([]);
 
-  const [balances, setBalances] = useState<any>({});
-  const [transactions, setTransactions] = useState<any[]>([]);
+  // Expense Modal
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
 
+  // Add Member
   const [memberEmail, setMemberEmail] = useState("");
 
-  const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-
-  const [expenseAmount, setExpenseAmount] = useState("");
-  const [expenseDesc, setExpenseDesc] = useState("");
-
-  const [payerId, setPayerId] = useState("");
-  const [splitType, setSplitType] = useState("equal");
-  const [customSplits, setCustomSplits] = useState<any>({});
-
-  // Filters
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [selectedMember, setSelectedMember] = useState("");
-
-  // ================= FETCH GROUPS =================
+  // =========================
+  // FETCH GROUPS
+  // =========================
   const fetchGroups = async () => {
     const res = await fetch("/api/groups");
     const data = await res.json();
@@ -55,45 +30,43 @@ export default function GroupsPage() {
     fetchGroups();
   }, []);
 
-  // ================= FETCH BALANCES =================
-  const fetchBalances = async (groupId: string) => {
-    setSelectedGroupId(groupId);
+  // =========================
+  // LOAD SAVED GROUP
+  // =========================
+  useEffect(() => {
+    const savedGroupId = localStorage.getItem("selectedGroupId");
+    if (savedGroupId) {
+      setSelectedGroupId(savedGroupId);
+    }
+  }, []);
 
-    const res = await fetch(`/api/expenses?groupId=${groupId}`);
-    const data = await res.json();
+  // =========================
+  // AUTO SELECT FIRST GROUP
+  // =========================
+  useEffect(() => {
+    if (groups.length > 0 && !selectedGroupId) {
+      const saved = localStorage.getItem("selectedGroupId");
 
-    setExpenses(data);
+      if (saved) {
+        setSelectedGroupId(saved);
+      } else {
+        setSelectedGroupId(groups[0].id);
+        localStorage.setItem("selectedGroupId", groups[0].id);
+      }
+    }
+  }, [groups]);
 
-    const group = groups.find((g) => g.id === groupId);
-    setMembers(group?.members || []);
-
-    const { calculateBalances } = await import("@/lib/balance");
-    const { simplifyDebts } = await import("@/lib/settle");
-
-    const result = calculateBalances(data);
-    setBalances(result);
-
-    setTransactions(simplifyDebts(result));
-  };
-
-  // ================= FILTER =================
-  const filteredExpenses = expenses.filter((e: any) => {
-    const date = new Date(e.createdAt);
-
-    if (startDate && date < new Date(startDate)) return false;
-    if (endDate && date > new Date(endDate)) return false;
-    if (selectedMember && e.paidById !== selectedMember) return false;
-
-    return true;
-  });
-
-  // ================= CREATE GROUP =================
+  // =========================
+  // CREATE GROUP
+  // =========================
   const createGroup = async () => {
-    if (!name) return;
+    if (!name.trim()) return;
 
     await fetch("/api/groups", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ name }),
     });
 
@@ -101,39 +74,39 @@ export default function GroupsPage() {
     fetchGroups();
   };
 
-  // ================= ADD MEMBER =================
+  // =========================
+  // ADD MEMBER
+  // =========================
   const addMember = async () => {
+    if (!memberEmail || !selectedGroupId) return;
+
     const res = await fetch("/api/groups/add-member", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: memberEmail, groupId: selectedGroupId }),
+      body: JSON.stringify({
+        email: memberEmail,
+        groupId: selectedGroupId,
+      }),
     });
 
     const data = await res.json();
 
-    if (!res.ok) return alert(data.error);
+    if (data.error) {
+      alert(data.error);
+    } else {
+      alert("Member added!");
+    }
 
     setMemberEmail("");
-    fetchGroups();
   };
 
-  // ================= ADD EXPENSE =================
-  const submitExpense = async () => {
-    if (!expenseAmount || !payerId) return;
-
-    if (splitType === "custom") {
-      const total = Object.values(customSplits).reduce(
-        (a: any, b: any) => a + b,
-        0
-      );
-
-      if (total !== Number(expenseAmount)) {
-        alert("Split mismatch");
-        return;
-      }
-    }
+  // =========================
+  // ADD EXPENSE
+  // =========================
+  const addExpense = async () => {
+    if (!amount || !selectedGroupId) return;
 
     await fetch("/api/expenses", {
       method: "POST",
@@ -141,166 +114,154 @@ export default function GroupsPage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        description: expenseDesc,
-        amount: Number(expenseAmount),
-        groupId: activeGroupId,
-        paidById: payerId,
-        splitType,
-        splits: customSplits,
+        description,
+        amount: Number(amount),
+        groupId: selectedGroupId,
       }),
     });
 
     setShowExpenseModal(false);
-    setExpenseAmount("");
-    setExpenseDesc("");
-    setPayerId("");
-    setCustomSplits({});
+    setAmount("");
+    setDescription("");
 
-    fetchBalances(activeGroupId!);
-  };
-
-  // ================= EXPORT CSV =================
-  const exportCSV = () => {
-    if (!filteredExpenses.length) return;
-
-    const rows = filteredExpenses.map((e: any) => ({
-      Description: e.description,
-      Amount: e.amount,
-      PaidBy: e.paidBy?.email,
-      Date: new Date(e.createdAt).toLocaleDateString(),
-    }));
-
-    const csv =
-      Object.keys(rows[0]).join(",") +
-      "\n" +
-      rows.map((r: any) => Object.values(r).join(",")).join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "expenses.csv";
-    a.click();
-  };
-
-  // ================= EXPORT PDF =================
-  const exportPDF = () => {
-    if (!filteredExpenses.length) return;
-
-    const doc = new jsPDF();
-
-    doc.text("Expense Report", 10, 10);
-
-    filteredExpenses.forEach((e: any, i: number) => {
-      doc.text(
-        `${e.description} - ₹${e.amount} - ${e.paidBy?.email}`,
-        10,
-        20 + i * 10
-      );
-    });
-
-    doc.save("expenses.pdf");
+    fetchGroups();
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Splitwise Dashboard</h1>
+    <div className="max-w-md mx-auto p-4 pb-24">
+      {/* Header */}
+      {/* <h1 className="text-2xl font-bold mb-4">Splitwise</h1> */}
 
-      {/* CREATE GROUP */}
+      {/* Create Group */}
       <div className="flex gap-2 mb-4">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border p-2 w-full"
-          placeholder="Group name"
+          className="border p-2 rounded w-full"
+          placeholder="Create new group"
         />
-        <button onClick={createGroup} className="bg-black text-white px-4">
-          Create
+        <button
+          onClick={createGroup}
+          className="bg-green-500 text-white px-4 rounded"
+        >
+          Add
         </button>
       </div>
 
-      {/* EXPORT */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={exportCSV}
-          className="bg-green-500 text-white px-3 py-1 rounded"
-        >
-          Export CSV
-        </button>
+      {/* Groups List */}
+      <div className="space-y-3">
+        {groups.map((g) => (
+          <div
+            key={g.id}
+            onClick={() => {
+              setSelectedGroupId(g.id);
+              localStorage.setItem("selectedGroupId", g.id);
+            }}
+            className={`p-4 border rounded-xl cursor-pointer transition ${selectedGroupId === g.id
+              ? "border-green-500 bg-green-50"
+              : ""
+              }`}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{g.name}</p>
 
-        <button
-          onClick={exportPDF}
-          className="bg-red-500 text-white px-3 py-1 rounded"
-        >
-          Export PDF
-        </button>
+                <p className="text-sm text-gray-500">
+                  {g.members?.length || 0} members
+                </p>
+
+                {/* Total Amount */}
+                <p className="text-sm mt-1 text-green-600">
+                  ₹
+                  {g.expenses?.reduce(
+                    (sum: number, e: any) => sum + e.amount,
+                    0
+                  ) || 0}
+                </p>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/groups/${g.id}`);
+                }}
+                className="text-green-600 text-sm"
+              >
+                View
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* GROUP LIST */}
-      <GroupList
-        groups={groups}
-        selectedGroupId={selectedGroupId}
-        onSelect={fetchBalances}
-        onAddExpense={(id: string) => {
-          setActiveGroupId(id);
+      {/* Add Member */}
+      {/* {selectedGroupId && (
+        <div className="mt-4 flex gap-2">
+          <input
+            placeholder="Enter email"
+            value={memberEmail}
+            onChange={(e) => setMemberEmail(e.target.value)}
+            className="border p-2 rounded w-full"
+          />
+          <button
+            onClick={addMember}
+            className="bg-blue-500 text-white px-3 rounded"
+          >
+            Add
+          </button>
+        </div>
+      )} */}
+
+      {/* Floating Button */}
+      {/* <button
+        onClick={() => {
+          if (!selectedGroupId) {
+            alert("Select a group first");
+            return;
+          }
           setShowExpenseModal(true);
         }}
-        onDelete={() => { }}
-      />
+        className="fixed bottom-20 right-6 bg-green-500 text-white w-14 h-14 rounded-full text-2xl shadow-lg"
+      >
+        +
+      </button> */}
 
-      {/* ADD MEMBER */}
-      <AddMember
-        selectedGroupId={selectedGroupId}
-        memberEmail={memberEmail}
-        setMemberEmail={setMemberEmail}
-        onAdd={addMember}
-      />
+      {/* Expense Modal */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-2xl w-[300px] space-y-3">
+            <h2 className="font-semibold text-lg">Add Expense</h2>
 
-      {/* FILTERS */}
-      {selectedGroupId && (
-        <Filters
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          members={members}
-          selectedMember={selectedMember}
-          setSelectedMember={setSelectedMember}
-        />
+            <input
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="border p-2 w-full"
+            />
+
+            <input
+              type="number"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="border p-2 w-full"
+            />
+
+            <div className="flex justify-between">
+              <button onClick={() => setShowExpenseModal(false)}>
+                Cancel
+              </button>
+
+              <button
+                onClick={addExpense}
+                className="bg-green-500 text-white px-4 py-1 rounded"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-
-      {/* DASHBOARD */}
-      {selectedGroupId && (
-        <>
-          <ExpenseSummary expenses={filteredExpenses} />
-          <SpendingPieChart expenses={filteredExpenses} />
-          <MonthlyTrend expenses={filteredExpenses} />
-          <Insights expenses={filteredExpenses} />
-
-          <Balances balances={balances} />
-          <SettleList transactions={transactions} />
-          <ExpenseHistory expenses={filteredExpenses} />
-        </>
-      )}
-
-      {/* MODAL */}
-      <ExpenseModal
-        show={showExpenseModal}
-        onClose={() => setShowExpenseModal(false)}
-        onSubmit={submitExpense}
-        members={members}
-        payerId={payerId}
-        setPayerId={setPayerId}
-        expenseAmount={expenseAmount}
-        setExpenseAmount={setExpenseAmount}
-        expenseDesc={expenseDesc}
-        setExpenseDesc={setExpenseDesc}
-        splitType={splitType}
-        setSplitType={setSplitType}
-        customSplits={customSplits}
-        setCustomSplits={setCustomSplits}
-      />
     </div>
   );
 }

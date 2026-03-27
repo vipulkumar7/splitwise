@@ -1,13 +1,10 @@
-export function simplifyDebts(balances: any) {
+export function simplifyDebts(balances: Record<string, number>) {
   const creditors: any[] = [];
   const debtors: any[] = [];
 
-  Object.entries(balances).forEach(([id, data]: any) => {
-    if (data.amount > 0) {
-      creditors.push({ id, ...data });
-    } else if (data.amount < 0) {
-      debtors.push({ id, ...data });
-    }
+  Object.entries(balances).forEach(([userId, amount]) => {
+    if (amount > 0) creditors.push({ userId, amount });
+    if (amount < 0) debtors.push({ userId, amount });
   });
 
   const transactions: any[] = [];
@@ -19,22 +16,22 @@ export function simplifyDebts(balances: any) {
     const debtor = debtors[i];
     const creditor = creditors[j];
 
-    const amount = Math.min(
+    const settleAmount = Math.min(
       Math.abs(debtor.amount),
       creditor.amount
     );
 
     transactions.push({
-      from: debtor.name,
-      to: creditor.name,
-      amount,
+      from: debtor.userId,
+      to: creditor.userId,
+      amount: settleAmount,
     });
 
-    debtor.amount += amount;
-    creditor.amount -= amount;
+    debtor.amount += settleAmount;
+    creditor.amount -= settleAmount;
 
-    if (Math.abs(debtor.amount) < 1) i++;
-    if (creditor.amount < 1) j++;
+    if (Math.abs(debtor.amount) < 0.01) i++;
+    if (creditor.amount < 0.01) j++;
   }
 
   return transactions;

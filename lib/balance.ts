@@ -1,32 +1,17 @@
 export function calculateBalances(expenses: any[]) {
-  const balances: Record<string, any> = {};
+  const balances: Record<string, number> = {};
 
-  expenses.forEach((exp) => {
-    // everyone owes
-    exp.splits.forEach((split: any) => {
-      const user = split.user;
+  expenses.forEach((expense) => {
+    const payer = expense.paidById;
 
-      if (!balances[user.id]) {
-        balances[user.id] = {
-          name: user.name,
-          amount: 0,
-        };
-      }
+    // payer gets full amount
+    balances[payer] = (balances[payer] || 0) + expense.amount;
 
-      balances[user.id].amount -= split.amount;
+    // subtract splits
+    expense.splits.forEach((split: any) => {
+      balances[split.userId] =
+        (balances[split.userId] || 0) - split.amount;
     });
-
-    // payer gets money
-    const payer = exp.paidBy;
-
-    if (!balances[payer.id]) {
-      balances[payer.id] = {
-        name: payer.name,
-        amount: 0,
-      };
-    }
-
-    balances[payer.id].amount += exp.amount;
   });
 
   return balances;

@@ -5,7 +5,7 @@ export default async function ProfilePage() {
     const session = await getServerSession(authOptions);
 
     return (
-        <div className="p-6 max-w-md mx-auto">
+        <div className="max-w-md mx-auto p-4 bg-white min-h-screen">
             <div className="border p-6 rounded space-y-4">
                 <h1 className="text-xl font-bold">Profile</h1>
 

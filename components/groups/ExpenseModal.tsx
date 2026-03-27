@@ -1,103 +1,114 @@
-export default function ExpenseModal({
-    show,
-    onClose,
-    onSubmit,
-    members,
-    payerId,
-    setPayerId,
-    expenseAmount,
-    setExpenseAmount,
-    expenseDesc,
-    setExpenseDesc,
-    splitType,
-    setSplitType,
-    customSplits,
-    setCustomSplits,
+"use client";
+
+import { useState } from "react";
+
+export default function AddExpenseModal({
+  group,
+  onClose,
+  onSuccess,
 }: any) {
-    if (!show) return null;
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [payerId, setPayerId] = useState("");
+  const [splitType, setSplitType] = useState("equal");
 
-    return (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-            <div className="bg-white p-6 rounded space-y-3 w-[320px]">
-                <h2 className="font-semibold">Add Expense</h2>
+  const submit = async () => {
+    const res = await fetch("/api/expenses", {
+      method: "POST",
+      body: JSON.stringify({
+        description,
+        amount: Number(amount),
+        groupId: group.id,
+        payerId,
+        splitType,
+      }),
+    });
 
-                {/* Description */}
-                <input
-                    placeholder="Description"
-                    value={expenseDesc}
-                    onChange={(e) => setExpenseDesc(e.target.value)}
-                    className="border p-2 w-full"
-                />
+    if (res.ok) {
+      onSuccess();
+      onClose();
+    }
+  };
 
-                {/* Amount */}
-                <input
-                    type="number"
-                    placeholder="Amount"
-                    value={expenseAmount}
-                    onChange={(e) => setExpenseAmount(e.target.value)}
-                    className="border p-2 w-full"
-                />
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {/* MODAL */}
+      <div className="bg-white rounded-2xl w-[360px] p-6 shadow-2xl animate-fadeIn">
+        {/* TITLE */}
+        <h2 className="text-lg font-semibold mb-4">Add Expense</h2>
 
-                {/* ✅ PAYER DROPDOWN */}
-                <select
-                    value={payerId}
-                    onChange={(e) => setPayerId(e.target.value)}
-                    className="border p-2 w-full"
-                >
-                    <option value="">Select payer</option>
+        {/* INPUTS */}
+        <div className="space-y-3">
+          <input
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-400 outline-none"
+          />
 
-                    {members.map((m: any) => (
-                        <option key={m.user.id} value={m.user.id}>
-                            {m.user.name || m.user.email}
-                        </option>
-                    ))}
-                </select>
+          <input
+            placeholder="Amount"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-400 outline-none"
+          />
 
-                {/* SPLIT TYPE */}
-                <select
-                    value={splitType}
-                    onChange={(e) => setSplitType(e.target.value)}
-                    className="border p-2 w-full"
-                >
-                    <option value="equal">Equal</option>
-                    <option value="custom">Custom</option>
-                </select>
+          {/* 🔥 CUSTOM DROPDOWN - PAYER */}
+          <div className="relative">
+            <select
+              value={payerId}
+              onChange={(e) => setPayerId(e.target.value)}
+              className="w-full appearance-none border rounded-lg p-3 pr-10 bg-white focus:ring-2 focus:ring-green-400 outline-none"
+            >
+              <option value="">Select payer</option>
+              {group.members.map((m: any) => (
+                <option key={m.user.id} value={m.user.id}>
+                  {m.user.name || m.user.email}
+                </option>
+              ))}
+            </select>
 
-                {/* ✅ CUSTOM SPLIT UI */}
-                {splitType === "custom" &&
-                    members.map((m: any) => (
-                        <div
-                            key={m.user.id}
-                            className="flex justify-between items-center"
-                        >
-                            <span>{m.user.name || m.user.email}</span>
+            {/* custom arrow */}
+            <span className="absolute right-3 top-3 text-gray-400">
+              ▼
+            </span>
+          </div>
 
-                            <input
-                                type="number"
-                                className="border w-20 p-1"
-                                value={customSplits[m.user.id] || ""}
-                                onChange={(e) =>
-                                    setCustomSplits({
-                                        ...customSplits,
-                                        [m.user.id]: Number(e.target.value),
-                                    })
-                                }
-                            />
-                        </div>
-                    ))}
+          {/* 🔥 CUSTOM DROPDOWN - SPLIT */}
+          <div className="relative">
+            <select
+              value={splitType}
+              onChange={(e) => setSplitType(e.target.value)}
+              className="w-full appearance-none border rounded-lg p-3 pr-10 bg-white focus:ring-2 focus:ring-green-400 outline-none"
+            >
+              <option value="equal">Equal</option>
+              <option value="custom">Custom</option>
+            </select>
 
-                {/* ACTIONS */}
-                <div className="flex justify-between mt-3">
-                    <button onClick={onClose}>Cancel</button>
-
-                    <button
-                        onClick={onSubmit}
-                        className="bg-black text-white px-4 py-1 rounded"
-                    >
-                        Add
-                    </button>
-                </div>
-            </div>
+            <span className="absolute right-3 top-3 text-gray-400">
+              ▼
+            </span>
+          </div>
         </div>
-    );
+
+        {/* ACTIONS */}
+        <div className="flex justify-between items-center mt-6">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-black"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={submit}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2 rounded-lg shadow hover:scale-105 transition"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
