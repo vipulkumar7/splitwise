@@ -1,8 +1,18 @@
 import "./globals.css";
 import AuthProvider from "@/components/providers/session-provider";
-import BottomNav from "@/components/ui/BottomNav";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import Navbar from "@/components/shared/navbar";
+import BottomNav from "@/components/ui/BottomNav";
+
+export const metadata = {
+  title: "Splitwise",
+  description: "Split expenses easily",
+  manifest: "/manifest.json",
+  themeColor: "#16a34a",
+  icons: {
+    apple: "/icons/icon-192.png",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -14,7 +24,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <Navbar />
-          <div className="pb-20">{children}</div> {/* space for bottom nav */}
+          {children}
           <BottomNav />
           <InstallPrompt />
         </AuthProvider>

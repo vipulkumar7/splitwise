@@ -22,7 +22,7 @@ export default function InstallPrompt() {
     return (
         <button
             onClick={() => prompt.prompt()}
-            className="fixed bottom-24 right-6 bg-black text-white px-4 py-2 rounded-lg shadow"
+            className="fixed bottom-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg"
         >
             Install App
         </button>
