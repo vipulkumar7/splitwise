@@ -9,10 +9,13 @@ export default function LoginPage() {
         <h1 className="text-xl font-bold">Splitwise</h1>
 
         <button
-          onClick={() => signIn("google")}
-          className="bg-black text-white px-4 py-2 rounded w-full"
+          onClick={() =>
+            signIn("google", {
+              callbackUrl: "/groups", // 👈 important
+            })
+          }
         >
-          Continue with Google
+          Login with Google
         </button>
       </div>
     </div>

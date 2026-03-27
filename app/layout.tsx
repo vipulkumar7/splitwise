@@ -1,17 +1,7 @@
-import InstallPrompt from "@/components/pwa/InstallPrompt";
 import "./globals.css";
 import AuthProvider from "@/components/providers/session-provider";
-
-export const metadata = {
-  title: "Splitwise",
-  description: "Split expenses easily",
-  manifest: "/manifest.json",
-  themeColor: "#000000",
-  viewport: "width=device-width, initial-scale=1",
-  icons: {
-    apple: "/icons/icon-192.png",
-  },
-};
+import InstallPrompt from "@/components/pwa/InstallPrompt";
+import Navbar from "@/components/shared/navbar";
 
 export default function RootLayout({
   children,
@@ -19,9 +9,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="bg-white dark:bg-black">
+    <html lang="en">
+      <body>
         <AuthProvider>
+          <Navbar />   {/* ✅ Added */}
           {children}
           <InstallPrompt />
         </AuthProvider>

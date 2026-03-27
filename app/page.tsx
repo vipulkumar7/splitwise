@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
 
-  // ✅ If logged in → dashboard
+  // ✅ Logged in → go to groups (main screen)
   if (session) {
-    redirect("/dashboard");
+    redirect("/groups");
   }
 
-  // ❌ If not logged in → login
+  // ❌ Not logged in → login
   redirect("/login");
 }
