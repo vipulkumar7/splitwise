@@ -2,33 +2,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const groupId = params.id;
+  const { id } = await context.params;
 
   try {
-    // ✅ delete splits first
-    await prisma.split.deleteMany({
-      where: {
-        expense: {
-          groupId,
-        },
-      },
-    });
-
-    // ✅ delete expenses
-    await prisma.expense.deleteMany({
-      where: { groupId },
-    });
-
-    // ✅ delete members
-    await prisma.groupMember.deleteMany({
-      where: { groupId },
-    });
-
-    // ✅ delete group
     await prisma.group.delete({
-      where: { id: groupId },
+      where: { id },
     });
 
     return Response.json({ success: true });
