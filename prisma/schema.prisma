@@ -34,11 +34,13 @@ model User {
 model Group {
   id        String   @id @default(cuid())
   name      String
-
   createdAt DateTime @default(now())
 
   members  GroupMember[]
   expenses Expense[]
+
+  // ✅ ADD THIS LINE (FIX)
+  invites  GroupInvite[]
 }
 
 //////////////////////////////
@@ -125,4 +127,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model GroupInvite {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  groupId   String
+
+  group     Group    @relation(fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+  accepted  Boolean  @default(false)
 }

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
             const splitAmount = amount / members.length;
 
             await prisma.split.createMany({
-                data: members.map((m) => ({
+                data: members.map((m: any) => ({
                     userId: m.userId,
                     expenseId: expense.id,
                     amount: splitAmount,

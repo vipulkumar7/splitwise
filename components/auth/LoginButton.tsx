@@ -1,14 +1,22 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginButton() {
+export default function LoginPage() {
+    const params = useSearchParams();
+    const callbackUrl = params.get("callbackUrl") || "/groups";
+
     return (
-        <button
-            onClick={() => signIn("google")}
-            className="bg-black text-white px-4 py-2 rounded"
-        >
-            Login
-        </button>
+        <div className="p-6">
+            <button
+                onClick={() =>
+                    signIn("google", { callbackUrl })
+                }
+                className="bg-black text-white px-4 py-2"
+            >
+                Sign in with Google
+            </button>
+        </div>
     );
 }

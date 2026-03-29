@@ -12,28 +12,8 @@ export default function GroupDetailPage() {
     const [group, setGroup] = useState<any>(null);
     const [showModal, setShowModal] = useState(false);
 
-    // STATE
+    // 🔥 Invite state
     const [email, setEmail] = useState("");
-
-    // FUNCTION
-    const addMember = async () => {
-        const res = await fetch("/api/groups/add-member", {
-            method: "POST",
-            body: JSON.stringify({
-                email,
-                groupId: id,
-            }),
-        });
-
-        const data = await res.json();
-
-        if (data.error) {
-            alert(data.error);
-        } else {
-            setEmail("");
-            fetchGroup();
-        }
-    };
 
     const fetchGroup = async () => {
         const res = await fetch(`/api/groups/${id}`);
@@ -45,11 +25,33 @@ export default function GroupDetailPage() {
         fetchGroup();
     }, []);
 
+    // ======================
+    // 🔥 INVITE FUNCTION
+    // ======================
+    const inviteUser = async () => {
+        const res = await fetch("/api/groups/invite", {
+            method: "POST",
+            body: JSON.stringify({
+                email,
+                groupId: id,
+            }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Invite sent (check console for link)");
+            setEmail("");
+        } else {
+            alert(data.error || "Something went wrong");
+        }
+    };
+
     if (!group) return <p className="p-4">Loading...</p>;
 
-    // =========================
+    // ======================
     // BALANCE LOGIC
-    // =========================
+    // ======================
     const balances = calculateBalances(group.expenses || []);
     const transactions = simplifyDebts(balances);
 
@@ -57,23 +59,6 @@ export default function GroupDetailPage() {
         <div className="max-w-md mx-auto p-4 pb-24">
             {/* HEADER */}
             <h1 className="text-xl font-bold">{group.name}</h1>
-
-            {/* ADD MEMBER */}
-            <div className="mt-4 flex gap-2">
-                <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Invite by email"
-                    className="border p-2 flex-1 rounded"
-                />
-
-                <button
-                    onClick={addMember}
-                    className="bg-blue-500 text-white px-4 rounded"
-                >
-                    Add
-                </button>
-            </div>
 
             {/* MEMBERS */}
             <div className="flex -space-x-2 mt-3">
@@ -85,6 +70,25 @@ export default function GroupDetailPage() {
                         {m.user.name?.[0] || m.user.email[0]}
                     </div>
                 ))}
+            </div>
+
+            {/* ========================= */}
+            {/* 🔥 INVITE UI HERE */}
+            {/* ========================= */}
+            <div className="flex gap-2 mt-4">
+                <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Invite via email"
+                    className="border p-2 flex-1 rounded-lg"
+                />
+
+                <button
+                    onClick={inviteUser}
+                    className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600"
+                >
+                    Invite
+                </button>
             </div>
 
             {/* ===================== */}
@@ -109,7 +113,7 @@ export default function GroupDetailPage() {
             </div>
 
             {/* ===================== */}
-            {/* 🔥 BALANCE UI */}
+            {/* BALANCES */}
             {/* ===================== */}
             <h2 className="mt-6 font-semibold">Balances</h2>
 
@@ -134,7 +138,7 @@ export default function GroupDetailPage() {
             </div>
 
             {/* ===================== */}
-            {/* 🔥 SETTLE UI */}
+            {/* SETTLE UI */}
             {/* ===================== */}
             <h2 className="mt-6 font-semibold">Settle Up</h2>
 
