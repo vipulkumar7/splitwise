@@ -11,9 +11,9 @@ export default async function InvitePage({
     try {
         const { token } = await params;
 
-        // ✅ get session
         const session = await getServerSession(authOptions);
 
+        // ❌ Not logged in → redirect
         if (!session?.user?.email) {
             redirect("/login");
         }
@@ -27,10 +27,6 @@ export default async function InvitePage({
             return <p className="p-4">Invalid invite</p>;
         }
 
-        if (invite.accepted) {
-            return <p className="p-4">Invite already used</p>;
-        }
-
         // ✅ find user
         const user = await prisma.user.findUnique({
             where: { email: session.user.email! },
@@ -40,21 +36,30 @@ export default async function InvitePage({
             return <p className="p-4">User not found</p>;
         }
 
-        // ✅ add to group
-        await prisma.groupMember.create({
-            data: {
+        // ✅ CHECK if already member (IMPORTANT FIX)
+        const existingMember = await prisma.groupMember.findFirst({
+            where: {
                 userId: user.id,
                 groupId: invite.groupId,
             },
         });
 
-        // ✅ mark accepted
+        if (!existingMember) {
+            await prisma.groupMember.create({
+                data: {
+                    userId: user.id,
+                    groupId: invite.groupId,
+                },
+            });
+        }
+
+        // ✅ mark invite accepted
         await prisma.groupInvite.update({
             where: { id: invite.id },
             data: { accepted: true },
         });
 
-        // ✅ redirect
+        // ✅ redirect to group page
         redirect(`/groups/${invite.groupId}`);
 
     } catch (error) {
