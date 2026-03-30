@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import { calculateBalances } from "@/lib/balance";
 import { simplifyDebts } from "@/lib/settle";
 import AddExpenseModal from "@/components/expenses/add-expense-modal";
+import Toast from "@/components/ui/toast";
 
 export default function GroupDetailPage() {
     const { id } = useParams();
 
     const [group, setGroup] = useState<any>(null);
     const [showModal, setShowModal] = useState(false);
+    const [toast, setToast] = useState("");
 
     // 🔥 Invite state
     const [email, setEmail] = useState("");
@@ -31,19 +33,18 @@ export default function GroupDetailPage() {
     const inviteUser = async () => {
         const res = await fetch("/api/groups/invite", {
             method: "POST",
-            body: JSON.stringify({
-                email,
-                groupId: id,
-            }),
+            body: JSON.stringify({ email, groupId: id, }),
         });
 
         const data = await res.json();
 
         if (data.success) {
-            alert("Invite sent (check console for link)");
+            setToast(`Invite sent to ${email} 🎉`);
             setEmail("");
+
+            setTimeout(() => setToast(""), 3000);
         } else {
-            alert(data.error || "Something went wrong");
+            setToast("Failed to send invite ❌");
         }
     };
 
@@ -186,6 +187,7 @@ export default function GroupDetailPage() {
                     onSuccess={fetchGroup}
                 />
             )}
+            {toast && <Toast message={toast} />}
         </div>
     );
 }

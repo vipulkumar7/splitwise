@@ -8,67 +8,52 @@ export default async function InvitePage({
 }: {
     params: Promise<{ token: string }>;
 }) {
-    try {
-        const { token } = await params;
+    const { token } = await params; // ✅ IMPORTANT FIX
 
-        const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
 
-        // ❌ Not logged in → redirect
-        if (!session?.user?.email) {
-            redirect("/login");
-        }
+    // 🔐 If not logged in
+    if (!session) {
+        redirect(`/api/auth/signin?callbackUrl=/${token}`);
+    }
 
-        // ✅ find invite
-        const invite = await prisma.groupInvite.findUnique({
-            where: { token },
-        });
+    const invite = await prisma.groupInvite.findUnique({
+        where: { token },
+        include: { group: true },
+    });
 
-        if (!invite) {
-            return <p className="p-4">Invalid invite</p>;
-        }
+    if (!invite) {
+        return <div className="p-4">Invalid invite</div>;
+    }
 
-        // ✅ find user
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email! },
-        });
+    const user = await prisma.user.findUnique({
+        where: { email: session.user?.email! },
+    });
 
-        if (!user) {
-            return <p className="p-4">User not found</p>;
-        }
+    if (!user) {
+        return <div className="p-4">User not found</div>;
+    }
 
-        // ✅ CHECK if already member (IMPORTANT FIX)
-        const existingMember = await prisma.groupMember.findFirst({
-            where: {
+    // ✅ Add user to group
+    await prisma.groupMember.upsert({
+        where: {
+            userId_groupId: {
                 userId: user.id,
                 groupId: invite.groupId,
             },
-        });
+        },
+        update: {},
+        create: {
+            userId: user.id,
+            groupId: invite.groupId,
+        },
+    });
 
-        if (!existingMember) {
-            await prisma.groupMember.create({
-                data: {
-                    userId: user.id,
-                    groupId: invite.groupId,
-                },
-            });
-        }
+    // ✅ Mark invite accepted
+    await prisma.groupInvite.update({
+        where: { token },
+        data: { accepted: true },
+    });
 
-        // ✅ mark invite accepted
-        await prisma.groupInvite.update({
-            where: { id: invite.id },
-            data: { accepted: true },
-        });
-
-        // ✅ redirect to group page
-        redirect(`/groups/${invite.groupId}`);
-
-    } catch (error) {
-        console.error("INVITE ACCEPT ERROR:", error);
-
-        return (
-            <div className="p-4 text-red-500">
-                Something went wrong. Check logs.
-            </div>
-        );
-    }
+    redirect(`/groups/${invite.groupId}`);
 }
