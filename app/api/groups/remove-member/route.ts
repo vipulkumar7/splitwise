@@ -2,10 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
+export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
 
@@ -13,48 +10,38 @@ export async function DELETE(
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = await prisma.user.findUnique({
+        const { userId, groupId } = await req.json();
+
+        if (!userId || !groupId) {
+            return Response.json({ error: "Missing fields" }, { status: 400 });
+        }
+
+        // 🔍 Get current user
+        const currentUser = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
 
-        const groupId = params.id;
-
-        // ✅ check if user is member
-        const member = await prisma.groupMember.findFirst({
-            where: {
-                groupId,
-                userId: user!.id,
-            },
-        });
-
-        if (!member) {
-            return Response.json({ error: "Not allowed" }, { status: 403 });
+        if (!currentUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
         }
 
-        // ✅ delete all related data
-        await prisma.split.deleteMany({
-            where: {
-                expense: {
-                    groupId,
-                },
-            },
-        });
+        // ❗ Prevent removing yourself using remove API (use exit instead)
+        // (optional safety)
+        // if (currentUser.id === userId) {
+        //   return Response.json({ error: "Use exit instead" }, { status: 400 });
+        // }
 
-        await prisma.expense.deleteMany({
-            where: { groupId },
-        });
-
+        // ✅ Remove member
         await prisma.groupMember.deleteMany({
-            where: { groupId },
-        });
-
-        await prisma.group.delete({
-            where: { id: groupId },
+            where: {
+                userId,
+                groupId,
+            },
         });
 
         return Response.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        return Response.json({ error: "Failed to delete group" });
+    } catch (err) {
+        console.error(err);
+        return Response.json({ error: "Server error" }, { status: 500 });
     }
 }
