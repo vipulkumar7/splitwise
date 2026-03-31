@@ -233,6 +233,53 @@ export default function GroupDetailPage() {
                 ))}
             </div>
 
+            {/* =========================
+                BALANCES (WHO OWES)
+                ========================= 
+            */}
+            <h2 className="mt-6 font-semibold">Balances</h2>
+
+            <div className="mt-2 space-y-2">
+                {Object.entries(balances).map(([userId, amount]) => (
+                    <div key={userId} className="text-sm">
+                        {amount > 0 ? (
+                            <p className="text-green-600">
+                                {getName(userId)} is owed ₹{amount.toFixed(0)}
+                            </p>
+                        ) : amount < 0 ? (
+                            <p className="text-red-500">
+                                {getName(userId)} owes ₹{Math.abs(amount).toFixed(0)}
+                            </p>
+                        ) : (
+                            <p className="text-gray-500">
+                                {getName(userId)} is settled
+                            </p>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <h2 className="mt-6 font-semibold">Settle Up</h2>
+
+            <div className="mt-2 space-y-1 text-sm">
+                {Object.entries(balances)
+                    .filter(([_, amt]) => amt < 0)
+                    .map(([debtorId, amt]) => {
+                        const creditor = Object.entries(balances).find(
+                            ([_, a]) => a > 0
+                        );
+
+                        if (!creditor) return null;
+
+                        return (
+                            <p key={debtorId}>
+                                {getName(debtorId)} pays {getName(creditor[0])} ₹
+                                {Math.abs(amt).toFixed(0)}
+                            </p>
+                        );
+                    })}
+            </div>
+
             {/* Floating Button */}
             <button
                 onClick={() => setShowModal(true)}

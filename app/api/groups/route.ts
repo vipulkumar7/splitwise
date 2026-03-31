@@ -2,23 +2,23 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// =========================
+// GET GROUPS
+// =========================
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.email) {
-            return Response.json({ error: "Unauthorized" }, { status: 401 });
+            return Response.json([], { status: 200 });
         }
 
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
 
-        if (!user) {
-            return Response.json({ error: "User not found" }, { status: 404 });
-        }
+        if (!user) return Response.json([]);
 
-        // ✅ Fetch only groups where user is member
         const groups = await prisma.group.findMany({
             where: {
                 members: {
@@ -29,21 +29,59 @@ export async function GET() {
             },
             include: {
                 members: {
-                    include: {
-                        user: true,
-                    },
+                    include: { user: true },
                 },
                 expenses: true,
             },
-            orderBy: {
-                createdAt: "desc",
+        });
+
+        return Response.json(groups);
+    } catch (err) {
+        console.error(err);
+        return Response.json([], { status: 500 });
+    }
+}
+
+// =========================
+// CREATE GROUP ✅
+// =========================
+export async function POST(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.email) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { name } = await req.json();
+
+        if (!name) {
+            return Response.json({ error: "Name required" }, { status: 400 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
+
+        if (!user) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // ✅ Create group
+        const group = await prisma.group.create({
+            data: {
+                name,
+                members: {
+                    create: {
+                        userId: user.id,
+                    },
+                },
             },
         });
 
-        // ✅ ALWAYS return array
-        return Response.json(groups);
+        return Response.json(group);
     } catch (error) {
-        console.error("GROUPS API ERROR:", error);
-        return Response.json([], { status: 500 }); // safe fallback
+        console.error("CREATE GROUP ERROR:", error);
+        return Response.json({ error: "Failed" }, { status: 500 });
     }
 }

@@ -219,7 +219,7 @@ export default function GroupsPage() {
         ))}
       </div>
 
-      {/* Add Member */}
+      {/* Add Member
       {selectedGroupId && (
         <div className="mt-4 flex gap-2">
           <input
@@ -235,7 +235,7 @@ export default function GroupsPage() {
             Add
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Floating Button */}
       <button
