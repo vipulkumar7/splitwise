@@ -61,7 +61,7 @@ export default function GroupDetailPage() {
             setToast(`Invite sent to ${email} 📩`);
             setEmail("");
         } else {
-            setToast("Failed ❌");
+            setToast("Failed to invite user ❌");
         }
 
         setTimeout(() => setToast(""), 3000);
@@ -112,13 +112,20 @@ export default function GroupDetailPage() {
     // DELETE GROUP
     // =========================
     const deleteGroup = async () => {
-        if (!confirm("Delete group?")) return;
+        if (!confirm("Delete group permanently?")) return;
 
-        await fetch(`/api/groups/${groupId}`, {
+        const res = await fetch(`/api/groups/${groupId}`, {
             method: "DELETE",
         });
 
-        window.location.href = "/groups";
+        const data = await res.json();
+
+        if (data.success) {
+            window.location.href = "/groups";
+        } else {
+            setToast("Failed to delete group ❌");
+            setTimeout(() => setToast(""), 3000);
+        }
     };
 
     if (!group) return <div className="p-4">Loading...</div>;
