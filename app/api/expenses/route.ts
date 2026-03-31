@@ -17,8 +17,8 @@ export async function POST(req: Request) {
             description,
             groupId,
             payerId,
-            splitType,
-            splits,
+            splitType = "equal",
+            splits = {},
         } = body;
 
         if (!amount || !groupId || !payerId) {
@@ -28,26 +28,38 @@ export async function POST(req: Request) {
             );
         }
 
-        // ✅ create expense
+        // ✅ Create expense
         const expense = await prisma.expense.create({
             data: {
-                amount,
+                amount: Number(amount),
                 description,
                 groupId,
                 paidById: payerId,
             },
         });
 
-        // ✅ get group members
+        // ✅ Get members
         const members = await prisma.groupMember.findMany({
             where: { groupId },
+        });
+
+        // =========================
+        // 🔔 NOTIFICATIONS (IMPROVED)
+        // =========================
+        await prisma.notification.createMany({
+            data: members
+                .filter((m: any) => m.userId !== payerId)
+                .map((m: any) => ({
+                    userId: m.userId,
+                    message: `${description} added in group 💸`,
+                })),
         });
 
         // =========================
         // EQUAL SPLIT
         // =========================
         if (splitType === "equal") {
-            const splitAmount = amount / members.length;
+            const splitAmount = Number(amount) / members.length;
 
             await prisma.split.createMany({
                 data: members.map((m: any) => ({
@@ -62,7 +74,7 @@ export async function POST(req: Request) {
         // CUSTOM SPLIT
         // =========================
         if (splitType === "custom") {
-            const splitData = Object.entries(splits || {}).map(
+            const splitData = Object.entries(splits).map(
                 ([userId, value]: any) => ({
                     userId,
                     expenseId: expense.id,
@@ -77,7 +89,7 @@ export async function POST(req: Request) {
 
         return Response.json({ success: true });
     } catch (error) {
-        console.error(error);
+        console.error("EXPENSE ERROR:", error);
         return Response.json(
             { error: "Something went wrong" },
             { status: 500 }

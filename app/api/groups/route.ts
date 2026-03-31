@@ -10,7 +10,6 @@ export async function GET() {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // ✅ get current user
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
@@ -19,7 +18,7 @@ export async function GET() {
             return Response.json({ error: "User not found" }, { status: 404 });
         }
 
-        // ✅ IMPORTANT: include members + expenses
+        // ✅ Fetch only groups where user is member
         const groups = await prisma.group.findMany({
             where: {
                 members: {
@@ -41,56 +40,10 @@ export async function GET() {
             },
         });
 
+        // ✅ ALWAYS return array
         return Response.json(groups);
     } catch (error) {
-        console.error(error);
-        return Response.json(
-            { error: "Something went wrong" },
-            { status: 500 }
-        );
-    }
-}
-
-export async function POST(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.email) {
-            return Response.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { name } = await req.json();
-
-        if (!name) {
-            return Response.json({ error: "Name is required" }, { status: 400 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return Response.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // ✅ create group
-        const group = await prisma.group.create({
-            data: {
-                name,
-                members: {
-                    create: {
-                        userId: user.id,
-                    },
-                },
-            },
-        });
-
-        return Response.json(group);
-    } catch (error) {
-        console.error(error);
-        return Response.json(
-            { error: "Something went wrong" },
-            { status: 500 }
-        );
+        console.error("GROUPS API ERROR:", error);
+        return Response.json([], { status: 500 }); // safe fallback
     }
 }

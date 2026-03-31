@@ -11,10 +11,10 @@ datasource db {
 // USER
 //////////////////////////////
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  image     String?
+  id    String  @id @default(cuid())
+  name  String?
+  email String  @unique
+  image String?
 
   createdAt DateTime @default(now())
 
@@ -23,9 +23,10 @@ model User {
   sessions Session[]
 
   // App relations
-  memberships GroupMember[]
-  expensesPaid Expense[] @relation("PaidBy")
+  memberships  GroupMember[]
+  expensesPaid Expense[]      @relation("PaidBy")
   splits       Split[]
+  notification Notification[]
 }
 
 //////////////////////////////
@@ -40,14 +41,14 @@ model Group {
   expenses Expense[]
 
   // ✅ ADD THIS LINE (FIX)
-  invites  GroupInvite[]
+  invites GroupInvite[]
 }
 
 //////////////////////////////
 // GROUP MEMBER
 //////////////////////////////
 model GroupMember {
-  id      String @id @default(cuid())
+  id String @id @default(cuid())
 
   userId  String
   groupId String
@@ -62,25 +63,25 @@ model GroupMember {
 // EXPENSE
 //////////////////////////////
 model Expense {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   amount      Float
   description String?
 
-  groupId     String
-  paidById    String
+  groupId  String
+  paidById String
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  group   Group @relation(fields: [groupId], references: [id])
-  paidBy  User  @relation("PaidBy", fields: [paidById], references: [id])
-  splits  Split[]
+  group  Group   @relation(fields: [groupId], references: [id])
+  paidBy User    @relation("PaidBy", fields: [paidById], references: [id])
+  splits Split[]
 }
 
 //////////////////////////////
 // SPLIT
 //////////////////////////////
 model Split {
-  id        String  @id @default(cuid())
+  id String @id @default(cuid())
 
   amount    Float
   userId    String
@@ -130,13 +131,23 @@ model VerificationToken {
 }
 
 model GroupInvite {
-  id        String   @id @default(cuid())
-  email     String
-  token     String   @unique
-  groupId   String
+  id      String @id @default(cuid())
+  email   String
+  token   String @unique
+  groupId String
 
-  group     Group    @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
 
   createdAt DateTime @default(now())
   accepted  Boolean  @default(false)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

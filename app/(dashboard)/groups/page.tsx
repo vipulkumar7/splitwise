@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function GroupsPage() {
   const router = useRouter();
+
   const [groups, setGroups] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -21,9 +22,25 @@ export default function GroupsPage() {
   // FETCH GROUPS
   // =========================
   const fetchGroups = async () => {
-    const res = await fetch("/api/groups");
-    const data = await res.json();
-    setGroups(data || []);
+    try {
+      const res = await fetch("/api/groups");
+
+      if (!res.ok) {
+        setGroups([]);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setGroups(data);
+      } else {
+        setGroups([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setGroups([]);
+    }
   };
 
   useEffect(() => {
@@ -34,10 +51,8 @@ export default function GroupsPage() {
   // LOAD SAVED GROUP
   // =========================
   useEffect(() => {
-    const savedGroupId = localStorage.getItem("selectedGroupId");
-    if (savedGroupId) {
-      setSelectedGroupId(savedGroupId);
-    }
+    const saved = localStorage.getItem("selectedGroupId");
+    if (saved) setSelectedGroupId(saved);
   }, []);
 
   // =========================
@@ -45,14 +60,9 @@ export default function GroupsPage() {
   // =========================
   useEffect(() => {
     if (groups.length > 0 && !selectedGroupId) {
-      const saved = localStorage.getItem("selectedGroupId");
-
-      if (saved) {
-        setSelectedGroupId(saved);
-      } else {
-        setSelectedGroupId(groups[0].id);
-        localStorage.setItem("selectedGroupId", groups[0].id);
-      }
+      const first = groups[0].id;
+      setSelectedGroupId(first);
+      localStorage.setItem("selectedGroupId", first);
     }
   }, [groups]);
 
@@ -96,7 +106,8 @@ export default function GroupsPage() {
     if (data.error) {
       alert(data.error);
     } else {
-      alert("Member added!");
+      alert("Member added ✅");
+      fetchGroups();
     }
 
     setMemberEmail("");
@@ -108,6 +119,16 @@ export default function GroupsPage() {
   const addExpense = async () => {
     if (!amount || !selectedGroupId) return;
 
+    const group = groups.find((g) => g.id === selectedGroupId);
+
+    if (!group || !group.members?.length) {
+      alert("No members in group");
+      return;
+    }
+
+    // ✅ FIX: assign payer
+    const payerId = group.members[0].user.id;
+
     await fetch("/api/expenses", {
       method: "POST",
       headers: {
@@ -117,6 +138,8 @@ export default function GroupsPage() {
         description,
         amount: Number(amount),
         groupId: selectedGroupId,
+        payerId,
+        splitType: "equal",
       }),
     });
 
@@ -129,9 +152,6 @@ export default function GroupsPage() {
 
   return (
     <div className="max-w-md mx-auto p-4 pb-24">
-      {/* Header */}
-      {/* <h1 className="text-2xl font-bold mb-4">Splitwise</h1> */}
-
       {/* Create Group */}
       <div className="flex gap-2 mb-4">
         <input
@@ -150,6 +170,10 @@ export default function GroupsPage() {
 
       {/* Groups List */}
       <div className="space-y-3">
+        {groups.length === 0 && (
+          <p className="text-gray-500">No groups yet</p>
+        )}
+
         {groups.map((g) => (
           <div
             key={g.id}
@@ -157,10 +181,11 @@ export default function GroupsPage() {
               setSelectedGroupId(g.id);
               localStorage.setItem("selectedGroupId", g.id);
             }}
-            className={`p-4 border rounded-xl cursor-pointer transition ${selectedGroupId === g.id
-              ? "border-green-500 bg-green-50"
-              : ""
-              }`}
+            className={`p-4 border rounded-xl cursor-pointer transition ${
+              selectedGroupId === g.id
+                ? "border-green-500 bg-green-50"
+                : ""
+            }`}
           >
             <div className="flex justify-between items-center">
               <div>
@@ -170,7 +195,7 @@ export default function GroupsPage() {
                   {g.members?.length || 0} members
                 </p>
 
-                {/* Total Amount */}
+                {/* Total Expense */}
                 <p className="text-sm mt-1 text-green-600">
                   ₹
                   {g.expenses?.reduce(
@@ -195,10 +220,10 @@ export default function GroupsPage() {
       </div>
 
       {/* Add Member */}
-      {/* {selectedGroupId && (
+      {selectedGroupId && (
         <div className="mt-4 flex gap-2">
           <input
-            placeholder="Enter email"
+            placeholder="Invite member email"
             value={memberEmail}
             onChange={(e) => setMemberEmail(e.target.value)}
             className="border p-2 rounded w-full"
@@ -210,10 +235,10 @@ export default function GroupsPage() {
             Add
           </button>
         </div>
-      )} */}
+      )}
 
       {/* Floating Button */}
-      {/* <button
+      <button
         onClick={() => {
           if (!selectedGroupId) {
             alert("Select a group first");
@@ -224,7 +249,7 @@ export default function GroupsPage() {
         className="fixed bottom-20 right-6 bg-green-500 text-white w-14 h-14 rounded-full text-2xl shadow-lg"
       >
         +
-      </button> */}
+      </button>
 
       {/* Expense Modal */}
       {showExpenseModal && (
