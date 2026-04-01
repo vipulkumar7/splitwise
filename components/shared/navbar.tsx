@@ -19,9 +19,11 @@ export default function Navbar() {
       </h1>
 
       <div className="flex items-center gap-4">
-        <Link href="/groups" className="hover:underline">
-          Groups
-        </Link>
+        {session?.user && (
+          <Link href="/groups" className="hover:underline">
+            Groups
+          </Link>
+        )}
 
         {session?.user && (
           <>
