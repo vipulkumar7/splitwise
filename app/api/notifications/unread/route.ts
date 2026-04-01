@@ -6,18 +6,19 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-        return Response.json([], { status: 401 });
+        return Response.json({ count: 0 });
     }
 
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
     });
 
-    const notifications = await prisma.notification.findMany({
-        where: { userId: user?.id },
-        orderBy: { createdAt: "desc" },
-        take: 20,
+    const count = await prisma.notification.count({
+        where: {
+            userId: user?.id,
+            read: false,
+        },
     });
 
-    return Response.json(notifications);
+    return Response.json({ count });
 }

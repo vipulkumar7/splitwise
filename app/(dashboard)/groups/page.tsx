@@ -238,7 +238,7 @@ export default function GroupsPage() {
       )} */}
 
       {/* Floating Button */}
-      <button
+      {/* <button
         onClick={() => {
           if (!selectedGroupId) {
             alert("Select a group first");
@@ -249,7 +249,7 @@ export default function GroupsPage() {
         className="fixed bottom-20 right-6 bg-green-500 text-white w-14 h-14 rounded-full text-2xl shadow-lg"
       >
         +
-      </button>
+      </button> */}
 
       {/* Expense Modal */}
       {showExpenseModal && (

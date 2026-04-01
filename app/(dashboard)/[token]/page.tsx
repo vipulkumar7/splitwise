@@ -8,7 +8,6 @@ export default async function InvitePage({
 }: {
     params: Promise<{ token: string }>;
 }) {
-    // ✅ FIX: unwrap params
     const { token } = await params;
 
     if (!token) {
@@ -17,12 +16,12 @@ export default async function InvitePage({
 
     const session = await getServerSession(authOptions);
 
-    // 🔐 If not logged in → redirect back after login
+    // 🔐 Not logged in → redirect to login
     if (!session) {
         redirect(`/api/auth/signin?callbackUrl=/${token}`);
     }
 
-    // ✅ Find invite
+    // 🔍 Find invite
     const invite = await prisma.groupInvite.findUnique({
         where: { token },
         include: { group: true },
@@ -32,7 +31,7 @@ export default async function InvitePage({
         return <div className="p-4">Invalid or expired invite</div>;
     }
 
-    // ✅ Find user
+    // 🔍 Find user
     const user = await prisma.user.findUnique({
         where: { email: session.user?.email! },
     });
@@ -57,10 +56,10 @@ export default async function InvitePage({
     });
 
     // =========================
-    // 🔔 NOTIFICATIONS (JOIN FIX)
+    // 🔔 NOTIFICATIONS (FIXED)
     // =========================
 
-    // 1. Notify joined user
+    // 1️⃣ Notify the joined user
     await prisma.notification.create({
         data: {
             userId: user.id,
@@ -68,19 +67,21 @@ export default async function InvitePage({
         },
     });
 
-    // 2. Notify existing members
+    // 2️⃣ Notify other members
     const members = await prisma.groupMember.findMany({
         where: { groupId: invite.groupId },
     });
 
-    await prisma.notification.createMany({
-        data: members
-            .filter((m: any) => m.userId !== user.id)
-            .map((m: any) => ({
-                userId: m.userId,
-                message: `${user.name || user.email} joined "${invite.group.name}"`,
-            })),
-    });
+    for (const m of members) {
+        if (m.userId !== user.id) {
+            await prisma.notification.create({
+                data: {
+                    userId: m.userId,
+                    message: `${user.name || user.email} joined "${invite.group.name}"`,
+                },
+            });
+        }
+    }
 
     // ✅ Mark invite accepted
     await prisma.groupInvite.update({
@@ -88,6 +89,6 @@ export default async function InvitePage({
         data: { accepted: true },
     });
 
-    // 🚀 Redirect to group
+    // 🚀 Redirect to group page
     redirect(`/groups/${invite.groupId}`);
 }

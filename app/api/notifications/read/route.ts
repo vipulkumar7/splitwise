@@ -2,22 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function GET() {
+export async function POST() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-        return Response.json([], { status: 401 });
+        return Response.json({ success: false });
     }
 
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
     });
 
-    const notifications = await prisma.notification.findMany({
-        where: { userId: user?.id },
-        orderBy: { createdAt: "desc" },
-        take: 20,
+    await prisma.notification.updateMany({
+        where: {
+            userId: user?.id,
+            read: false,
+        },
+        data: { read: true },
     });
 
-    return Response.json(notifications);
+    return Response.json({ success: true });
 }
