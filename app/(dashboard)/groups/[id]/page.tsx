@@ -19,23 +19,65 @@ export default function GroupDetailPage() {
     const [amount, setAmount] = useState("");
     const [description, setDescription] = useState("");
     const [payerId, setPayerId] = useState("");
+    const [showMenu, setShowMenu] = useState(false);
 
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [showAction, setShowAction] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     // =========================
-    // FETCH GROUP
+    // SAFE FETCH (CORE FIX)
+    // =========================
+    const safeFetchGroup = async () => {
+        try {
+            const res = await fetch(`/api/groups/${groupId}`);
+
+            // ✅ GROUP DELETED
+            if (res.status === 404) {
+                setToast("Group was deleted ❌");
+
+                setTimeout(() => {
+                    window.location.href = "/groups";
+                }, 1500);
+
+                return null;
+            }
+
+            return res.json();
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    };
+
+    // =========================
+    // INITIAL LOAD
     // =========================
     useEffect(() => {
-        const fetchGroup = async () => {
-            const res = await fetch(`/api/groups/${groupId}`);
-            const data = await res.json();
-            setGroup(data);
+        const init = async () => {
+            const data = await safeFetchGroup();
+            if (data) setGroup(data);
         };
 
-        fetchGroup();
+        init();
+    }, [groupId]);
+
+    // =========================
+    // TAB FOCUS DETECTION (NO POLLING)
+    // =========================
+    useEffect(() => {
+        const handleFocus = async () => {
+            const data = await safeFetchGroup();
+            if (data) setGroup(data);
+        };
+
+        window.addEventListener("focus", handleFocus);
+
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+        };
     }, [groupId]);
 
     // =========================
@@ -54,10 +96,11 @@ export default function GroupDetailPage() {
     });
 
     useEffect(() => {
-        if (currentUserId) {
-            setPayerId(currentUserId);
-        }
+        if (currentUserId) setPayerId(currentUserId);
     }, [currentUserId]);
+
+    const getName = (id: string) =>
+        members.find((m: any) => m.user.id === id)?.user.name || "User";
 
     // =========================
     // ACTIONS
@@ -67,9 +110,16 @@ export default function GroupDetailPage() {
 
         const res = await fetch("/api/groups/invite", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({ email, groupId }),
         });
+
+        if (res.status === 404) {
+            safeFetchGroup();
+            return;
+        }
 
         const data = await res.json();
 
@@ -79,11 +129,11 @@ export default function GroupDetailPage() {
     };
 
     const addExpense = async () => {
-        if (!amount || !description) return;
-
-        await fetch("/api/expenses", {
+        const res = await fetch("/api/expenses", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({
                 amount: Number(amount),
                 description,
@@ -93,12 +143,17 @@ export default function GroupDetailPage() {
             }),
         });
 
+        if (res.status === 404) {
+            safeFetchGroup();
+            return;
+        }
+
         setShowModal(false);
         setAmount("");
         setDescription("");
 
-        const res = await fetch(`/api/groups/${groupId}`);
-        setGroup(await res.json());
+        const data = await safeFetchGroup();
+        if (data) setGroup(data);
     };
 
     const removeMember = async (userId: string) => {
@@ -116,6 +171,12 @@ export default function GroupDetailPage() {
         const res = await fetch(`/api/groups/${groupId}`, {
             method: "DELETE",
         });
+
+        if (res.status === 404) {
+            safeFetchGroup();
+            return;
+        }
+
         const data = await res.json();
 
         if (data.success) {
@@ -125,8 +186,27 @@ export default function GroupDetailPage() {
         }
     };
 
+    const exitGroup = async () => {
+        if (!currentUserId) return;
+
+        await fetch("/api/groups/remove-member", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: currentUserId, groupId }),
+        });
+
+        window.location.href = "/groups";
+    };
+
+    const copyInviteLink = () => {
+        const link = `${window.location.origin}/invite/${groupId}`;
+        navigator.clipboard.writeText(link);
+        setToast("Invite link copied 🔗");
+        setTimeout(() => setToast(""), 3000);
+    };
+
     // =========================
-    // BALANCE
+    // BALANCES
     // =========================
     const balances: Record<string, number> = {};
 
@@ -146,49 +226,64 @@ export default function GroupDetailPage() {
         });
     });
 
-    const getName = (id: string) =>
-        members.find((m: any) => m.user.id === id)?.user.name || "User";
-
     // =========================
-    // LOADING
+    // LOADING / DELETED UI
     // =========================
     if (!group) {
-        return <div className="p-4">Loading...</div>;
+        return (
+            <div className="p-6 text-center">
+                <h2 className="text-lg font-semibold">
+                    Loading...
+                </h2>
+            </div>
+        );
     }
 
+    // =========================
+    // UI
+    // =========================
     return (
-        <div className="max-w-md mx-auto p-4 pb-24">
+        <div className="max-w-md mx-auto p-4 pb-24 relative">
+
             {/* HEADER */}
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">{group.name}</h1>
 
-                <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="bg-red-500 text-white px-4 py-1 rounded"
-                >
-                    Delete Group
-                </button>
+                <button onClick={() => setShowMenu(!showMenu)}>⋮</button>
+
+                {showMenu && (
+                    <div className="absolute right-4 top-12 bg-white shadow rounded w-48 z-50">
+                        <button
+                            onClick={copyInviteLink}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                            Copy Invite Link
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowMenu(false);
+                                setShowExitConfirm(true);
+                            }}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                            Exit Group
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowMenu(false);
+                                setShowDeleteConfirm(true);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                        >
+                            Delete Group
+                        </button>
+                    </div>
+                )}
             </div>
 
             <AvatarGroup members={members} />
-
-            {/* MEMBERS */}
-            <h2 className="mt-4 font-semibold">Members</h2>
-
-            {members.map((m: any) => (
-                <div key={m.user.id} className="flex justify-between p-3 border rounded mt-2">
-                    <span>{m.user.name || m.user.email}</span>
-
-                    <button
-                        onClick={() => {
-                            setSelectedUser(m.user);
-                            setShowAction(true);
-                        }}
-                    >
-                        ⋮
-                    </button>
-                </div>
-            ))}
 
             {/* INVITE */}
             <div className="flex gap-2 mt-4">
