@@ -189,11 +189,31 @@ export default function GroupDetailPage() {
     const exitGroup = async () => {
         if (!currentUserId) return;
 
-        await fetch("/api/groups/remove-member", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: currentUserId, groupId }),
-        });
+        try {
+            const res = await fetch(`/api/groups/remove-member`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId, groupId }),
+            });
+            if (res.status === 404) {
+                setToast("Group no longer exists ❌");
+                setTimeout(() => {
+                    window.location.href = "/groups";
+                }, 1500);
+                return;
+            }
+            const data = await res.json();
+
+            if (data.success) {
+                window.location.replace("/groups");
+            } else {
+                setToast("Failed to exit group ❌");
+            }
+        } catch (error) {
+            console.error("Error exiting group:", error);
+            setToast("An error occurred while exiting the group ❌");
+        }
+
 
         window.location.href = "/groups";
     };
@@ -260,11 +280,7 @@ export default function GroupDetailPage() {
                             Copy Invite Link
                         </button>
 
-                        <button
-                            onClick={() => {
-                                setShowMenu(false);
-                                setShowExitConfirm(true);
-                            }}
+                        <button onClick={exitGroup}
                             className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                         >
                             Exit Group
@@ -319,21 +335,23 @@ export default function GroupDetailPage() {
             {/* BALANCES */}
             <h2 className="mt-6 font-semibold">Balances</h2>
 
-            {Object.entries(balances).map(([userId, amount]) => (
-                <div key={userId}>
-                    {amount > 0 ? (
-                        <p className="text-green-600">
-                            {getName(userId)} is owed ₹{amount.toFixed(0)}
-                        </p>
-                    ) : amount < 0 ? (
-                        <p className="text-red-500">
-                            {getName(userId)} owes ₹{Math.abs(amount).toFixed(0)}
-                        </p>
-                    ) : (
-                        <p>{getName(userId)} is settled</p>
-                    )}
-                </div>
-            ))}
+            {
+                Object.entries(balances).map(([userId, amount]) => (
+                    <div key={userId}>
+                        {amount > 0 ? (
+                            <p className="text-green-600">
+                                {getName(userId)} is owed ₹{amount.toFixed(0)}
+                            </p>
+                        ) : amount < 0 ? (
+                            <p className="text-red-500">
+                                {getName(userId)} owes ₹{Math.abs(amount).toFixed(0)}
+                            </p>
+                        ) : (
+                            <p>{getName(userId)} is settled</p>
+                        )}
+                    </div>
+                ))
+            }
 
             {/* FLOAT BUTTON */}
             <button
@@ -344,123 +362,131 @@ export default function GroupDetailPage() {
             </button>
 
             {/* Expense Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded-2xl w-[300px] space-y-3">
-                        <input
-                            placeholder="Description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="border p-2 w-full"
-                        />
+            {
+                showModal && (
+                    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+                        <div className="bg-white p-6 rounded-2xl w-[300px] space-y-3">
+                            <input
+                                placeholder="Description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                className="border p-2 w-full"
+                            />
 
-                        <input
-                            type="number"
-                            placeholder="Amount"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="border p-2 w-full"
-                        />
+                            <input
+                                type="number"
+                                placeholder="Amount"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="border p-2 w-full"
+                            />
 
-                        <select
-                            value={payerId}
-                            onChange={(e) => setPayerId(e.target.value)}
-                            className="border p-2 w-full"
-                        >
-                            {sortedMembers.map((m: any) => (
-                                <option key={m.user.id} value={m.user.id}>
-                                    {m.user.id === currentUserId
-                                        ? `${m.user.name} (You)`
-                                        : m.user.name}
-                                </option>
-                            ))}
-                        </select>
-
-                        <div className="flex justify-between">
-                            <button onClick={() => setShowModal(false)}>Cancel</button>
-                            <button
-                                onClick={addExpense}
-                                className="bg-green-500 text-white px-4 py-1 rounded"
+                            <select
+                                value={payerId}
+                                onChange={(e) => setPayerId(e.target.value)}
+                                className="border p-2 w-full"
                             >
-                                Add
-                            </button>
+                                {sortedMembers.map((m: any) => (
+                                    <option key={m.user.id} value={m.user.id}>
+                                        {m.user.id === currentUserId
+                                            ? `${m.user.name} (You)`
+                                            : m.user.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div className="flex justify-between">
+                                <button onClick={() => setShowModal(false)}>Cancel</button>
+                                <button
+                                    onClick={addExpense}
+                                    className="bg-green-500 text-white px-4 py-1 rounded"
+                                >
+                                    Add
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ACTION SHEET */}
-            {showAction && (
-                <div className="fixed inset-0 bg-black/40 flex justify-end items-end">
-                    <div className="bg-white w-full p-4 rounded-t-2xl">
-                        <button
-                            onClick={() => {
-                                setShowAction(false);
-                                setShowConfirm(true);
-                            }}
-                            className="text-red-500 w-full py-2"
-                        >
-                            Remove from group
-                        </button>
+            {
+                showAction && (
+                    <div className="fixed inset-0 bg-black/40 flex justify-end items-end">
+                        <div className="bg-white w-full p-4 rounded-t-2xl">
+                            <button
+                                onClick={() => {
+                                    setShowAction(false);
+                                    setShowConfirm(true);
+                                }}
+                                className="text-red-500 w-full py-2"
+                            >
+                                Remove from group
+                            </button>
 
-                        <button onClick={() => setShowAction(false)}>Cancel</button>
+                            <button onClick={() => setShowAction(false)}>Cancel</button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* CONFIRM */}
-            {showConfirm && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded text-center">
-                        <p>Remove {selectedUser?.name}?</p>
-
-                        <button
-                            onClick={async () => {
-                                await removeMember(selectedUser.id);
-                                setShowConfirm(false);
-                            }}
-                        >
-                            Confirm
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* DELETE CONFIRM MODAL */}
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-2xl w-[320px] text-center space-y-4 shadow-lg">
-
-                        <h2 className="text-lg font-semibold text-red-600">
-                            Delete Group?
-                        </h2>
-
-                        <p className="text-sm text-gray-500">
-                            This will permanently delete the group and all expenses.
-                        </p>
-
-                        <div className="flex justify-between mt-4">
-                            <button
-                                onClick={() => setShowDeleteConfirm(false)}
-                                className="px-4 py-1 rounded border"
-                            >
-                                Cancel
-                            </button>
+            {
+                showConfirm && (
+                    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+                        <div className="bg-white p-6 rounded text-center">
+                            <p>Remove {selectedUser?.name}?</p>
 
                             <button
                                 onClick={async () => {
-                                    await deleteGroup();
-                                    setShowDeleteConfirm(false);
+                                    await removeMember(selectedUser.id);
+                                    setShowConfirm(false);
                                 }}
-                                className="bg-red-500 text-white px-4 py-1 rounded"
                             >
-                                Delete
+                                Confirm
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
+
+            {/* DELETE CONFIRM MODAL */}
+            {
+                showDeleteConfirm && (
+                    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-2xl w-[320px] text-center space-y-4 shadow-lg">
+
+                            <h2 className="text-lg font-semibold text-red-600">
+                                Delete Group?
+                            </h2>
+
+                            <p className="text-sm text-gray-500">
+                                This will permanently delete the group and all expenses.
+                            </p>
+
+                            <div className="flex justify-between mt-4">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="px-4 py-1 rounded border"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={async () => {
+                                        await deleteGroup();
+                                        setShowDeleteConfirm(false);
+                                    }}
+                                    className="bg-red-500 text-white px-4 py-1 rounded"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
             {toast && <Toast message={toast} />}
-        </div>
+        </div >
     );
 }
