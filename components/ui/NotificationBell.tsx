@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { IoNotifications } from "react-icons/io5";
 
 export default function NotificationBell() {
     const [open, setOpen] = useState(false);
@@ -69,8 +70,8 @@ export default function NotificationBell() {
     return (
         <div className="relative" ref={ref}>
             {/* 🔔 Bell */}
-            <button onClick={handleOpen} className="relative text-xl">
-                🔔
+            <button onClick={handleOpen} className="relative text-xl mt-2">
+                <IoNotifications />
 
                 {/* Badge */}
                 {count > 0 && (

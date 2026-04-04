@@ -6,6 +6,9 @@ import { useSession } from "next-auth/react";
 import AvatarGroup from "@/components/ui/AvatarGroup";
 import Toast from "@/components/ui/toast";
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
+import { FaWhatsapp, FaCopy, FaEnvelope, } from "react-icons/fa";
+import { BsThreeDotsVertical } from "react-icons/bs";
+
 
 export default function GroupDetailPage() {
     const params = useParams();
@@ -41,6 +44,7 @@ export default function GroupDetailPage() {
     const [emailLoading, setEmailLoading] = useState(false);
     const [balanceLoading, setBalanceLoading] = useState(false);
     const [expenseLoading, setExpenseLoading] = useState(false);
+    const [latestExpenseId, setLatestExpenseId] = useState<string | null>(null);
 
     // =========================
     // SAFE FETCH
@@ -170,6 +174,11 @@ export default function GroupDetailPage() {
             if (data) setGroup(data);
 
             setToast("Expense added ✅");
+            if (data?.expenses?.length) {
+                const latest = data.expenses[data.expenses.length - 1];
+                setLatestExpenseId(latest.id);
+                setTimeout(() => setLatestExpenseId(null), 2000);
+            }
         } catch {
             setToast("Failed ❌");
         } finally {
@@ -348,6 +357,38 @@ export default function GroupDetailPage() {
         }
     };
 
+    const groupExpensesByDate = (expenses: any[]) => {
+        const groups: Record<string, any[]> = {};
+
+        expenses.forEach((exp) => {
+            const date = new Date(exp.createdAt);
+            const today = new Date();
+
+            let label = date.toLocaleDateString();
+
+            if (date.toDateString() === today.toDateString()) {
+                label = "Today";
+            } else {
+                const yesterday = new Date();
+                yesterday.setDate(today.getDate() - 1);
+
+                if (date.toDateString() === yesterday.toDateString()) {
+                    label = "Yesterday";
+                }
+            }
+
+            if (!groups[label]) groups[label] = [];
+            groups[label].push(exp);
+        });
+
+        return groups;
+    };
+
+    const sortedExpenses = [...(group?.expenses ?? [])]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const groupedExpenses = groupExpensesByDate(sortedExpenses);
+
     // =========================
     // BALANCES
     // =========================
@@ -357,7 +398,7 @@ export default function GroupDetailPage() {
         balances[m.user.id] = 0;
     });
 
-    group?.expenses?.forEach((exp: any) => {
+    sortedExpenses?.forEach((exp: any) => {
         const splitAmount = exp.amount / members.length;
 
         members.forEach((m: any) => {
@@ -391,9 +432,11 @@ export default function GroupDetailPage() {
         <div className="max-w-md mx-auto p-4 pb-24 relative">
 
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">{group.name}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
 
-                <button onClick={() => setShowMenu(!showMenu)}>⋮</button>
+                <button onClick={() => setShowMenu(!showMenu)}>
+                    <BsThreeDotsVertical />
+                </button>
 
                 {showMenu && (
                     <div
@@ -432,57 +475,130 @@ export default function GroupDetailPage() {
                     </div>
                 )}
             </div>
-
-            <AvatarGroup members={members} />
-
+            <div className="flex items-center gap-3 mt-3">
+                <AvatarGroup members={members} />
+                {/* MEMBER COUNT */}
+                <p className="text-sm text-gray-500">
+                    {members.length} members
+                </p>
+            </div>
             {/* EXPENSES */}
             <h2 className="mt-6 font-semibold">Expenses</h2>
 
-            {expenseLoading ? (
-                <div className="space-y-3 mt-2 animate-pulse">
-                    <div className="h-16 bg-gray-300 rounded"></div>
-                    <div className="h-16 bg-gray-300 rounded"></div>
-                </div>
-            ) : (
-                <div className="space-y-3 mt-2">
-                    {group.expenses?.map((exp: any) => (
-                        <div key={exp.id} className="p-3 border rounded">
-                            <p>{exp.description}</p>
-                            <p>₹{exp.amount}</p>
-                            <p className="text-sm text-gray-500">
-                                Paid by: {getName(exp.paidById)}
-                            </p>
+            <div className="mt-3 space-y-6">
+                {Object.entries(groupedExpenses).map(([date, expenses]: any) => (
+                    <div key={date}>
+                        {/* DATE HEADER */}
+                        <p className="text-xs text-gray-500 mb-2 font-semibold">
+                            {date}
+                        </p>
+
+                        <div className="space-y-2">
+                            {expenses.map((exp: any) => {
+                                const isNew = exp.id === latestExpenseId;
+
+                                return (
+                                    <div
+                                        key={exp.id}
+                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all ${isNew
+                                            ? "bg-green-50 border-green-400 shadow-sm"
+                                            : "bg-white"
+                                            }`}
+                                    >
+                                        {/* LEFT */}
+                                        <div className="flex items-center gap-3">
+                                            {/* <div className="text-xl">
+                                                {exp.description}
+                                            </div> */}
+
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-800">
+                                                    {exp.description}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Paid by {getName(exp.paidById)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* RIGHT */}
+                                        <p className="text-sm font-semibold text-gray-900">
+                                            ₹{exp.amount}
+                                        </p>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    ))}
-                </div>
-            )}
+                    </div>
+                ))}
+            </div>
 
 
             {/* BALANCES */}
-            <h2 className="mt-6 font-semibold">Balances</h2>
+            <h2 className="mt-6 font-semibold text-lg">Balances</h2>
 
-            {balanceLoading ? (
-                <div className="mt-2 space-y-2 animate-pulse">
-                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-                </div>
-            ) : (
-                Object.entries(balances).map(([userId, amount]) => (
-                    <div key={userId}>
-                        {amount > 0 ? (
-                            <p className="text-green-600">
-                                {getName(userId)} is owed ₹{amount.toFixed(0)}
-                            </p>
-                        ) : amount < 0 ? (
-                            <p className="text-red-500">
-                                {getName(userId)} owes ₹{Math.abs(amount).toFixed(0)}
-                            </p>
-                        ) : (
-                            <p>{getName(userId)} is settled</p>
-                        )}
-                    </div>
-                ))
-            )}
+            <div className="mt-3 space-y-3">
+                {Object.entries(balances)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([userId, amount]) => {
+                        const isPositive = amount > 0;
+                        const isNegative = amount < 0;
+                        const isYou = userId === currentUserId;
+
+                        return (
+                            <div
+                                key={userId}
+                                className={`flex items-center justify-between p-4 rounded-xl border shadow-sm ${isPositive
+                                    ? "bg-green-50"
+                                    : isNegative
+                                        ? "bg-red-50"
+                                        : "bg-gray-50"
+                                    }`}
+                            >
+                                {/* LEFT */}
+                                <div className="flex items-center gap-3">
+                                    {/* AVATAR */}
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-semibold">
+                                        {getName(userId)[0]}
+                                    </div>
+
+                                    <div>
+                                        <p className="font-medium text-gray-800">
+                                            {isYou ? "You" : getName(userId)}
+                                        </p>
+
+                                        <p
+                                            className={`text-sm ${isPositive
+                                                ? "text-green-600"
+                                                : isNegative
+                                                    ? "text-red-500"
+                                                    : "text-gray-500"
+                                                }`}
+                                        >
+                                            {isPositive
+                                                ? "gets back"
+                                                : isNegative
+                                                    ? "owes"
+                                                    : "settled"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* RIGHT */}
+                                <p
+                                    className={`text-lg font-semibold ${isPositive
+                                        ? "text-green-600"
+                                        : isNegative
+                                            ? "text-red-500"
+                                            : "text-gray-500"
+                                        }`}
+                                >
+                                    ₹{Math.abs(amount).toFixed(0)}
+                                </p>
+                            </div>
+                        );
+                    })}
+            </div>
 
             {/* FLOAT BUTTON */}
             <button
@@ -493,29 +609,56 @@ export default function GroupDetailPage() {
             </button>
 
             {/* Expense Modal */}
-            {
-                showModal && (
-                    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-                        <div className="bg-white p-6 rounded-2xl w-[300px] space-y-3">
+            {showModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
+                    onClick={() => setShowModal(false)}>
+                    {/* MODAL CARD */}
+                    <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-5 space-y-4 animate-scaleIn">
+
+                        {/* HEADER */}
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-lg font-semibold">
+                                Add Expense
+                            </h2>
+
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="text-gray-400 hover:text-black"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* DESCRIPTION */}
+                        <div>
+                            <label className="text-sm text-gray-500">Description</label>
                             <input
-                                placeholder="Description"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="border p-2 w-full"
+                                placeholder="e.g. Food, Travel"
+                                className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             />
+                        </div>
 
+                        {/* AMOUNT */}
+                        <div>
+                            <label className="text-sm text-gray-500">Amount</label>
                             <input
                                 type="number"
-                                placeholder="Amount"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="border p-2 w-full"
+                                placeholder="₹0"
+                                className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             />
+                        </div>
 
+                        {/* PAYER */}
+                        <div>
+                            <label className="text-sm text-gray-500">Paid by</label>
                             <select
                                 value={payerId}
                                 onChange={(e) => setPayerId(e.target.value)}
-                                className="border p-2 w-full"
+                                className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 {sortedMembers.map((m: any) => (
                                     <option key={m.user.id} value={m.user.id}>
@@ -525,8 +668,7 @@ export default function GroupDetailPage() {
                                     </option>
                                 ))}
                             </select>
-
-                            <div className="flex justify-between">
+                            <div className="flex justify-between mt-4">
                                 <button onClick={() => setShowModal(false)}>Cancel</button>
                                 <button
                                     onClick={addExpense}
@@ -540,29 +682,45 @@ export default function GroupDetailPage() {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )
-            }
 
-            {/* ACTION SHEET */}
-            {
-                showAction && (
-                    <div className="fixed inset-0 bg-black/40 flex justify-end items-end">
-                        <div className="bg-white w-full p-4 rounded-t-2xl">
+                        {/* ACTIONS */}
+                        {/* <div className="flex justify-between items-center pt-2">
                             <button
-                                onClick={() => {
-                                    setShowAction(false);
-                                    setShowConfirm(true);
-                                }}
-                                className="text-red-500 w-full py-2"
+                                onClick={() => setShowModal(false)}
+                                className="text-gray-500"
                             >
-                                Remove from group
+                                Cancel
                             </button>
 
-                            <button onClick={() => setShowAction(false)}>Cancel</button>
-                        </div>
+                            <button
+                                onClick={isEditing ? updateExpense : addExpense}
+                                className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg font-medium transition active:scale-95"
+                            >
+                                {isEditing ? "Update" : "Add"}
+                            </button>
+                        </div> */}
                     </div>
-                )
+                </div>
+            )}
+
+            {/* ACTION SHEET */}
+            {showAction && (
+                <div className="fixed inset-0 bg-black/40 flex justify-end items-end">
+                    <div className="bg-white w-full p-4 rounded-t-2xl">
+                        <button
+                            onClick={() => {
+                                setShowAction(false);
+                                setShowConfirm(true);
+                            }}
+                            className="text-red-500 w-full py-2"
+                        >
+                            Remove from group
+                        </button>
+
+                        <button onClick={() => setShowAction(false)}>Cancel</button>
+                    </div>
+                </div>
+            )
             }
 
             {/* CONFIRM */}
@@ -655,62 +813,82 @@ export default function GroupDetailPage() {
 
             {showShareModal && (
                 <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-                    <div className="bg-white w-[320px] p-6 rounded-2xl space-y-4 shadow-lg text-center">
+                    <div className="bg-white w-[320px] rounded-2xl p-5 shadow-xl space-y-4">
 
-                        <h2 className="text-lg font-semibold">Share Invite</h2>
+                        {/* TITLE */}
+                        <h2 className="text-lg font-semibold text-center">
+                            Share Invite
+                        </h2>
 
-                        <button
-                            onClick={handleCopy}
-                            disabled={shareLoading}
-                            className="w-full border p-2 rounded hover:bg-gray-100"
-                        >
-                            {shareLoading ? "Copying..." : "📋 Copy Link"}
-                        </button>
+                        {/* OPTIONS */}
+                        <div className="space-y-3">
 
-                        <button
-                            onClick={handleWhatsApp}
-                            className="w-full border p-2 rounded hover:bg-gray-100"
-                        >
-                            📱 WhatsApp
-                        </button>
-
-                        {/* EMAIL OPTION */}
-                        {!showEmailInput ? (
+                            {/* WHATSAPP */}
                             <button
-                                onClick={() => setShowEmailInput(true)}
-                                className="w-full border p-2 rounded hover:bg-gray-100"
+                                onClick={handleWhatsApp}
+                                className="flex items-center justify-center gap-3 w-full border rounded-xl py-3 hover:bg-gray-50 transition"
                             >
-                                ✉️ Email
+                                <span className="text-green-500 text-xl">
+                                    {/* react-icons */}
+                                    <FaWhatsapp />
+                                </span>
+                                <span className="font-medium">WhatsApp</span>
                             </button>
-                        ) : (
-                            <div className="space-y-2">
-                                <input
-                                    type="email"
-                                    placeholder="Enter email"
-                                    value={inviteEmail}
-                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                    className="w-full border p-2 rounded"
-                                />
 
+                            {/* COPY */}
+                            <button
+                                onClick={handleCopy}
+                                disabled={shareLoading}
+                                className="flex items-center justify-center gap-3 w-full border rounded-xl py-3 hover:bg-gray-50 transition"
+                            >
+                                <span className="text-gray-700 text-lg">
+                                    <FaCopy />
+                                </span>
+                                <span className="font-medium">Copy Link</span>
+                            </button>
+
+                            {/* EMAIL OPTION */}
+                            {!showEmailInput ? (
                                 <button
-                                    onClick={handleEmailInvite}
-                                    disabled={emailLoading}
-                                    className={`w-full text-white p-2 rounded ${emailLoading
-                                        ? "bg-gray-400"
-                                        : "bg-blue-500 hover:bg-blue-600"
-                                        }`}
+                                    onClick={() => setShowEmailInput(true)}
+                                    className="flex items-center justify-center gap-3 w-full border rounded-xl py-3 hover:bg-gray-50 transition"
                                 >
-                                    {emailLoading ? "Inviting..." : "Send Invite"}
+                                    <span className="text-blue-500 text-lg">
+                                        <FaEnvelope />
+                                    </span>
+                                    <span className="font-medium">Email</span>
                                 </button>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="space-y-2">
+                                    <input
+                                        type="email"
+                                        placeholder="Enter email"
+                                        value={inviteEmail}
+                                        onChange={(e) => setInviteEmail(e.target.value)}
+                                        className="w-full border p-2 rounded"
+                                    />
 
-                        <button
-                            onClick={() => setShowShareModal(false)}
-                            className="text-sm text-gray-500 mt-2"
-                        >
-                            Cancel
-                        </button>
+                                    <button
+                                        onClick={handleEmailInvite}
+                                        disabled={emailLoading}
+                                        className={`w-full text-white p-2 rounded ${emailLoading
+                                            ? "bg-gray-400"
+                                            : "bg-blue-500 hover:bg-blue-600"
+                                            }`}
+                                    >
+                                        {emailLoading ? "Inviting..." : "Send Invite"}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* CANCEL */}
+                            <button
+                                onClick={() => setShowShareModal(false)}
+                                className="w-full text-center text-gray-500 mt-2"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
