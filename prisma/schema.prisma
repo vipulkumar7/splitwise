@@ -142,12 +142,22 @@ model GroupInvite {
   accepted  Boolean  @default(false)
 }
 
+enum NotificationType {
+  GENERAL
+  USER_JOINED
+  EXPENSE_ADDED
+  EXPENSE_UPDATED
+  EXPENSE_DELETED
+  GROUP_CREATED
+}
+
 model Notification {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  type      NotificationType @default(GENERAL) // ✅ only ONE type field
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }

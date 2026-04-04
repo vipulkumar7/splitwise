@@ -101,3 +101,54 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    console.log("GROUP ID:", params.id);
+
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { name } = await req.json();
+
+    if (!name || !name.trim()) {
+      return Response.json({ error: "Name required" }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // ✅ FIXED MODEL NAME
+    const isMember = await prisma.groupMember.findFirst({
+      where: {
+        groupId: params.id,
+        userId: user.id,
+      },
+    });
+
+    if (!isMember) {
+      return Response.json({ error: "Not allowed" }, { status: 403 });
+    }
+
+    const updatedGroup = await prisma.group.update({
+      where: { id: params.id },
+      data: { name },
+    });
+
+    return Response.json(updatedGroup);
+  } catch (error) {
+    console.error("UPDATE GROUP ERROR:", error);
+    return Response.json({ error: "Failed to update group" }, { status: 500 });
+  }
+}

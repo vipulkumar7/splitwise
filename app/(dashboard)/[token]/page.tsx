@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { NotificationType } from "@prisma/client"; // ✅ IMPORTANT
 
 export default async function InvitePage({
     params,
@@ -16,7 +17,7 @@ export default async function InvitePage({
 
     const session = await getServerSession(authOptions);
 
-    // 🔐 Not logged in → redirect to login
+    // 🔐 Not logged in
     if (!session) {
         redirect(`/api/auth/signin?callbackUrl=/${token}`);
     }
@@ -40,7 +41,7 @@ export default async function InvitePage({
         return <div className="p-4">User not found</div>;
     }
 
-    // ✅ Add user to group (safe)
+    // ✅ Add user to group
     await prisma.groupMember.upsert({
         where: {
             userId_groupId: {
@@ -56,13 +57,14 @@ export default async function InvitePage({
     });
 
     // =========================
-    // 🔔 NOTIFICATIONS (FIXED)
+    // 🔔 NOTIFICATIONS
     // =========================
 
-    // 1️⃣ Notify the joined user
+    // 1️⃣ Notify joined user
     await prisma.notification.create({
         data: {
             userId: user.id,
+            type: NotificationType.USER_JOINED,
             message: `You joined "${invite.group.name}" 🎉`,
         },
     });
@@ -72,23 +74,26 @@ export default async function InvitePage({
         where: { groupId: invite.groupId },
     });
 
-    for (const m of members) {
-        if (m.userId !== user.id) {
-            await prisma.notification.create({
-                data: {
-                    userId: m.userId,
-                    message: `${user.name || user.email} joined "${invite.group.name}"`,
-                },
-            });
-        }
+    const notifications = members
+        .filter((m) => m.userId !== user.id)
+        .map((m) => ({
+            userId: m.userId,
+            type: NotificationType.USER_JOINED,
+            message: ` ${user.name || user.email} joined "${invite.group.name}" 👥`,
+        }));
+
+    if (notifications.length > 0) {
+        await prisma.notification.createMany({
+            data: notifications,
+        });
     }
 
-    // ✅ Mark invite accepted
+    // ✅ Mark invite accepted (ONLY ONCE)
     await prisma.groupInvite.update({
         where: { token },
         data: { accepted: true },
     });
 
-    // 🚀 Redirect to group page
+    // 🚀 Redirect
     redirect(`/groups/${invite.groupId}`);
 }

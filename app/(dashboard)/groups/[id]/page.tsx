@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AvatarGroup from "@/components/ui/AvatarGroup";
 import Toast from "@/components/ui/toast";
@@ -9,10 +9,10 @@ import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 import { FaWhatsapp, FaCopy, FaEnvelope, } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 
-
 export default function GroupDetailPage() {
     const params = useParams();
     const { data: session } = useSession();
+    const router = useRouter();
     const groupId = params.id as string;
 
     const [group, setGroup] = useState<any>(null);
@@ -45,7 +45,11 @@ export default function GroupDetailPage() {
     const [balanceLoading, setBalanceLoading] = useState(false);
     const [expenseLoading, setExpenseLoading] = useState(false);
     const [latestExpenseId, setLatestExpenseId] = useState<string | null>(null);
-
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showMembersModal, setShowMembersModal] = useState(false);
+    const [groupName, setGroupName] = useState(group?.name || "");
+    const [editName, setEditName] = useState("");
+    const [showEdit, setShowEdit] = useState(false);
     // =========================
     // SAFE FETCH
     // =========================
@@ -389,6 +393,27 @@ export default function GroupDetailPage() {
 
     const groupedExpenses = groupExpensesByDate(sortedExpenses);
 
+    const updateGroupName = async () => {
+        try {
+            const res = await fetch(`/api/groups/${groupId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name: editName }),
+            });
+
+            if (!res.ok) throw new Error();
+
+            setToast("Group name updated ✅");
+            setShowEditModal(false);
+            setShowEdit(false);
+            router.refresh();
+        } catch {
+            setToast("Failed to update group");
+        }
+    };
+
     // =========================
     // BALANCES
     // =========================
@@ -443,6 +468,24 @@ export default function GroupDetailPage() {
                         ref={menuRef} // ✅ ADD THIS
                         className="absolute right-4 top-12 bg-white shadow rounded w-48 z-50"
                     >
+                        <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={() => {
+                                setShowMenu(false);
+                                setEditName(group?.name || "");
+                                setShowEdit(true);
+                                setShowEditModal(true);
+                            }}>
+                            Edit Group Name
+                        </button>
+                        <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={() => {
+                                setShowMenu(false);
+                                setShowMembersModal(true);
+                            }}>
+                            Members
+                        </button>
                         <button
                             onClick={() => {
                                 setShowMenu(false);
@@ -889,6 +932,85 @@ export default function GroupDetailPage() {
                                 Cancel
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {showEditModal && (
+                <div
+                    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                    onClick={() => setShowEditModal(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white w-[320px] rounded-2xl p-5 shadow-xl"
+                    >
+                        <h2 className="font-semibold text-lg mb-3">Edit Group Name</h2>
+
+                        <input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full border px-3 py-2 rounded-lg"
+                        />
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button onClick={() => setShowEditModal(false)}>
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={updateGroupName}
+                                className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showMembersModal && (
+                <div
+                    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                    onClick={() => setShowMembersModal(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white w-[340px] rounded-2xl p-5 shadow-xl"
+                    >
+                        <h2 className="font-semibold text-lg mb-4">Group Members</h2>
+
+                        <div className="space-y-3">
+                            {members.map((m: any) => (
+                                <div
+                                    key={m.user.id}
+                                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
+                                >
+                                    {/* Avatar */}
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-semibold">
+                                        {m.user.name[0]}
+                                    </div>
+
+                                    {/* Name */}
+                                    <div>
+                                        <p className="font-medium">
+                                            {m.user.id === currentUserId
+                                                ? "You"
+                                                : m.user.name}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {m.user.email}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => setShowMembersModal(false)}
+                            className="mt-4 w-full bg-gray-100 py-2 rounded-lg"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             )}

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { error } from "console";
 
 // =========================
 // GET GROUPS
@@ -13,11 +14,14 @@ export async function GET() {
             return Response.json([], { status: 200 });
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.upsert({
             where: { email: session.user.email },
+            update: {},
+            create: {
+                email: session.user.email,
+                name: session.user.name || "",
+            },
         });
-
-        if (!user) return Response.json([]);
 
         const groups = await prisma.group.findMany({
             where: {

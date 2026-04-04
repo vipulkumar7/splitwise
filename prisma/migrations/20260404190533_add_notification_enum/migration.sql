@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('GENERAL', 'USER_JOINED', 'EXPENSE_ADDED', 'EXPENSE_UPDATED', 'EXPENSE_DELETED', 'GROUP_CREATED');
+
+-- AlterTable
+ALTER TABLE "Notification" ADD COLUMN     "type" "NotificationType" NOT NULL DEFAULT 'GENERAL';
