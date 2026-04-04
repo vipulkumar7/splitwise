@@ -39,6 +39,8 @@ export default function GroupDetailPage() {
     const [showEmailInput, setShowEmailInput] = useState(false);
     const [inviteEmail, setInviteEmail] = useState("");
     const [emailLoading, setEmailLoading] = useState(false);
+    const [balanceLoading, setBalanceLoading] = useState(false);
+    const [expenseLoading, setExpenseLoading] = useState(false);
 
     // =========================
     // SAFE FETCH
@@ -138,6 +140,8 @@ export default function GroupDetailPage() {
 
         try {
             setAddingExpense(true);
+            setBalanceLoading(true);
+            setExpenseLoading(true);
 
             const res = await fetch("/api/expenses", {
                 method: "POST",
@@ -158,7 +162,6 @@ export default function GroupDetailPage() {
                 return;
             }
 
-            // reset
             setShowModal(false);
             setAmount("");
             setDescription("");
@@ -167,10 +170,12 @@ export default function GroupDetailPage() {
             if (data) setGroup(data);
 
             setToast("Expense added ✅");
-        } catch (err) {
-            setToast("Failed to add expense ❌");
+        } catch {
+            setToast("Failed ❌");
         } finally {
             setAddingExpense(false);
+            setBalanceLoading(false);
+            setExpenseLoading(false);
             setTimeout(() => setToast(""), 3000);
         }
     };
@@ -433,22 +438,35 @@ export default function GroupDetailPage() {
             {/* EXPENSES */}
             <h2 className="mt-6 font-semibold">Expenses</h2>
 
-            <div className="space-y-3 mt-2">
-                {group.expenses?.map((exp: any) => (
-                    <div key={exp.id} className="p-3 border rounded">
-                        <p>{exp.description}</p>
-                        <p>₹{exp.amount}</p>
-                        <p className="text-sm text-gray-500">
-                            Paid by: {getName(exp.paidById)}
-                        </p>
-                    </div>
-                ))}
-            </div>
+            {expenseLoading ? (
+                <div className="space-y-3 mt-2 animate-pulse">
+                    <div className="h-16 bg-gray-300 rounded"></div>
+                    <div className="h-16 bg-gray-300 rounded"></div>
+                </div>
+            ) : (
+                <div className="space-y-3 mt-2">
+                    {group.expenses?.map((exp: any) => (
+                        <div key={exp.id} className="p-3 border rounded">
+                            <p>{exp.description}</p>
+                            <p>₹{exp.amount}</p>
+                            <p className="text-sm text-gray-500">
+                                Paid by: {getName(exp.paidById)}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
 
             {/* BALANCES */}
             <h2 className="mt-6 font-semibold">Balances</h2>
 
-            {
+            {balanceLoading ? (
+                <div className="mt-2 space-y-2 animate-pulse">
+                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+                </div>
+            ) : (
                 Object.entries(balances).map(([userId, amount]) => (
                     <div key={userId}>
                         {amount > 0 ? (
@@ -464,7 +482,7 @@ export default function GroupDetailPage() {
                         )}
                     </div>
                 ))
-            }
+            )}
 
             {/* FLOAT BUTTON */}
             <button
