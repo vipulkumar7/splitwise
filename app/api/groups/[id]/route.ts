@@ -7,14 +7,21 @@ import { authOptions } from "@/lib/auth";
 // =========================
 export async function GET(req: Request, context: any) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params; // ✅ FIX
+
+    console.log("GET GROUP ID:", id);
 
     const group = await prisma.group.findUnique({
       where: { id },
       include: {
-        members: { include: { user: true } },
+        members: {
+          include: { user: true },
+        },
         expenses: {
-          include: { splits: true, paidBy: true },
+          include: {
+            splits: true,
+            paidBy: true,
+          },
         },
       },
     });
@@ -26,7 +33,10 @@ export async function GET(req: Request, context: any) {
     return Response.json(group);
   } catch (error) {
     console.error("GET ERROR:", error);
-    return Response.json({ error: "Something went wrong" }, { status: 500 });
+    return Response.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }
 
@@ -35,7 +45,7 @@ export async function GET(req: Request, context: any) {
 // =========================
 export async function PATCH(req: Request, context: any) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params; // ✅ FIX
 
     const session = await getServerSession(authOptions);
 
@@ -85,7 +95,9 @@ export async function PATCH(req: Request, context: any) {
 // =========================
 export async function DELETE(req: Request, context: any) {
   try {
-    const groupId = context.params.id;
+    const { id: groupId } = await context.params; // ✅ FIX
+
+    console.log("DELETE GROUP:", groupId);
 
     await prisma.split.deleteMany({
       where: {
