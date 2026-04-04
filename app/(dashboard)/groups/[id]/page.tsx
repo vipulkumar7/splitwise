@@ -613,7 +613,7 @@ export default function GroupDetailPage() {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
                     onClick={() => setShowModal(false)}>
                     {/* MODAL CARD */}
-                    <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-5 space-y-4 animate-scaleIn">
+                    <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-5 space-y-4 animate-scaleIn" onClick={(e) => e.stopPropagation()}>
 
                         {/* HEADER */}
                         <div className="flex justify-between items-center">
