@@ -2,18 +2,40 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+// =========================
+// GET
+// =========================
+export async function GET(req: Request, context: any) {
   try {
-    const { id: groupId } = await context.params;
+    const id = context.params.id;
 
-    console.log("DELETE GROUP ID:", groupId);
+    const group = await prisma.group.findUnique({
+      where: { id },
+      include: {
+        members: { include: { user: true } },
+        expenses: {
+          include: { splits: true, paidBy: true },
+        },
+      },
+    });
 
-    if (!groupId) {
-      return Response.json({ error: "Missing groupId" }, { status: 400 });
+    if (!group) {
+      return Response.json({ error: "Group not found" }, { status: 404 });
     }
+
+    return Response.json(group);
+  } catch (error) {
+    console.error("GET ERROR:", error);
+    return Response.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
+
+// =========================
+// PATCH
+// =========================
+export async function PATCH(req: Request, context: any) {
+  try {
+    const id = context.params.id;
 
     const session = await getServerSession(authOptions);
 
@@ -21,15 +43,53 @@ export async function DELETE(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // =========================
-    // DELETE ORDER
-    // =========================
+    const { name } = await req.json();
+
+    if (!name || !name.trim()) {
+      return Response.json({ error: "Name required" }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isMember = await prisma.groupMember.findFirst({
+      where: {
+        groupId: id,
+        userId: user.id,
+      },
+    });
+
+    if (!isMember) {
+      return Response.json({ error: "Not allowed" }, { status: 403 });
+    }
+
+    const updatedGroup = await prisma.group.update({
+      where: { id },
+      data: { name },
+    });
+
+    return Response.json(updatedGroup);
+  } catch (error) {
+    console.error("PATCH ERROR:", error);
+    return Response.json({ error: "Failed to update group" }, { status: 500 });
+  }
+}
+
+// =========================
+// DELETE
+// =========================
+export async function DELETE(req: Request, context: any) {
+  try {
+    const groupId = context.params.id;
 
     await prisma.split.deleteMany({
       where: {
-        expense: {
-          groupId,
-        },
+        expense: { groupId },
       },
     });
 
@@ -54,101 +114,8 @@ export async function DELETE(
     console.error("DELETE ERROR:", error);
 
     return Response.json(
-      {
-        error: "Delete failed",
-        details: error.message,
-      },
+      { error: "Delete failed", details: error.message },
       { status: 500 }
     );
-  }
-}
-
-export async function GET(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    // ✅ FIX: await params
-    const { id } = await context.params;
-
-    const group = await prisma.group.findUnique({
-      where: { id },
-      include: {
-        members: {
-          include: {
-            user: true,
-          },
-        },
-        expenses: {
-          include: {
-            splits: true,
-            paidBy: true,
-          },
-        },
-      },
-    });
-
-    if (!group) {
-      return Response.json({ error: "Group not found" }, { status: 404 });
-    }
-
-    return Response.json(group);
-  } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    console.log("GROUP ID:", params.id);
-
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { name } = await req.json();
-
-    if (!name || !name.trim()) {
-      return Response.json({ error: "Name required" }, { status: 400 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return Response.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // ✅ FIXED MODEL NAME
-    const isMember = await prisma.groupMember.findFirst({
-      where: {
-        groupId: params.id,
-        userId: user.id,
-      },
-    });
-
-    if (!isMember) {
-      return Response.json({ error: "Not allowed" }, { status: 403 });
-    }
-
-    const updatedGroup = await prisma.group.update({
-      where: { id: params.id },
-      data: { name },
-    });
-
-    return Response.json(updatedGroup);
-  } catch (error) {
-    console.error("UPDATE GROUP ERROR:", error);
-    return Response.json({ error: "Failed to update group" }, { status: 500 });
   }
 }
