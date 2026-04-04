@@ -1,77 +1,73 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { transporter } from "@/lib/email";
 import { randomBytes } from "crypto";
+import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
     const { email, groupId } = await req.json();
 
-    // ✅ validation
     if (!email || !groupId) {
-      return NextResponse.json(
-        { error: "Email and groupId required" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // ✅ generate token
-    const token = randomBytes(32).toString("hex");
-
-    // ✅ save invite in DB
-    const invite = await prisma.groupInvite.create({
-      data: {
+    // ✅ check if already invited
+    let invite = await prisma.groupInvite.findFirst({
+      where: {
         email,
-        token,
         groupId,
+        accepted: false,
       },
     });
 
-    // ✅ create invite URL
-    const inviteUrl = `${process.env.NEXTAUTH_URL}/${token}`;
+    // ✅ create new token if not exists
+    if (!invite) {
+      const token = randomBytes(32).toString("hex");
 
-    console.log("📨 Invite link:", inviteUrl);
-
-    // ✅ send email
-    try {
-      const info = await transporter.sendMail({
-        from: `"Splitwise" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "You're invited to Splitwise 🎉",
-        html: `
-          <h2>You're invited 🎉</h2>
-          <p>You have been invited to join a group.</p>
-          <p>Click below to join:</p>
-          <a href="${inviteUrl}" style="padding:10px 20px;background:#16a34a;color:white;border-radius:5px;text-decoration:none;">
-            Join Group
-          </a>
-          <p style="margin-top:10px;">Or copy this link:</p>
-          <p>${inviteUrl}</p>
-        `,
-      });
-
-      console.log("✅ EMAIL SENT:", info.messageId);
-
-      return NextResponse.json({
-        success: true,
-        message: "Invite sent",
-      });
-
-    } catch (emailError) {
-      console.error("❌ EMAIL ERROR:", emailError);
-
-      // fallback → still return success (so flow continues)
-      return NextResponse.json({
-        success: true,
-        message: "Invite created (check console for link)",
-        inviteUrl, // useful for dev
+      invite = await prisma.groupInvite.create({
+        data: {
+          email,
+          groupId,
+          token,
+        },
       });
     }
 
-  } catch (error) {
-    console.error("❌ INVITE API ERROR:", error);
+    // ✅ generate invite link
+    const inviteLink = `${process.env.NEXTAUTH_URL}/${invite.token}`;
 
-    return NextResponse.json(
+    // =========================
+    // 📧 EMAIL CONFIG (GMAIL)
+    // =========================
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // App password
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Splitwise" <${process.env.EMAIL_USER} >`,
+      to: email,
+      subject: "You're invited to join a group 💸",
+      html: `
+        <h2>Join my Splitwise group</h2>
+        <p>Click below to join:</p>
+        <a href="${inviteLink}" style="padding:10px 15px;background:#22c55e;color:white;border-radius:5px;text-decoration:none;">
+          Join Group
+        </a>
+        <p>${inviteLink}</p>
+      `,
+    });
+
+    return Response.json({
+      success: true,
+      inviteLink, // ✅ important (reuse everywhere)
+    });
+
+  } catch (error) {
+    console.error("INVITE ERROR:", error);
+    return Response.json(
       { error: "Something went wrong" },
       { status: 500 }
     );

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AvatarGroup from "@/components/ui/AvatarGroup";
 import Toast from "@/components/ui/toast";
+import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 
 export default function GroupDetailPage() {
     const params = useParams();
@@ -12,6 +13,11 @@ export default function GroupDetailPage() {
     const groupId = params.id as string;
 
     const [group, setGroup] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [inviting, setInviting] = useState(false);
+    const [addingExpense, setAddingExpense] = useState(false);
+
     const [email, setEmail] = useState("");
     const [toast, setToast] = useState("");
 
@@ -27,21 +33,25 @@ export default function GroupDetailPage() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [shareLoading, setShareLoading] = useState(false);
+
+    const [showEmailInput, setShowEmailInput] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState("");
+    const [emailLoading, setEmailLoading] = useState(false);
+
     // =========================
-    // SAFE FETCH (CORE FIX)
+    // SAFE FETCH
     // =========================
     const safeFetchGroup = async () => {
         try {
             const res = await fetch(`/api/groups/${groupId}`);
 
-            // ✅ GROUP DELETED
             if (res.status === 404) {
                 setToast("Group was deleted ❌");
-
                 setTimeout(() => {
                     window.location.href = "/groups";
                 }, 1500);
-
                 return null;
             }
 
@@ -57,28 +67,49 @@ export default function GroupDetailPage() {
     // =========================
     useEffect(() => {
         const init = async () => {
+            setLoading(true); // ✅ START
+
             const data = await safeFetchGroup();
             if (data) setGroup(data);
+
+            setLoading(false); // ✅ END
         };
 
         init();
     }, [groupId]);
 
     // =========================
-    // TAB FOCUS DETECTION (NO POLLING)
+    // TAB FOCUS REFRESH
     // =========================
     useEffect(() => {
         const handleFocus = async () => {
+            setLoading(true);
             const data = await safeFetchGroup();
             if (data) setGroup(data);
+            setLoading(false);
         };
 
         window.addEventListener("focus", handleFocus);
+        return () => window.removeEventListener("focus", handleFocus);
+    }, [groupId]);
+
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node)
+            ) {
+                setShowMenu(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
 
         return () => {
-            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [groupId]);
+    }, []);
 
     // =========================
     // SAFE DATA
@@ -102,58 +133,46 @@ export default function GroupDetailPage() {
     const getName = (id: string) =>
         members.find((m: any) => m.user.id === id)?.user.name || "User";
 
-    // =========================
-    // ACTIONS
-    // =========================
-    const inviteUser = async () => {
-        if (!email) return;
-
-        const res = await fetch("/api/groups/invite", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, groupId }),
-        });
-
-        if (res.status === 404) {
-            safeFetchGroup();
-            return;
-        }
-
-        const data = await res.json();
-
-        setToast(data.success ? `Invite sent to ${email}` : "Failed ❌");
-        setEmail("");
-        setTimeout(() => setToast(""), 3000);
-    };
-
     const addExpense = async () => {
-        const res = await fetch("/api/expenses", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                amount: Number(amount),
-                description,
-                groupId,
-                payerId,
-                splitType: "equal",
-            }),
-        });
+        if (!amount || !description || addingExpense) return;
 
-        if (res.status === 404) {
-            safeFetchGroup();
-            return;
+        try {
+            setAddingExpense(true);
+
+            const res = await fetch("/api/expenses", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    amount: Number(amount),
+                    description,
+                    groupId,
+                    payerId,
+                    splitType: "equal",
+                }),
+            });
+
+            if (res.status === 404) {
+                safeFetchGroup();
+                return;
+            }
+
+            // reset
+            setShowModal(false);
+            setAmount("");
+            setDescription("");
+
+            const data = await safeFetchGroup();
+            if (data) setGroup(data);
+
+            setToast("Expense added ✅");
+        } catch (err) {
+            setToast("Failed to add expense ❌");
+        } finally {
+            setAddingExpense(false);
+            setTimeout(() => setToast(""), 3000);
         }
-
-        setShowModal(false);
-        setAmount("");
-        setDescription("");
-
-        const data = await safeFetchGroup();
-        if (data) setGroup(data);
     };
 
     const removeMember = async (userId: string) => {
@@ -168,25 +187,40 @@ export default function GroupDetailPage() {
     };
 
     const deleteGroup = async () => {
-        const res = await fetch(`/api/groups/${groupId}`, {
-            method: "DELETE",
-        });
+        try {
+            const res = await fetch(`/api/groups/${groupId}`, {
+                method: "DELETE",
+            });
 
-        if (res.status === 404) {
-            safeFetchGroup();
-            return;
-        }
+            if (res.status === 404) {
+                setToast("Group already deleted ❌");
+                setTimeout(() => {
+                    window.location.href = "/groups";
+                }, 1500);
+                return;
+            }
 
-        const data = await res.json();
+            const data = await res.json();
 
-        if (data.success) {
-            window.location.href = "/groups";
-        } else {
-            setToast("Delete failed ❌");
+            if (data.success) {
+                setToast("Group deleted successfully 🗑️"); // ✅ toast
+
+                setTimeout(() => {
+                    window.location.href = "/groups"; // ✅ delayed redirect
+                }, 1500);
+            } else {
+                setToast("Delete failed ❌");
+            }
+
+            setTimeout(() => setToast(""), 3000);
+        } catch (error) {
+            console.error(error);
+            setToast("Something went wrong ❌");
+            setTimeout(() => setToast(""), 3000);
         }
     };
 
-    const exitGroup = async () => {
+    const handleExitGroup = async () => {
         if (!currentUserId) return;
 
         try {
@@ -195,34 +229,118 @@ export default function GroupDetailPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: currentUserId, groupId }),
             });
+
             if (res.status === 404) {
                 setToast("Group no longer exists ❌");
+
                 setTimeout(() => {
                     window.location.href = "/groups";
                 }, 1500);
+
                 return;
             }
+
             const data = await res.json();
 
             if (data.success) {
-                window.location.replace("/groups");
+                setShowExitConfirm(false);
+
+                setToast("Exited group successfully 🚪"); // ✅ toast
+
+                setTimeout(() => {
+                    window.location.href = "/groups"; // ✅ delay redirect
+                }, 1500);
             } else {
                 setToast("Failed to exit group ❌");
             }
+
+            setTimeout(() => setToast(""), 3000);
+
         } catch (error) {
-            console.error("Error exiting group:", error);
-            setToast("An error occurred while exiting the group ❌");
+            console.error(error);
+            setToast("Something went wrong ❌");
+            setTimeout(() => setToast(""), 3000);
         }
-
-
-        window.location.href = "/groups";
     };
 
-    const copyInviteLink = () => {
-        const link = `${window.location.origin}/invite/${groupId}`;
-        navigator.clipboard.writeText(link);
-        setToast("Invite link copied 🔗");
-        setTimeout(() => setToast(""), 3000);
+    const getInviteLink = async () => {
+        const res = await fetch("/api/groups/invite-link", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ groupId }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) throw new Error("Failed");
+
+        return data.inviteLink;
+    };
+
+    const handleCopy = async () => {
+        try {
+            setShareLoading(true);
+            const link = await getInviteLink();
+
+            await navigator.clipboard.writeText(link);
+            setToast("Link copied 🔗");
+            setShowShareModal(false);
+        } catch {
+            setToast("Failed ❌");
+        } finally {
+            setShareLoading(false);
+            setTimeout(() => setToast(""), 3000);
+        }
+    };
+
+    const handleWhatsApp = async () => {
+        try {
+            const link = await getInviteLink();
+
+            const message = `Join my group "${group.name}" 💸\n${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+
+            setShowShareModal(false);
+        } catch {
+            setToast("Failed ❌");
+        }
+    };
+
+    const handleEmailInvite = async () => {
+        if (!inviteEmail || emailLoading) return;
+
+        try {
+            setEmailLoading(true);
+
+            const res = await fetch("/api/groups/invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: inviteEmail,
+                    groupId,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setToast(`Invite sent to ${inviteEmail} ✅`);
+                setInviteEmail("");
+                setShowEmailInput(false);
+                setShowShareModal(false);
+            } else {
+                setToast("Failed ❌");
+            }
+        } catch {
+            setToast("Error ❌");
+        } finally {
+            setEmailLoading(false);
+            setTimeout(() => setToast(""), 3000);
+        }
     };
 
     // =========================
@@ -247,40 +365,51 @@ export default function GroupDetailPage() {
     });
 
     // =========================
-    // LOADING / DELETED UI
+    // ✅ LOADING SKELETON
     // =========================
-    if (!group) {
+    if (loading) {
         return (
-            <div className="p-6 text-center">
-                <h2 className="text-lg font-semibold">
-                    Loading...
-                </h2>
+            <div className="max-w-md mx-auto p-4">
+                <GroupDetailSkeleton />
             </div>
         );
     }
 
+    if (!group) {
+        return <div className="p-6 text-center">Group not found</div>;
+    }
+
     // =========================
-    // UI
+    // UI (UNCHANGED)
     // =========================
     return (
         <div className="max-w-md mx-auto p-4 pb-24 relative">
 
-            {/* HEADER */}
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">{group.name}</h1>
 
                 <button onClick={() => setShowMenu(!showMenu)}>⋮</button>
 
                 {showMenu && (
-                    <div className="absolute right-4 top-12 bg-white shadow rounded w-48 z-50">
+                    <div
+                        ref={menuRef} // ✅ ADD THIS
+                        className="absolute right-4 top-12 bg-white shadow rounded w-48 z-50"
+                    >
                         <button
-                            onClick={copyInviteLink}
+                            onClick={() => {
+                                setShowMenu(false);
+                                setShowShareModal(true);
+                            }}
                             className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                         >
-                            Copy Invite Link
+                            Share Invite
                         </button>
 
-                        <button onClick={exitGroup}
+                        <button
+                            onClick={() => {
+                                setShowMenu(false);
+                                setShowExitConfirm(true);
+                            }}
                             className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                         >
                             Exit Group
@@ -300,22 +429,6 @@ export default function GroupDetailPage() {
             </div>
 
             <AvatarGroup members={members} />
-
-            {/* INVITE */}
-            <div className="flex gap-2 mt-4">
-                <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Invite via email"
-                    className="border p-2 flex-1 rounded"
-                />
-                <button
-                    onClick={inviteUser}
-                    className="bg-blue-500 text-white px-4 rounded"
-                >
-                    Invite
-                </button>
-            </div>
 
             {/* EXPENSES */}
             <h2 className="mt-6 font-semibold">Expenses</h2>
@@ -399,9 +512,13 @@ export default function GroupDetailPage() {
                                 <button onClick={() => setShowModal(false)}>Cancel</button>
                                 <button
                                     onClick={addExpense}
-                                    className="bg-green-500 text-white px-4 py-1 rounded"
+                                    disabled={addingExpense}
+                                    className={`px-4 py-1 rounded text-white ${addingExpense
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-green-500 hover:bg-green-600"
+                                        }`}
                                 >
-                                    Add
+                                    {addingExpense ? "Adding..." : "Add"}
                                 </button>
                             </div>
                         </div>
@@ -486,7 +603,100 @@ export default function GroupDetailPage() {
                     </div>
                 )
             }
+
+            {showExitConfirm && (
+                <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-2xl w-[320px] text-center space-y-4 shadow-lg">
+
+                        <h2 className="text-lg font-semibold text-red-600">
+                            Exit Group?
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            You will be removed from this group.
+                        </p>
+
+                        <div className="flex justify-between mt-4">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="px-4 py-1 rounded border"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={handleExitGroup} // ✅ NEW FUNCTION
+                                className="bg-red-500 text-white px-4 py-1 rounded"
+                            >
+                                Exit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showShareModal && (
+                <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+                    <div className="bg-white w-[320px] p-6 rounded-2xl space-y-4 shadow-lg text-center">
+
+                        <h2 className="text-lg font-semibold">Share Invite</h2>
+
+                        <button
+                            onClick={handleCopy}
+                            disabled={shareLoading}
+                            className="w-full border p-2 rounded hover:bg-gray-100"
+                        >
+                            {shareLoading ? "Copying..." : "📋 Copy Link"}
+                        </button>
+
+                        <button
+                            onClick={handleWhatsApp}
+                            className="w-full border p-2 rounded hover:bg-gray-100"
+                        >
+                            📱 WhatsApp
+                        </button>
+
+                        {/* EMAIL OPTION */}
+                        {!showEmailInput ? (
+                            <button
+                                onClick={() => setShowEmailInput(true)}
+                                className="w-full border p-2 rounded hover:bg-gray-100"
+                            >
+                                ✉️ Email
+                            </button>
+                        ) : (
+                            <div className="space-y-2">
+                                <input
+                                    type="email"
+                                    placeholder="Enter email"
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    className="w-full border p-2 rounded"
+                                />
+
+                                <button
+                                    onClick={handleEmailInvite}
+                                    disabled={emailLoading}
+                                    className={`w-full text-white p-2 rounded ${emailLoading
+                                        ? "bg-gray-400"
+                                        : "bg-blue-500 hover:bg-blue-600"
+                                        }`}
+                                >
+                                    {emailLoading ? "Inviting..." : "Send Invite"}
+                                </button>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => setShowShareModal(false)}
+                            className="text-sm text-gray-500 mt-2"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
             {toast && <Toast message={toast} />}
-        </div >
+        </div>
     );
 }
