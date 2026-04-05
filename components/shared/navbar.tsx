@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../ui/NotificationBell";
 import { CgProfile } from "react-icons/cg";
-import { TbLogout } from "react-icons/tb";
+import LogoutButton from "../ui/Logout";
 
 export default function Navbar() {
   const router = useRouter();
@@ -97,15 +97,7 @@ export default function Navbar() {
                   <CgProfile className="text-lg text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">Profile</span>
                 </button>
-
-                {/* LOGOUT */}
-                <button
-                  onClick={() => signOut()}
-                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition"
-                >
-                  <TbLogout className="text-lg text-red-500" />
-                  <span className="text-sm font-medium text-red-500">Logout</span>
-                </button>
+                <LogoutButton />
               </div>
             )}
           </div>
