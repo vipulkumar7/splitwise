@@ -93,7 +93,7 @@ export default function InstallPrompt() {
                         {/* CLOSE */}
                         <button
                             onClick={handleClose}
-                            className="absolute top-2 right-2 text-gray-300 hover:text-white"
+                            className="absolute top-2 right-2 text-gray-300 hover:text-white mb-4"
                         >
                             <FiX size={16} />
                         </button>
