@@ -8,11 +8,9 @@ import { getServerSession } from "next-auth";
 // ======================
 export async function PUT(
     req: Request,
-    context: { params: Promise<{ id: string }> } // ✅ FIX
+    context: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await context.params; // ✅ IMPORTANT
-
-    console.log("UPDATE ID:", id);
+    const { id } = await context.params;
 
     try {
         const body = await req.json();
@@ -43,11 +41,9 @@ export async function PUT(
 // ======================
 export async function DELETE(
     req: Request,
-    context: { params: Promise<{ id: string }> } // ✅ FIXED
+    context: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await context.params; // ✅ MUST await
-
-    console.log("DELETE HIT:", id);
+    const { id } = await context.params;
 
     try {
         // check exists

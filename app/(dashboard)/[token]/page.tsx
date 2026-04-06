@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { NotificationType } from "@prisma/client"; // ✅ IMPORTANT
-
+import { NotificationType } from "@prisma/client";
 export default async function InvitePage({
     params,
 }: {
@@ -75,8 +74,8 @@ export default async function InvitePage({
     });
 
     const notifications = members
-        .filter((m) => m.userId !== user.id)
-        .map((m) => ({
+        .filter((m: any) => m.userId !== user.id)
+        .map((m: any) => ({
             userId: m.userId,
             type: NotificationType.USER_JOINED,
             message: ` ${user.name || user.email} joined "${invite.group.name}" 👥`,

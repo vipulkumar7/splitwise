@@ -16,7 +16,8 @@ export default function ShareModal({
     groupName,
     setToast,
 }: any) {
-    const [loading, setLoading] = useState(false);
+    const [showCopy, setShowCopy] = useState(false);
+    const [showEmailInvite, setShowEmailInvite] = useState(false);
     const [email, setEmail] = useState("");
 
     if (!show) return null;
@@ -42,7 +43,7 @@ export default function ShareModal({
     // =========================
     const handleCopy = async () => {
         try {
-            setLoading(true);
+            setShowCopy(true);
             const link = await getLink();
             await navigator.clipboard.writeText(link);
 
@@ -51,7 +52,7 @@ export default function ShareModal({
         } catch {
             setToast({ message: "Failed ❌", type: "error", id: Date.now() });
         } finally {
-            setLoading(false);
+            setShowCopy(false);
         }
     };
 
@@ -68,10 +69,10 @@ export default function ShareModal({
     };
 
     const handleEmail = async () => {
-        if (!email || loading) return;
+        if (!email || showEmailInvite) return;
 
         try {
-            setLoading(true);
+            setShowEmailInvite(true);
 
             await fetch("/api/groups/invite", {
                 method: "POST",
@@ -87,7 +88,7 @@ export default function ShareModal({
         } catch {
             setToast({ message: "Failed ❌", type: "error", id: Date.now() });
         } finally {
-            setLoading(false);
+            setShowEmailInvite(false);
         }
     };
 
@@ -130,12 +131,12 @@ export default function ShareModal({
                     {/* COPY */}
                     <button
                         onClick={handleCopy}
-                        disabled={loading}
+                        disabled={showCopy}
                         className="flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-gray-100 transition"
                     >
                         <FaCopy className="text-gray-700 text-lg" />
                         <span className="font-medium">
-                            {loading ? "Copying..." : "Copy Link"}
+                            {showCopy ? "Copying..." : "Copy Link"}
                         </span>
                     </button>
 
@@ -151,10 +152,10 @@ export default function ShareModal({
 
                         <button
                             onClick={handleEmail}
-                            disabled={loading}
+                            disabled={showEmailInvite}
                             className="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-xl flex items-center justify-center"
                         >
-                            {loading ? (
+                            {showEmailInvite ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <FaEnvelope />

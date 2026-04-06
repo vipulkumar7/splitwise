@@ -7,9 +7,7 @@ import { authOptions } from "@/lib/auth";
 // =========================
 export async function GET(req: Request, context: any) {
   try {
-    const { id } = await context.params; // ✅ FIX
-
-    console.log("GET GROUP ID:", id);
+    const { id } = await context.params;
 
     const group = await prisma.group.findUnique({
       where: { id },
@@ -45,7 +43,7 @@ export async function GET(req: Request, context: any) {
 // =========================
 export async function PATCH(req: Request, context: any) {
   try {
-    const { id } = await context.params; // ✅ FIX
+    const { id } = await context.params;
 
     const session = await getServerSession(authOptions);
 
@@ -95,9 +93,7 @@ export async function PATCH(req: Request, context: any) {
 // =========================
 export async function DELETE(req: Request, context: any) {
   try {
-    const { id: groupId } = await context.params; // ✅ FIX
-
-    console.log("DELETE GROUP:", groupId);
+    const { id: groupId } = await context.params;
 
     await prisma.split.deleteMany({
       where: {
@@ -134,10 +130,10 @@ export async function DELETE(req: Request, context: any) {
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> } // ✅ FIXED TYPE
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params; // ✅ MUST await
+    const { id } = await context.params;
 
     const body = await req.json();
 
@@ -150,7 +146,7 @@ export async function PUT(
 
     return Response.json(updated);
   } catch (err) {
-    console.error("UPDATE GROUP ERROR:", err); // ✅ add this
+    console.error("UPDATE GROUP ERROR:", err);
     return Response.json({ error: "Failed" }, { status: 500 });
   }
 }
