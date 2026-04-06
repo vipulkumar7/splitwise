@@ -2,6 +2,7 @@ import "./globals.css";
 import AuthProvider from "@/components/providers/session-provider";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import Navbar from "@/components/shared/navbar";
+import BottomNav from "@/components/ui/BottomNav";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Analytics />
+          <BottomNav />
           <InstallPrompt />
         </AuthProvider>
       </body>

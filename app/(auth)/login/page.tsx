@@ -20,7 +20,7 @@ export default function LoginClient() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 px-4">
 
-      <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl text-center">
+      <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl text-center mb-40">
 
         <h1 className="text-3xl font-bold text-white mb-2">
           Splitwise
