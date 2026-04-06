@@ -131,3 +131,26 @@ export async function DELETE(req: Request, context: any) {
     );
   }
 }
+
+export async function PUT(
+  req: Request,
+  context: { params: Promise<{ id: string }> } // ✅ FIXED TYPE
+) {
+  try {
+    const { id } = await context.params; // ✅ MUST await
+
+    const body = await req.json();
+
+    const updated = await prisma.group.update({
+      where: { id },
+      data: {
+        name: body.name,
+      },
+    });
+
+    return Response.json(updated);
+  } catch (err) {
+    console.error("UPDATE GROUP ERROR:", err); // ✅ add this
+    return Response.json({ error: "Failed" }, { status: 500 });
+  }
+}
