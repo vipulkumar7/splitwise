@@ -60,7 +60,7 @@ export default function InstallPrompt() {
                     transition={{ duration: 0.4 }}
                     className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4"
                 >
-                    <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-4 flex items-center gap-4 mb-4">
+                    <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-4 flex items-center gap-4 mb-16">
                         {/* ICON */}
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold">
                             💸
