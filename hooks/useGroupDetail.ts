@@ -1,5 +1,6 @@
 "use client";
 
+import { exit } from "process";
 import { useEffect, useState } from "react";
 
 export const useGroupDetail = (groupId: string) => {
@@ -74,19 +75,27 @@ export const useGroupDetail = (groupId: string) => {
     };
 
     const deleteGroup = async () => {
-        await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
-        setToast("Deleted 🗑️");
-        setTimeout(() => (window.location.href = "/groups"), 1500);
+        const res = await fetch(`/api/groups/${groupId}`, {
+            method: "DELETE",
+        });
+
+        if (!res.ok) throw new Error();
     };
 
     const exitGroup = async (userId: string) => {
-        await fetch("/api/groups/remove-member", {
+        const res = await fetch(`/api/groups/${groupId}/exit`, {
             method: "POST",
-            body: JSON.stringify({ userId, groupId }),
+            headers: {
+                "Content-Type": "application/json", // ✅ MUST
+            },
+            body: JSON.stringify({ userId }),
         });
 
-        setToast("Exited 🚪");
-        setTimeout(() => (window.location.href = "/groups"), 1500);
+        if (!res.ok) {
+            const err = await res.json(); // 👈 debug
+            console.error("EXIT ERROR:", err);
+            throw new Error("Exit failed");
+        }
     };
 
     const deleteExpense = async (id: string) => {

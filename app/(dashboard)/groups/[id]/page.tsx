@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import { useRouter } from "next/navigation";
 import { useGroupDetail } from "@/hooks/useGroupDetail";
-
-
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 import Toast from "@/components/ui/toast";
 import GroupHeader from "@/components/groups/GroupHeader";
@@ -22,6 +20,7 @@ import MembersModal from "@/components/groups/MembersModal";
 export default function GroupDetailPage() {
     const params = useParams();
     const { data: session } = useSession();
+    const router = useRouter();
     const groupId = params.id as string;
 
     const {
@@ -58,7 +57,8 @@ export default function GroupDetailPage() {
     const [showEditGroup, setShowEditGroup] = useState(false);
     const [groupName, setGroupName] = useState(group?.name || "");
     const [updatingGroup, setUpdatingGroup] = useState(false);
-
+    const [deletingGroup, setDeletingGroup] = useState(false);
+    const [exitingGroup, setExitingGroup] = useState(false);
     // =========================
     // LOADING
     // =========================
@@ -107,6 +107,30 @@ export default function GroupDetailPage() {
         setDescription("");
         setAmount("");
         setPayerId("");
+    };
+
+    const handleDelete = async () => {
+        try {
+            setDeletingGroup(true);
+            await deleteGroup();
+            router.push("/groups");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setDeletingGroup(false);
+        }
+    };
+
+    const handleExit = async () => {
+        try {
+            setExitingGroup(true);
+            await exitGroup(currentUserId);
+            router.push("/groups");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setExitingGroup(false);
+        }
     };
 
     if (loading) return <GroupDetailSkeleton />;
@@ -279,19 +303,21 @@ export default function GroupDetailPage() {
                 show={showExit}
                 title="Exit this group?"
                 description="You will lose access to all group expenses."
-                confirmText="Exit"
-                onConfirm={() => exitGroup(currentUserId)}
-                onClose={() => setShowExit(false)}
+                confirmText={exitingGroup ? "Exiting..." : "Exit"}
+                loading={exitingGroup}
+                onConfirm={handleExit}
+                onClose={() => !exitingGroup && setShowExit(false)}
             />
 
             <ConfirmModal
                 show={showDelete}
                 title="Delete this group?"
                 description="This action cannot be undone. All expenses will be lost."
-                confirmText="Delete"
+                confirmText={deletingGroup ? "Deleting..." : "Delete"}
                 type="danger"
-                onConfirm={deleteGroup}
-                onClose={() => setShowDelete(false)}
+                loading={deletingGroup}
+                onConfirm={handleDelete}
+                onClose={() => !deletingGroup && setShowDelete(false)} // 🔒 block close
             />
 
             <ConfirmModal
@@ -370,8 +396,8 @@ export default function GroupDetailPage() {
                                     }
                                 }}
                                 className={`flex-1 py-3 rounded-xl text-white font-semibold transition ${updatingGroup
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-green-500 hover:bg-green-600 active:scale-[0.97]"
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-green-500 hover:bg-green-600 active:scale-[0.97]"
                                     }`}
                             >
                                 {updatingGroup ? (

@@ -10,6 +10,7 @@ export default function ConfirmModal({
     confirmText,
     onConfirm,
     onClose,
+    loading,
     type = "default",
 }: any) {
     if (!show) return null;
@@ -45,17 +46,25 @@ export default function ConfirmModal({
                 {/* BUTTONS */}
                 <div className="flex gap-3 mt-6">
                     <button
-                        onClick={onClose}
-                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
-                    >
-                        Cancel
-                    </button>
-
-                    <button
+                        disabled={loading}
                         onClick={onConfirm}
-                        className="flex-1 py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 transition shadow-md"
+                        className={`flex-1 py-3 rounded-xl text-white font-semibold transition ${type === "danger"
+                                ? loading
+                                    ? "bg-red-400 cursor-not-allowed"
+                                    : "bg-red-500 hover:bg-red-600"
+                                : loading
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-green-500 hover:bg-green-600"
+                            }`}
                     >
-                        {confirmText}
+                        {loading ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                {confirmText}
+                            </div>
+                        ) : (
+                            confirmText
+                        )}
                     </button>
                 </div>
             </motion.div>
