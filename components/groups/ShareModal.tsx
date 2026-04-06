@@ -47,10 +47,10 @@ export default function ShareModal({
             const link = await getLink();
             await navigator.clipboard.writeText(link);
 
-            setToast({ message: "Link copied ✅", type: "success", id: Date.now() });
+            setToast({ message: "Link copied", type: "success", id: Date.now() });
             onClose();
         } catch {
-            setToast({ message: "Failed ❌", type: "error", id: Date.now() });
+            setToast({ message: "Failed to copy link", type: "error", id: Date.now() });
         } finally {
             setShowCopy(false);
         }
@@ -82,11 +82,11 @@ export default function ShareModal({
                 body: JSON.stringify({ email, groupId }),
             });
 
-            setToast({ message: "Invite sent ✅", type: "success", id: Date.now() });
+            setToast({ message: "Invite sent", type: "success", id: Date.now() });
             setEmail("");
             onClose();
         } catch {
-            setToast({ message: "Failed ❌", type: "error", id: Date.now() });
+            setToast({ message: "Failed to invite sent", type: "error", id: Date.now() });
         } finally {
             setShowEmailInvite(false);
         }

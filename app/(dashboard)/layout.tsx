@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import UserMenu from "@/components/auth/UserMenu";
 import { authOptions } from "@/lib/auth";
 
 export default async function DashboardLayout({

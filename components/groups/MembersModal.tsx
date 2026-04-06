@@ -16,12 +16,12 @@ export default function MembersModal({
     if (!show) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white w-[80%] max-w-md rounded-2xl p-5 shadow-xl">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+            <div className="bg-white w-[80%] max-w-md rounded-2xl p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Members</h2>
-                    <button onClick={onClose}>
+                    <button onClick={(onClose)}>
                         <FiX size={20} />
                     </button>
                 </div>
