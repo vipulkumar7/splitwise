@@ -144,12 +144,13 @@ export default function GroupsPage() {
         {/* ADD BUTTON */}
         <button
           onClick={createGroup}
-          disabled={creating}
+          disabled={creating || !name.trim()}
           className={`px-5 py-2 rounded-xl text-white font-semibold transition-all duration-200
-            ${creating
+              ${creating || !name.trim()
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 active:scale-95 shadow-md"
-            }`}
+              : "bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 active:scale-95"
+            }
+          `}
         >
           {creating ? "Creating..." : "+ Add"}
         </button>
