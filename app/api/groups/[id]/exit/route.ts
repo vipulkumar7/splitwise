@@ -1,20 +1,24 @@
 import { prisma } from "@/lib/prisma";
 
-export async function POST(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
+export async function POST(req: Request, context: any) {
+    const { id } = context.params;
+
     try {
-        const { userId } = await req.json();
+        const body = await req.json();
+        const { userId } = body;
 
         if (!userId) {
-            return Response.json({ error: "Missing userId" }, { status: 400 });
+            return Response.json(
+                { error: "User ID required" },
+                { status: 400 }
+            );
         }
 
+        // ✅ Remove user from group
         await prisma.groupMember.deleteMany({
             where: {
-                groupId: params.id,
-                userId,
+                groupId: id,
+                userId: userId,
             },
         });
 
