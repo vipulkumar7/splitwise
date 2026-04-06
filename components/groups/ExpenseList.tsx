@@ -208,13 +208,13 @@ export default function ExpenseList({
 
                                         {/* MENU */}
                                         <div className="
-      relative w-44 rounded-2xl
-      bg-white/80 backdrop-blur-xl
-      border border-white/20
-      shadow-[0_8px_30px_rgb(0,0,0,0.12)]
-      p-1
-      animate-in fade-in zoom-in-95 duration-150
-    ">
+                                            relative w-44 rounded-2xl
+                                            bg-white/80 backdrop-blur-xl
+                                            border border-white/20
+                                            shadow-[0_8px_30px_rgb(0,0,0,0.12)]
+                                            p-1
+                                            animate-in fade-in zoom-in-95 duration-150
+                                        ">
 
                                             {/* EDIT */}
                                             <button

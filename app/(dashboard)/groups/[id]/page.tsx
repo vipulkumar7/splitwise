@@ -178,6 +178,16 @@ export default function GroupDetailPage() {
             {/* EXPENSES */}
             {group?.expenses?.length > 0 ? (
                 <>
+                    {/* BALANCES */}
+                    <h2 className="mt-6 font-semibold text-lg">Balances</h2>
+
+                    <BalanceList
+                        members={members}
+                        expenses={group.expenses || []}
+                        currentUserId={currentUserId}
+                        getName={getName}
+                    />
+
                     <h2 className="mt-6 font-semibold text-lg">Expenses</h2>
 
                     <ExpenseList
@@ -190,16 +200,6 @@ export default function GroupDetailPage() {
                             setShowDeleteConfirm(true);
                         }}
                         loading={refreshing}
-                    />
-
-                    {/* BALANCES */}
-                    <h2 className="mt-6 font-semibold text-lg">Balances</h2>
-
-                    <BalanceList
-                        members={members}
-                        expenses={group.expenses || []}
-                        currentUserId={currentUserId}
-                        getName={getName}
                     />
                 </>
             ) : (
