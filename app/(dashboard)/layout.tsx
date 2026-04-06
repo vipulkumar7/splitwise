@@ -16,12 +16,6 @@ export default async function DashboardLayout({
 
   return (
     <div>
-      {/* Navbar */}
-      {/* <div className="flex justify-between p-4 border-b">
-        <h1 className="font-bold">Splitwise</h1>
-        <UserMenu user={session.user} />
-      </div> */}
-
       {children}
     </div>
   );

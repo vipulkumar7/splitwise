@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiMoreVertical, FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiMoreVertical, FiEdit, FiTrash2, FiEdit2 } from "react-icons/fi";
 
 type Props = {
     expenses: any[];
@@ -176,6 +176,64 @@ export default function ExpenseList({
                                 </div>
 
                                 {/* DROPDOWN (same as yours) */}
+                                {openMenuId === exp.id && (
+                                    <div className="absolute right-0 top-10 z-50">
+
+                                        {/* BACKDROP CLICK AREA (optional premium UX) */}
+                                        <div
+                                            className="fixed inset-0"
+                                            onClick={() => setOpenMenuId(null)}
+                                        />
+
+                                        {/* MENU */}
+                                        <div className="
+      relative w-44 rounded-2xl
+      bg-white/80 backdrop-blur-xl
+      border border-white/20
+      shadow-[0_8px_30px_rgb(0,0,0,0.12)]
+      p-1
+      animate-in fade-in zoom-in-95 duration-150
+    ">
+
+                                            {/* EDIT */}
+                                            <button
+                                                onClick={() => {
+                                                    setOpenMenuId(null);
+                                                    onEdit(exp);
+                                                }}
+                                                className="
+                                                    flex items-center gap-3 w-full
+                                                    px-4 py-2.5 rounded-xl
+                                                    text-sm font-medium text-gray-700
+                                                    hover:bg-gray-100/70
+                                                    transition-all duration-150
+                                                    "
+                                            >
+                                                <span className="text-lg"><FiEdit2 size={16} /></span>
+                                                Edit Expense
+                                            </button>
+
+                                            {/* DELETE */}
+                                            <button
+                                                onClick={() => {
+                                                    setOpenMenuId(null);
+                                                    onDelete(exp.id);
+                                                }}
+                                                className="
+                                                    flex items-center gap-3 w-full
+                                                    px-4 py-2.5 rounded-xl
+                                                    text-sm font-medium text-red-600
+                                                    hover:bg-red-50
+                                                    transition-all duration-150
+                                                    "
+                                            >
+                                                <span className="text-lg"><FiTrash2 size={16} /></span>
+                                                Delete Expense
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

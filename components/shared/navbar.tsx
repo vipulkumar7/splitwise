@@ -42,15 +42,6 @@ export default function Navbar() {
       {/* RIGHT SIDE */}
       <div className="flex items-center gap-5">
 
-        {session?.user && (
-          <Link
-            href="/groups"
-            className="text-gray-600 hover:text-green-600 transition"
-          >
-            Groups
-          </Link>
-        )}
-
         {session?.user && <NotificationBell />}
 
         {/* 🔥 AVATAR + DROPDOWN */}
