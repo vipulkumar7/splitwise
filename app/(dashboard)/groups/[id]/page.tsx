@@ -286,7 +286,7 @@ export default function GroupDetailPage() {
                             );
 
                             if (!res.ok) throw new Error("Update failed");
-                            setToast({ message: "Expense updated successfully", type: "success" });
+                            setToast({ message: "Expense updated successfully", type: "success", id: Date.now() });
                             await fetchGroup(true); // refresh data
 
                         } else {
@@ -352,6 +352,7 @@ export default function GroupDetailPage() {
                 description="This action cannot be undone."
                 confirmText={deleting ? "Deleting..." : "Delete"}
                 type="danger"
+                loading={deleting}
                 onConfirm={handleDeleteExpense}
                 onClose={() => setShowDeleteConfirm(false)}
             />
@@ -439,7 +440,7 @@ export default function GroupDetailPage() {
                     </div>
                 </div>
             )}
-            {toast && <Toast message={toast.message} type={toast.type as "success" | "error"} />}
+            {toast && <Toast key={toast.id} message={toast.message} type={toast.type} />}
         </div>
     );
 }

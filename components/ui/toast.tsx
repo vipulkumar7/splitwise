@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FiCheckCircle, FiXCircle, FiInfo } from "react-icons/fi";
 
-type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info";
 
 export default function Toast({
     message,
@@ -11,7 +11,7 @@ export default function Toast({
     duration = 3000,
 }: {
     message: string;
-    type?: ToastType;
+    type: ToastType;
     duration?: number;
 }) {
     const [visible, setVisible] = useState(false);

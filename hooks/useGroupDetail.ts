@@ -1,5 +1,6 @@
 "use client";
 
+import { ToastType } from "@/components/ui/toast";
 import { m } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { exit } from "process";
@@ -9,7 +10,7 @@ export const useGroupDetail = (groupId: string) => {
     const router = useRouter();
     const [group, setGroup] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [toast, setToast] = useState({ message: "", type: "success" });
+    const [toast, setToast] = useState<{ message: string; type: ToastType; id: number } | null>(null);
     const [addingExpense, setAddingExpense] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -26,7 +27,8 @@ export const useGroupDetail = (groupId: string) => {
             if (res.status === 404) {
                 setToast({
                     message: "Group deleted ❌",
-                    type: "error"
+                    type: "error",
+                    id: Date.now()
                 });
                 return;
             }
@@ -38,7 +40,8 @@ export const useGroupDetail = (groupId: string) => {
             console.error(e);
             setToast({
                 message: "Failed to load group",
-                type: "error"
+                type: "error",
+                id: Date.now()
             });
         } finally {
             setLoading(false);
@@ -76,6 +79,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: res.ok ? "Expense added 🎉" : "Failed to add expense ❌",
                 type: res.ok ? "success" : "error",
+                id: Date.now()
             });
 
             if (!res.ok) throw new Error();
@@ -87,6 +91,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Failed to add expense ❌",
                 type: "error",
+                id: Date.now()
             });
         } finally {
             setAddingExpense(false);
@@ -106,6 +111,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Group deleted successfully",
                 type: "success",
+                id: Date.now()
             });
 
             router.push("/groups");
@@ -115,6 +121,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Failed to delete group",
                 type: "error",
+                id: Date.now()
             });
         }
     };
@@ -140,6 +147,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "You left the group",
                 type: "info",
+                id: Date.now()
             });
 
             router.push("/groups");
@@ -149,6 +157,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Failed to exit group",
                 type: "error",
+                id: Date.now()
             });
         }
     };
@@ -174,6 +183,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Expense deleted 🎉",
                 type: "success",
+                id: Date.now()
             });
 
         } catch (err) {
@@ -181,6 +191,7 @@ export const useGroupDetail = (groupId: string) => {
             setToast({
                 message: "Failed to delete expense ❌",
                 type: "error",
+                id: Date.now()
             });
         }
     };
