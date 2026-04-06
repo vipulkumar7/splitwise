@@ -176,27 +176,52 @@ export default function GroupDetailPage() {
             />
 
             {/* EXPENSES */}
-            <h2 className="mt-6 font-semibold text-lg">Expenses</h2>
-            <ExpenseList
-                expenses={group.expenses}
-                members={group.members}
-                currentUserId={session?.user?.id}
-                onEdit={handleEdit}   // ✅ important
-                onDelete={(id) => {
-                    setDeleteId(id);
-                    setShowDeleteConfirm(true);
-                }}
-                loading={refreshing}
-            />
+            {group?.expenses?.length > 0 ? (
+                <>
+                    <h2 className="mt-6 font-semibold text-lg">Expenses</h2>
 
-            {/* BALANCES */}
-            <h2 className="mt-6 font-semibold text-lg">Balances</h2>
-            <BalanceList
-                members={members}
-                expenses={group.expenses || []}
-                currentUserId={currentUserId}
-                getName={getName}
-            />
+                    <ExpenseList
+                        expenses={group.expenses}
+                        members={group.members}
+                        currentUserId={session?.user?.id}
+                        onEdit={handleEdit}
+                        onDelete={(id) => {
+                            setDeleteId(id);
+                            setShowDeleteConfirm(true);
+                        }}
+                        loading={refreshing}
+                    />
+
+                    {/* BALANCES */}
+                    <h2 className="mt-6 font-semibold text-lg">Balances</h2>
+
+                    <BalanceList
+                        members={members}
+                        expenses={group.expenses || []}
+                        currentUserId={currentUserId}
+                        getName={getName}
+                    />
+                </>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+
+                    {/* ICON */}
+                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                        <span className="text-3xl">💸</span>
+                    </div>
+
+                    {/* TITLE */}
+                    <h3 className="text-lg font-semibold text-gray-700">
+                        No expenses yet
+                    </h3>
+
+                    {/* SUBTEXT */}
+                    <p className="text-sm text-gray-400 mt-1 max-w-xs">
+                        Tap the + button below to add your first expense
+                    </p>
+
+                </div>
+            )}
 
             {/* FLOAT BUTTON */}
             {/* <button
@@ -261,6 +286,7 @@ export default function GroupDetailPage() {
                             );
 
                             if (!res.ok) throw new Error("Update failed");
+                            setToast({ message: "Expense updated successfully", type: "success" });
                             await fetchGroup(true); // refresh data
 
                         } else {
@@ -413,7 +439,7 @@ export default function GroupDetailPage() {
                     </div>
                 </div>
             )}
-            {toast && <Toast message={toast} />}
+            {toast && <Toast message={toast.message} type={toast.type as "success" | "error"} />}
         </div>
     );
 }

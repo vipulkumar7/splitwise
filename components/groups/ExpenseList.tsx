@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiMoreVertical, FiEdit, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { FiMoreVertical, FiEdit, FiTrash2, FiEdit2, FiFileText } from "react-icons/fi";
 
 type Props = {
     expenses: any[];
@@ -66,8 +66,29 @@ export default function ExpenseList({
     // =========================
     if (!sortedExpenses.length) {
         return (
-            <div className="text-center py-10 text-gray-400">
-                No expenses yet
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+
+                {/* ICON CONTAINER */}
+                <div className="
+                    w-20 h-20 rounded-full
+                    bg-white/5 backdrop-blur-xl
+                    border border-white/10
+                    flex items-center justify-center
+                    shadow-[0_8px_30px_rgba(0,0,0,0.3)]
+                    mb-4
+                ">
+                    <span className="text-3xl"><FiFileText size={28} /></span>
+                </div>
+
+                {/* TITLE */}
+                <h3 className="text-lg font-semibold text-gray-300 tracking-tight">
+                    No expenses yet
+                </h3>
+
+                {/* SUBTEXT */}
+                <p className="text-sm text-gray-400 mt-1 max-w-xs">
+                    Start tracking by adding your first expense in this group
+                </p>
             </div>
         );
     }

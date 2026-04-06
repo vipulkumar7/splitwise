@@ -1,12 +1,15 @@
 "use client";
 
+import { m } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { exit } from "process";
 import { useEffect, useState } from "react";
 
 export const useGroupDetail = (groupId: string) => {
+    const router = useRouter();
     const [group, setGroup] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [toast, setToast] = useState("");
+    const [toast, setToast] = useState({ message: "", type: "success" });
     const [addingExpense, setAddingExpense] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -21,7 +24,10 @@ export const useGroupDetail = (groupId: string) => {
             const res = await fetch(`/api/groups/${groupId}`);
 
             if (res.status === 404) {
-                setToast("Group deleted ❌");
+                setToast({
+                    message: "Group deleted ❌",
+                    type: "error"
+                });
                 return;
             }
 
@@ -30,6 +36,10 @@ export const useGroupDetail = (groupId: string) => {
 
         } catch (e) {
             console.error(e);
+            setToast({
+                message: "Failed to load group",
+                type: "error"
+            });
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -63,38 +73,83 @@ export const useGroupDetail = (groupId: string) => {
                 }),
             });
 
+            setToast({
+                message: res.ok ? "Expense added 🎉" : "Failed to add expense ❌",
+                type: res.ok ? "success" : "error",
+            });
+
             if (!res.ok) throw new Error();
 
             await fetchGroup(true); // refresh data
 
         } catch (err) {
             console.error(err);
+            setToast({
+                message: "Failed to add expense ❌",
+                type: "error",
+            });
         } finally {
             setAddingExpense(false);
         }
     };
 
     const deleteGroup = async () => {
-        const res = await fetch(`/api/groups/${groupId}`, {
-            method: "DELETE",
-        });
+        try {
 
-        if (!res.ok) throw new Error();
+            const res = await fetch(`/api/groups/${groupId}`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) throw new Error();
+
+            // ✅ TOAST
+            setToast({
+                message: "Group deleted successfully",
+                type: "success",
+            });
+
+            router.push("/groups");
+        } catch (err) {
+            console.error(err);
+
+            setToast({
+                message: "Failed to delete group",
+                type: "error",
+            });
+        }
     };
 
     const exitGroup = async (userId: string) => {
-        const res = await fetch(`/api/groups/${groupId}/exit`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json", // ✅ MUST
-            },
-            body: JSON.stringify({ userId }),
-        });
+        try {
 
-        if (!res.ok) {
-            const err = await res.json(); // 👈 debug
-            console.error("EXIT ERROR:", err);
-            throw new Error("Exit failed");
+            const res = await fetch(`/api/groups/${groupId}/exit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                console.error("EXIT ERROR:", err);
+                throw new Error("Exit failed");
+            }
+
+            // ✅ TOAST
+            setToast({
+                message: "You left the group",
+                type: "info",
+            });
+
+            router.push("/groups");
+        } catch (err) {
+            console.error(err);
+
+            setToast({
+                message: "Failed to exit group",
+                type: "error",
+            });
         }
     };
 
@@ -116,10 +171,17 @@ export const useGroupDetail = (groupId: string) => {
             await fetchGroup(true);
 
             // 🔥 optional toast
-            setToast("Expense deleted 🗑️");
+            setToast({
+                message: "Expense deleted 🎉",
+                type: "success",
+            });
 
         } catch (err) {
             console.error(err);
+            setToast({
+                message: "Failed to delete expense ❌",
+                type: "error",
+            });
         }
     };
 

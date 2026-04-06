@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GroupSkeleton from "@/components/ui/GroupSkeleton";
 import Toast from "@/components/ui/toast";
-import { FaArrowAltCircleRight } from "react-icons/fa";
 
 export default function GroupsPage() {
   const router = useRouter();
 
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "success" });
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -99,18 +98,27 @@ export default function GroupsPage() {
       });
 
       if (res.ok) {
-        setToast("Group created 🎉");
+        setToast({
+          message: "Group created 🎉",
+          type: "success",
+        });
         setName("");
         fetchGroups();
 
       } else {
-        setToast("Failed to create group ❌");
+        setToast({
+          message: "Failed to create group ❌",
+          type: "error",
+        });
       }
-      setTimeout(() => setToast(""), 3000);
+      setTimeout(() => setToast({ message: "", type: "success" }), 3000);
     } catch (err) {
       console.error(err);
-      setToast("Something went wrong ❌");
-      setTimeout(() => setToast(""), 3000);
+      setToast({
+        message: "Something went wrong ❌",
+        type: "error",
+      });
+      setTimeout(() => setToast({ message: "", type: "success" }), 3000);
     } finally {
       setCreating(false);
     }
@@ -246,7 +254,7 @@ export default function GroupsPage() {
       )
       }
       {/* TOAST */}
-      {toast && <Toast message={toast} />}
+      {toast && <Toast message={toast.message} type={toast.type as "success" | "error"} />}
     </div >
   );
 }

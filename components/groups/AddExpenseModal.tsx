@@ -24,7 +24,7 @@ export default function AddExpenseModal({
 
     useEffect(() => {
         if (members?.length && !payerId) {
-            setPayerId(String(members[0].user.id) || '');
+            setPayerId(String(members[0].user.id));
         }
     }, [members]);
     if (!show) return null;

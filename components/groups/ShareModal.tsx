@@ -1,5 +1,6 @@
 "use client";
 
+import { m } from "framer-motion";
 import { useState } from "react";
 import {
     FaWhatsapp,
@@ -45,10 +46,10 @@ export default function ShareModal({
             const link = await getLink();
             await navigator.clipboard.writeText(link);
 
-            setToast("Link copied 🔗");
+            setToast({ message: "Link copied ✅", type: "success" });
             onClose();
         } catch {
-            setToast("Failed ❌");
+            setToast({ message: "Failed ❌", type: "error" });
         } finally {
             setLoading(false);
         }
@@ -80,11 +81,11 @@ export default function ShareModal({
                 body: JSON.stringify({ email, groupId }),
             });
 
-            setToast("Invite sent ✅");
+            setToast({ message: "Invite sent ✅", type: "success" });
             setEmail("");
             onClose();
         } catch {
-            setToast("Failed ❌");
+            setToast({ message: "Failed ❌", type: "error" });
         } finally {
             setLoading(false);
         }

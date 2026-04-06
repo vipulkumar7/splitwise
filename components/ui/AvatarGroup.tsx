@@ -10,7 +10,7 @@ export default function AvatarGroup({ members }: { members: any[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div className="flex items-center -space-x-3">
+    <div className="flex items-center -space-x-3 mt-2">
       {members.slice(0, 4).map((m: any, i: number) => {
         const user = m?.user;
         const id = user?.id;
