@@ -1,8 +1,7 @@
 "use client";
 
+import AvatarGroup from "@/components/ui/AvatarGroup";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import AvatarGroup from "../ui/AvatarGroup";
-import { group } from "console";
 
 export default function GroupHeader({
     groupName,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GroupSkeleton from "@/components/ui/GroupSkeleton";
-import Toast, { ToastType } from "@/components/ui/toast";
+import Toast, { ToastType } from "@/components/ui/Toast";
 
 export default function GroupsPage() {
   const router = useRouter();

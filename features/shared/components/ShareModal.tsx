@@ -1,6 +1,5 @@
 "use client";
 
-import { m } from "framer-motion";
 import { useState } from "react";
 import {
     FaWhatsapp,

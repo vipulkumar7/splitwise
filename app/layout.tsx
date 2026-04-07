@@ -1,8 +1,8 @@
 import "./globals.css";
-import AuthProvider from "@/components/providers/session-provider";
-import InstallPrompt from "@/components/pwa/InstallPrompt";
-import Navbar from "@/components/shared/navbar";
-import BottomNav from "@/components/ui/BottomNav";
+import AuthProvider from "@/providers/SessionProvider";
+import InstallPrompt from "@/pwa/InstallPrompt";
+import Navbar from "@/components/layout/Navbar";
+import BottomNav from "@/components/layout/BottomNav";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {

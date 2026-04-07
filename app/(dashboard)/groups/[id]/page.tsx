@@ -4,18 +4,20 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useGroupDetail } from "@/hooks/useGroupDetail";
+import { useGroupDetail } from "@/features/groups/hooks/useGroupDetail";
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
-import Toast from "@/components/ui/toast";
-import GroupHeader from "@/components/groups/GroupHeader";
-import GroupMenu from "@/components/groups/GroupMenu";
-import ExpenseList from "@/components/groups/ExpenseList";
-import BalanceList from "@/components/groups/BalanceList";
-import AddExpenseModal from "@/components/groups/AddExpenseModal";
-import ShareModal from "@/components/groups/ShareModal";
-import ConfirmModal from "@/components/groups/ConfirmModal";
-import AddExpenseButton from "@/components/groups/AddExpenseButton";
-import MembersModal from "@/components/groups/MembersModal";
+import Toast from "@/components/ui/Toast";
+import GroupMenu from "@/features/groups/components/GroupMenu";
+import ExpenseList from "@/features/expenses/components/ExpenseList";
+import BalanceList from "@/features/balances/components/BalanceList";
+import AddExpenseModal from "@/features/expenses/components/AddExpenseModal";
+import ShareModal from "@/features/shared/components/ShareModal";
+import ConfirmModal from "@/features/expenses/components/ConfirmModal";
+import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
+import MembersModal from "@/features/groups/components/MembersModal";
+import { useGroupUI } from "@/features/groups/hooks/useGroupUI";
+import { useGroupActions } from "@/features/groups/hooks/useGroupActions";
+import GroupHeader from "@/features/groups/components/GroupHeader";
 
 export default function GroupDetailPage() {
     const params = useParams();
@@ -23,20 +25,16 @@ export default function GroupDetailPage() {
     const router = useRouter();
     const groupId = params.id as string;
 
+    const { group, loading, refreshing, fetchGroup } = useGroupDetail(groupId);
+
+    const { toast, setToast, addingExpense, setAddingExpense } = useGroupUI();
+
     const {
-        group,
-        loading,
-        refreshing,
-        toast,
-        setToast,
         addExpense,
-        addingExpense,
-        setAddingExpense,
         deleteGroup,
         exitGroup,
         deleteExpense,
-        fetchGroup
-    } = useGroupDetail(groupId);
+    } = useGroupActions(groupId, fetchGroup, setToast);
 
     // =========================
     // UI STATES
