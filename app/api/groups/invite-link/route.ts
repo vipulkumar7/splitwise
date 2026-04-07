@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { randomBytes } from "crypto";
 
 export async function POST(req: Request) {

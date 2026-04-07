@@ -1,6 +1,6 @@
 
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth/auth";
+import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 
 // ======================
