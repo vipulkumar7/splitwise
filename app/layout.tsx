@@ -27,7 +27,9 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Analytics />
-          <BottomNav />
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t z-50">
+            <BottomNav />
+          </div>
           <InstallPrompt />
         </AuthProvider>
       </body>

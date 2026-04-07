@@ -10,7 +10,7 @@ export default function AvatarGroup({ members }: { members: any[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div className="flex items-center -space-x-3 mt-2">
+    <div className="flex items-center -space-x-3 mt-1">
       {members.slice(0, 4).map((m: any, i: number) => {
         const user = m?.user;
         const id = user?.id;
@@ -31,9 +31,10 @@ export default function AvatarGroup({ members }: { members: any[] }) {
                 w-9 h-9 rounded-full border-2 border-white 
                 flex items-center justify-center text-sm font-semibold 
                 shadow-sm cursor-pointer transition
-                ${isYou
-                  ? "bg-blue-500 text-white ring-2 ring-blue-200"
-                  : "bg-gray-300 text-gray-700 hover:scale-105"
+                ${
+                  isYou
+                    ? "bg-blue-500 text-white ring-2 ring-blue-200"
+                    : "bg-gray-300 text-gray-700 hover:scale-105"
                 }
               `}
             >

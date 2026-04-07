@@ -10,7 +10,11 @@ export default function GroupsPage() {
 
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: ToastType; id: number } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+    id: number;
+  } | null>(null);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -19,7 +23,7 @@ export default function GroupsPage() {
   const sortedGroups = [...groups].sort(
     (a, b) =>
       new Date(b.updatedAt || b.createdAt).getTime() -
-      new Date(a.updatedAt || a.createdAt).getTime()
+      new Date(a.updatedAt || a.createdAt).getTime(),
   );
 
   // =========================
@@ -101,86 +105,93 @@ export default function GroupsPage() {
         setToast({
           message: "Group created 🎉",
           type: "success",
-          id: Date.now()
+          id: Date.now(),
         });
         setName("");
         fetchGroups();
-
       } else {
         setToast({
           message: "Failed to create group ❌",
           type: "error",
-          id: Date.now()
+          id: Date.now(),
         });
       }
-      setTimeout(() => setToast({ message: "", type: "success", id: Date.now() }), 3000);
+      setTimeout(
+        () => setToast({ message: "", type: "success", id: Date.now() }),
+        3000,
+      );
     } catch (err) {
       console.error(err);
       setToast({
         message: "Something went wrong ❌",
         type: "error",
-        id: Date.now()
+        id: Date.now(),
       });
-      setTimeout(() => setToast({ message: "", type: "success", id: Date.now() }), 3000);
+      setTimeout(
+        () => setToast({ message: "", type: "success", id: Date.now() }),
+        3000,
+      );
     } finally {
       setCreating(false);
     }
-  }
+  };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4">
+      <div className="flex-shrink-0 mt-3">
+        {/* Create Group */}
+        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border mb-4">
+          {/* INPUT */}
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Create a new group..."
+            className="flex-1 px-3 py-2 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+          />
 
-      {/* Create Group */}
-      <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border mb-4">
-
-        {/* INPUT */}
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Create a new group..."
-          className="flex-1 px-3 py-2 bg-transparent outline-none text-gray-700 placeholder-gray-400"
-        />
-
-        {/* ADD BUTTON */}
-        <button
-          onClick={createGroup}
-          disabled={creating || !name.trim()}
-          className={`px-5 py-2 rounded-xl text-white font-semibold transition-all duration-200
-              ${creating || !name.trim()
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 active:scale-95"
-            }
+          {/* ADD BUTTON */}
+          <button
+            onClick={createGroup}
+            disabled={creating || !name.trim()}
+            className={`px-5 py-2 rounded-xl text-white font-semibold transition-all duration-200
+              ${
+                creating || !name.trim()
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 active:scale-95"
+              }
           `}
-        >
-          {creating ? "Creating..." : "+ Add"}
-        </button>
+          >
+            {creating ? "Creating..." : "+ Add"}
+          </button>
+        </div>
       </div>
 
       {/* =========================
           LOADING STATE (SKELETON)
          ========================= */}
-      {loading && <GroupSkeleton />}
+      {loading && (
+        <div className="flex-1 overflow-y-auto px-4">
+          <GroupSkeleton />
+        </div>
+      )}
 
       {/* =========================
           EMPTY STATE
          ========================= */}
       {!loading && groups.length === 0 && (
-        <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border shadow-sm">
-
+        <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border shadow-sm overflow-y-auto">
           {/* Icon */}
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4 shadow-inner">
             <span className="text-2xl">👥</span>
           </div>
 
           {/* Title */}
-          <h2 className="text-xl font-semibold mb-2">
-            No groups yet
-          </h2>
+          <h2 className="text-xl font-semibold mb-2">No groups yet</h2>
 
           {/* Subtitle */}
           <p className="text-gray-500 text-sm max-w-sm">
-            Start by creating a group to split expenses with friends,
-            family, or roommates.
+            Start by creating a group to split expenses with friends, family, or
+            roommates.
           </p>
 
           {/* CTA */}
@@ -197,12 +208,12 @@ export default function GroupsPage() {
           GROUP LIST
          ========================= */}
       {!loading && groups.length > 0 && (
-        <div className="space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto mb-32">
           {groups
             .sort(
               (a, b) =>
                 new Date(b.updatedAt || b.createdAt).getTime() -
-                new Date(a.updatedAt || a.createdAt).getTime()
+                new Date(a.updatedAt || a.createdAt).getTime(),
             )
             .map((group) => (
               <div
@@ -212,7 +223,6 @@ export default function GroupsPage() {
               >
                 {/* LEFT SIDE */}
                 <div className="flex items-center gap-4">
-
                   {/* 🔥 AVATAR STACK */}
                   <div className="flex -space-x-2">
                     {group.members?.slice(0, 3).map((m: any, i: number) => (
@@ -246,19 +256,24 @@ export default function GroupsPage() {
                 {/* RIGHT SIDE */}
                 <div className="text-right">
                   <p className="font-semibold text-green-600">
-                    ₹{group.expenses?.reduce(
+                    ₹
+                    {group.expenses?.reduce(
                       (sum: number, e: any) => sum + e.amount,
-                      0
+                      0,
                     ) || 0}
                   </p>
                 </div>
               </div>
             ))}
         </div>
-      )
-      }
+      )}
       {/* TOAST */}
-      {toast && <Toast message={toast.message} type={toast.type as "success" | "error"} />}
-    </div >
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type as "success" | "error"}
+        />
+      )}
+    </div>
   );
 }

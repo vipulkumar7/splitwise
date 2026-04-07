@@ -6,6 +6,11 @@ body {
   @apply bg-gray-50 text-black;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 @keyframes scaleIn {
   from {
     transform: scale(0.9);
