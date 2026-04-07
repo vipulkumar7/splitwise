@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -39,6 +39,7 @@ export default function GroupDetailPage() {
     // =========================
     // UI STATES
     // =========================
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
     const [showMenu, setShowMenu] = useState(false);
     const [showShare, setShowShare] = useState(false);
     const [showModal, setShowModal] = useState(false);
@@ -144,6 +145,7 @@ export default function GroupDetailPage() {
                 groupName={group.name}
                 onMenuClick={() => setShowMenu(!showMenu)}
                 groupMembers={group.members || []}
+                buttonRef={buttonRef}
             />
 
             {/* MENU */}
@@ -171,6 +173,7 @@ export default function GroupDetailPage() {
                     setShowMenu(false);
                     setShowDelete(true);
                 }}
+                anchorRef={buttonRef}
             />
 
             {/* EXPENSES */}

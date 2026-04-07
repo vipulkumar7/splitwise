@@ -17,12 +17,12 @@ export default function GroupDetailsSkeleton() {
             </div>
 
             {/* BALANCES TITLE */}
-            <div className="mb-3">
+            <div className="mb-4">
                 <div className="h-5 w-24 bg-gray-300 rounded-md" />
             </div>
 
             {/* BALANCE CARDS */}
-            <div className="space-y-3">
+            <div className="space-y-3 mb-6">
 
                 {[1, 2].map((i) => (
                     <div
@@ -46,13 +46,13 @@ export default function GroupDetailsSkeleton() {
             </div>
 
             {/* EXPENSES TITLE */}
-            <div className="mb-4">
+            <div className="mb-3">
                 <div className="h-5 w-24 bg-gray-300 rounded-md mb-2" />
                 <div className="h-3 w-16 bg-gray-200 rounded-md" />
             </div>
 
             {/* EXPENSE CARD LIST */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3">
 
                 {[1, 2].map((i) => (
                     <div

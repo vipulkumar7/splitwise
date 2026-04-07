@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { FiEdit2, FiUsers } from "react-icons/fi";
-import { FiShare2 } from "react-icons/fi";
-import { FiLogOut } from "react-icons/fi";
-import { FiTrash2 } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import { FiEdit2, FiUsers, FiShare2, FiLogOut, FiTrash2 } from "react-icons/fi";
 
 export default function GroupMenu({
     show,
@@ -14,28 +11,55 @@ export default function GroupMenu({
     onExit,
     onDelete,
     onMembers,
+    anchorRef, // ✅ IMPORTANT
 }: any) {
     const ref = useRef<HTMLDivElement>(null);
 
+    const [position, setPosition] = useState({
+        top: 0,
+        left: 0,
+    });
+
+    // ✅ Position calculation
     useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
+        if (anchorRef?.current && show) {
+            const rect = anchorRef.current.getBoundingClientRect();
+
+            setPosition({
+                top: rect.bottom + 8,
+                left: Math.max(rect.right - 220, 10), // prevent overflow
+            });
+        }
+    }, [anchorRef, show]);
+
+    // ✅ Close on outside click
+    useEffect(() => {
+        const handleClick = (e: any) => {
+            if (!ref.current?.contains(e.target)) {
                 onClose();
             }
         };
 
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, []);
+        if (show) {
+            document.addEventListener("mousedown", handleClick);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClick);
+        };
+    }, [show]);
 
     if (!show) return null;
 
     return (
         <div
             ref={ref}
-            className="absolute right-4 top-12 bg-white shadow-xl rounded-xl w-52 z-50 border"
+            className="fixed bg-white shadow-xl rounded-xl w-52 z-50 border"
+            style={{
+                top: position.top,
+                left: position.left,
+            }}
         >
-            {/* EDIT */}
             <button
                 onClick={onEditGroup}
                 className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
@@ -43,7 +67,6 @@ export default function GroupMenu({
                 <FiEdit2 /> Edit Group Name
             </button>
 
-            {/* Memebers */}
             <button
                 onClick={onMembers}
                 className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
@@ -51,7 +74,6 @@ export default function GroupMenu({
                 <FiUsers /> View Members
             </button>
 
-            {/* SHARE */}
             <button
                 onClick={onShare}
                 className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
@@ -59,7 +81,6 @@ export default function GroupMenu({
                 <FiShare2 /> Share Invite
             </button>
 
-            {/* EXIT */}
             <button
                 onClick={onExit}
                 className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
@@ -67,10 +88,9 @@ export default function GroupMenu({
                 <FiLogOut /> Exit Group
             </button>
 
-            {/* DELETE */}
             <button
                 onClick={onDelete}
-                className="flex items-center gap-3 w-full px-4 py-2 text-red-500 hover:bg-gray-100"
+                className="flex items-center gap-3 w-full px-4 py-2 text-red-500 hover:bg-red-50"
             >
                 <FiTrash2 /> Delete Group
             </button>
