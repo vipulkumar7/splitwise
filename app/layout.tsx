@@ -11,7 +11,9 @@ export const metadata = {
   manifest: "/manifest.json",
   themeColor: "#16a34a",
   icons: {
-    apple: "/icons/icon-192.png",
+    icon: "/icons/splitwise-icon.svg",
+    shortcut: "/icons/splitwise-icon.svg",
+    apple: "/icons/splitwise-icon.svg",
   },
 };
 
