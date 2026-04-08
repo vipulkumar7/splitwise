@@ -68,7 +68,7 @@ export default function InstallPrompt() {
 
                         {/* TEXT */}
                         <div className="flex-1">
-                            <p className="text-white font-semibold text-sm">
+                            <p className="text-gray-300 font-semibold text-sm">
                                 Install Splitwise
                             </p>
 

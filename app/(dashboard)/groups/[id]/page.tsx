@@ -10,7 +10,7 @@ import Toast from "@/components/ui/Toast";
 import GroupMenu from "@/features/groups/components/GroupMenu";
 import ExpenseList from "@/features/expenses/components/ExpenseList";
 import BalanceList from "@/features/balances/components/BalanceList";
-import AddExpenseModal from "@/features/expenses/components/AddExpenseModal1";
+import ExpenseFormModal from "@/features/expenses/components/ExpenseFormModal";
 import ShareModal from "@/components/modals/ShareModal";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
@@ -35,9 +35,6 @@ export default function GroupDetailPage() {
     setToast,
   );
 
-  // =========================
-  // UI STATES
-  // =========================
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -71,13 +68,9 @@ export default function GroupDetailPage() {
 
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
-
     setDescription(expense.description);
     setAmount(String(expense.amount));
-
-    // 🔥 FORCE STRING
     setPayerId(String(expense.paidById));
-
     setShowModal(true);
   };
 
@@ -87,7 +80,7 @@ export default function GroupDetailPage() {
     setDeleting(true);
 
     try {
-      await deleteExpense(deleteId); // ✅ already correct
+      await deleteExpense(deleteId);
     } catch (err) {
       console.error(err);
     } finally {
@@ -131,11 +124,96 @@ export default function GroupDetailPage() {
     }
   };
 
+  const handleUpdateGroup = async () => {
+    if (!groupName.trim()) return;
+
+    try {
+      setUpdatingGroup(true);
+
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: groupName }),
+      });
+
+      if (!res.ok) throw new Error("Update failed");
+
+      // ✅ Close edit mode immediately (UX boost)
+      setShowEditGroup(false);
+
+      // ✅ Background refresh
+      fetchGroup(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUpdatingGroup(false);
+    }
+  };
+
+  const createExpense = async (data: any) => {
+    await addExpense({
+      description: data.description,
+      amount: Number(data.amount),
+      payerId: data.payerId,
+    });
+
+    setToast({
+      message: "Expense added successfully",
+      type: "success",
+      id: Date.now(),
+    });
+  };
+
+  const updateExpense = async (data: any) => {
+    const res = await fetch(`/api/expenses/${editingExpense.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description: data.description,
+        amount: Number(data.amount),
+        payerId: data.payerId,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Update failed");
+
+    setToast({
+      message: "Expense updated successfully",
+      type: "success",
+      id: Date.now(),
+    });
+  };
+
+  const handleExpenseSave = async (data: any) => {
+    try {
+      setAddingExpense(true);
+
+      if (editingExpense) {
+        await updateExpense(data);
+      } else {
+        await createExpense(data);
+      }
+
+      // ✅ Close immediately
+      setShowModal(false);
+
+      // ✅ Background refresh
+      fetchGroup(true);
+    } catch (err) {
+      console.error(err);
+
+      setToast({
+        message: "Something went wrong ❌",
+        type: "error",
+        id: Date.now(),
+      });
+    } finally {
+      setAddingExpense(false);
+    }
+  };
+
   if (loading) return <GroupDetailSkeleton />;
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="max-w-md mx-auto p-4 pb-24 relative h-screen flex flex-col">
       {/* HEADER */}
@@ -221,13 +299,6 @@ export default function GroupDetailPage() {
         </div>
       )}
 
-      {/* FLOAT BUTTON */}
-      {/* <button
-                onClick={() => setShowModal(true)}
-                className="fixed bottom-20 right-6 w-14 h-14 bg-green-500 text-white text-3xl rounded-full flex items-center justify-center shadow-lg"
-            >
-                +
-            </button> */}
       <AddExpenseButton
         onClick={() => {
           setEditingExpense(null); // reset edit mode
@@ -245,7 +316,7 @@ export default function GroupDetailPage() {
       {/* MODALS */}
       {/* ========================= */}
 
-      <AddExpenseModal
+      <ExpenseFormModal
         show={showModal}
         onClose={() => {
           setShowModal(false);
@@ -260,50 +331,7 @@ export default function GroupDetailPage() {
         setPayerId={setPayerId}
         loading={addingExpense}
         editingExpense={editingExpense}
-        onAdd={async () => {
-          if (!description || !amount || !payerId) {
-            alert("All fields required");
-            return;
-          }
-
-          try {
-            setAddingExpense(true);
-            if (editingExpense) {
-              // ✅ UPDATE EXPENSE (FIXED PATH)
-              const res = await fetch(`/api/expenses/${editingExpense.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  description,
-                  amount,
-                  payerId,
-                }),
-              });
-
-              if (!res.ok) throw new Error("Update failed");
-              setToast({
-                message: "Expense updated successfully",
-                type: "success",
-                id: Date.now(),
-              });
-              await fetchGroup(true); // refresh data
-            } else {
-              // ✅ ADD EXPENSE (NO CHANGE)
-              await addExpense({
-                description,
-                amount,
-                payerId,
-              });
-            }
-          } catch (err) {
-            console.error(err);
-          } finally {
-            // RESET
-            setAddingExpense(false);
-            resetForm();
-            setShowModal(false);
-          }
-        }}
+        onSave={handleExpenseSave}
       />
 
       <ShareModal
@@ -392,28 +420,7 @@ export default function GroupDetailPage() {
               {/* UPDATE */}
               <button
                 disabled={updatingGroup}
-                onClick={async () => {
-                  if (!groupName.trim()) return;
-
-                  try {
-                    setUpdatingGroup(true); // 🔥 START LOADING
-
-                    const res = await fetch(`/api/groups/${groupId}`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: groupName }),
-                    });
-
-                    if (!res.ok) throw new Error("Update failed");
-
-                    await fetchGroup(true); // refresh UI
-                    setShowEditGroup(false);
-                  } catch (err) {
-                    console.error(err);
-                  } finally {
-                    setUpdatingGroup(false); // 🔥 STOP LOADING
-                  }
-                }}
+                onClick={handleUpdateGroup}
                 className={`flex-1 py-3 rounded-xl text-white font-semibold transition ${
                   updatingGroup
                     ? "bg-gray-400 cursor-not-allowed"
