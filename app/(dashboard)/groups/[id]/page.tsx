@@ -18,6 +18,7 @@ import MembersModal from "@/components/modals/MembersModal";
 import { useGroupUI } from "@/features/groups/hooks/useGroupUI";
 import { useGroupActions } from "@/features/groups/hooks/useGroupActions";
 import GroupHeader from "@/features/groups/components/GroupHeader";
+import { mutate } from "swr";
 
 export default function GroupDetailPage() {
   const params = useParams();
@@ -80,9 +81,34 @@ export default function GroupDetailPage() {
     setDeleting(true);
 
     try {
+      // 🔥 1. INSTANT UI UPDATE (no wait)
+      fetchGroup(
+        (prev: any) => ({
+          ...prev,
+          expenses: prev.expenses.filter((e: any) => e.id !== deleteId),
+        }),
+        false,
+      );
+
+      // 🔥 2. API CALL (background)
       await deleteExpense(deleteId);
+
+      setToast({
+        message: "Expense deleted",
+        type: "success",
+        id: Date.now(),
+      });
     } catch (err) {
       console.error(err);
+
+      // ❗ rollback (optional advanced)
+      fetchGroup(); // re-fetch correct data
+
+      setToast({
+        message: "Failed to delete ❌",
+        type: "error",
+        id: Date.now(),
+      });
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -142,7 +168,7 @@ export default function GroupDetailPage() {
       setShowEditGroup(false);
 
       // ✅ Background refresh
-      fetchGroup(true);
+      fetchGroup();
     } catch (err) {
       console.error(err);
     } finally {
@@ -165,6 +191,25 @@ export default function GroupDetailPage() {
   };
 
   const updateExpense = async (data: any) => {
+    // 🔥 1. Optimistic UI update
+    fetchGroup(
+      (prev: any) => ({
+        ...prev,
+        expenses: prev.expenses.map((e: any) =>
+          e.id === editingExpense.id
+            ? {
+                ...e,
+                description: data.description,
+                amount: Number(data.amount),
+                paidById: data.payerId,
+              }
+            : e,
+        ),
+      }),
+      false,
+    );
+
+    // 🔥 2. API call
     const res = await fetch(`/api/expenses/${editingExpense.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -175,7 +220,10 @@ export default function GroupDetailPage() {
       }),
     });
 
-    if (!res.ok) throw new Error("Update failed");
+    if (!res.ok) {
+      fetchGroup(); // rollback
+      throw new Error("Update failed");
+    }
 
     setToast({
       message: "Expense updated successfully",
@@ -197,8 +245,10 @@ export default function GroupDetailPage() {
       // ✅ Close immediately
       setShowModal(false);
 
+      mutate((key) => typeof key === "string" && key.startsWith("/api/groups"));
+
       // ✅ Background refresh
-      fetchGroup(true);
+      // fetchGroup();
     } catch (err) {
       console.error(err);
 

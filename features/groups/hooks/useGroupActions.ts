@@ -34,7 +34,7 @@ export const useGroupActions = (
 
             if (!res.ok) throw new Error();
 
-            await fetchGroup(true);
+            fetchGroup();
         } catch (err) {
             console.error(err);
         }
@@ -89,7 +89,7 @@ export const useGroupActions = (
 
             if (!res.ok) throw new Error();
 
-            await fetchGroup(true);
+            fetchGroup();
 
             setToast({
                 message: "Expense deleted 🎉",

@@ -1,39 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
+
+// ✅ reusable fetcher
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch");
+  return res.json();
+};
 
 export const useGroupDetail = (groupId: string) => {
-    const [group, setGroup] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    groupId ? `/api/groups/${groupId}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000,
+    },
+  );
 
-    const fetchGroup = async (isRefresh = false) => {
-        try {
-            if (isRefresh) setRefreshing(true);
-            else setLoading(true);
-
-            const res = await fetch(`/api/groups/${groupId}`);
-
-            if (!res.ok) throw new Error("Failed to fetch");
-
-            const data = await res.json();
-            setGroup(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchGroup(true);
-    }, [groupId]);
-
-    return {
-        group,
-        loading,
-        refreshing,
-        fetchGroup,
-    };
+  return {
+    group: data || null,
+    loading: isLoading,
+    refreshing: isValidating,
+    fetchGroup: mutate, // 🔥 replaces your fetchGroup
+    error,
+  };
 };
