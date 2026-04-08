@@ -10,7 +10,7 @@ import Toast from "@/components/ui/Toast";
 import GroupMenu from "@/features/groups/components/GroupMenu";
 import ExpenseList from "@/features/expenses/components/ExpenseList";
 import BalanceList from "@/features/balances/components/BalanceList";
-import AddExpenseModal from "@/features/expenses/components/AddExpenseModal";
+import AddExpenseModal from "@/features/expenses/components/AddExpenseModal1";
 import ShareModal from "@/components/modals/ShareModal";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
