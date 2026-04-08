@@ -35,6 +35,7 @@ export default function ExpenseFormModal({
   onSave,
   loading,
   editingExpense,
+  currentUserId,
 }: any) {
   const {
     register,
@@ -51,33 +52,19 @@ export default function ExpenseFormModal({
     },
   });
 
-  // =========================
-  // PREFILL (EDIT MODE)
-  // =========================
   useEffect(() => {
     if (editingExpense) {
-      // ✅ EDIT MODE → prefill
-      setValue("description", editingExpense.description || "");
-      setValue("amount", String(editingExpense.amount || ""));
-      setValue("payerId", String(editingExpense.paidById || ""));
-    } else {
-      // ✅ ADD MODE → RESET FORM
+      // ✅ EDIT MODE (full reset required)
       reset({
-        description: "",
-        amount: "",
-        payerId: members?.[0]?.user?.id ? String(members[0].user.id) : "",
+        description: editingExpense.description || "",
+        amount: String(editingExpense.amount || ""),
+        payerId: String(editingExpense.paidById || ""),
       });
+    } else if (currentUserId) {
+      // ✅ ADD MODE (only set payer)
+      setValue("payerId", currentUserId);
     }
-  }, [editingExpense, members]);
-
-  // =========================
-  // DEFAULT PAYER (ADD MODE)
-  // =========================
-  useEffect(() => {
-    if (!editingExpense && members?.length) {
-      setValue("payerId", String(members[0].user.id));
-    }
-  }, [members, editingExpense]);
+  }, [editingExpense, currentUserId, reset, setValue]);
 
   // =========================
   // SUBMIT

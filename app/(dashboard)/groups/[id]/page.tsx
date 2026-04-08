@@ -381,6 +381,7 @@ export default function GroupDetailPage() {
         setPayerId={setPayerId}
         loading={addingExpense}
         editingExpense={editingExpense}
+        currentUserId={session?.user?.id}
         onSave={handleExpenseSave}
       />
 
