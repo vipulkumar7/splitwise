@@ -8,7 +8,7 @@ import { useGroupDetail } from "@/features/groups/hooks/useGroupDetail";
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 import Toast from "@/components/ui/Toast";
 import GroupMenu from "@/features/groups/components/GroupMenu";
-import ExpenseList from "@/features/expenses/components/ExpenseList";
+import ExpenseList from "@/features/expenses/components/ExpenseList1";
 import BalanceList from "@/features/balances/components/BalanceList";
 import ExpenseFormModal from "@/features/expenses/components/ExpenseFormModal";
 import ShareModal from "@/components/modals/ShareModal";
@@ -266,7 +266,7 @@ export default function GroupDetailPage() {
           />
 
           <h2 className="my-2 font-semibold text-lg">Expenses</h2>
-          <div className="flex-1 overflow-y-auto mb-20">
+          <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth mb-20">
             <ExpenseList
               expenses={group.expenses}
               members={group.members}

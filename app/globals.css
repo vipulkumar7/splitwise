@@ -6,9 +6,20 @@ body {
   @apply bg-gray-50 text-black;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
+}
+
+/* Hide scrollbar but keep scroll working */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 @keyframes scaleIn {
@@ -55,10 +66,7 @@ html, body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg,
-      #f0f0f0 25%,
-      #e0e0e0 37%,
-      #f0f0f0 63%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
   background-size: 1000px 100%;
   animation: shimmer 1.5s infinite linear;
 }

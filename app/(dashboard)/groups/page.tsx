@@ -179,7 +179,7 @@ export default function GroupsPage() {
           EMPTY STATE
          ========================= */}
       {!loading && groups.length === 0 && (
-        <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border shadow-sm overflow-y-auto">
+        <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border shadow-sm overflow-y-auto no-scrollbar scroll-smooth">
           {/* Icon */}
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4 shadow-inner">
             <span className="text-2xl">👥</span>
@@ -208,7 +208,7 @@ export default function GroupsPage() {
           GROUP LIST
          ========================= */}
       {!loading && groups.length > 0 && (
-        <div className="flex-1 space-y-4 overflow-y-auto mb-32">
+        <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar scroll-smooth mb-32">
           {groups
             .sort(
               (a, b) =>
