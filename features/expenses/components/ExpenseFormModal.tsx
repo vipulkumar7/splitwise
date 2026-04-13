@@ -53,18 +53,24 @@ export default function ExpenseFormModal({
   });
 
   useEffect(() => {
+    if (!show) return;
+
     if (editingExpense) {
-      // ✅ EDIT MODE (full reset required)
+      // ✅ EDIT MODE (full reset)
       reset({
         description: editingExpense.description || "",
         amount: String(editingExpense.amount || ""),
         payerId: String(editingExpense.paidById || ""),
       });
-    } else if (currentUserId) {
-      // ✅ ADD MODE (only set payer)
-      setValue("payerId", currentUserId);
+    } else {
+      // ✅ ADD MODE (FULL RESET — FIX)
+      reset({
+        description: "",
+        amount: "",
+        payerId: currentUserId || "",
+      });
     }
-  }, [editingExpense, currentUserId, reset, setValue]);
+  }, [show, editingExpense, currentUserId, reset]);
 
   // =========================
   // SUBMIT
@@ -84,14 +90,6 @@ export default function ExpenseFormModal({
         onClick={(e) => e.stopPropagation()}
         className="relative w-[360px] rounded-3xl bg-white/95 shadow-2xl p-6 border"
       >
-        {/* {loading && (
-  <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-3xl">
-    <div className="flex items-center gap-2 text-gray-700 font-medium">
-      <span className="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
-      {editingExpense ? "Updating..." : "Adding..."}
-    </div>
-  </div>
-)} */}
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -182,14 +180,6 @@ export default function ExpenseFormModal({
               ? "Update Expense"
               : "Add Expense"}
         </Button>
-        {/* {loading && (
-          <p className="text-sm text-gray-500 text-center mb-2">
-            {editingExpense ? "Updating expense..." : "Adding expense..."}
-          </p>
-        )}
-        <Button loading={loading} onClick={handleSubmit(onSubmit)}>
-          {editingExpense ? "Update Expense" : "Add Expense"}
-        </Button> */}
       </div>
     </div>
   );

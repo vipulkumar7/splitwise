@@ -1,34 +1,41 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+
 import { useGroupDetail } from "@/features/groups/hooks/useGroupDetail";
-import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
-import Toast from "@/components/ui/Toast";
+import { useGroupUI } from "@/features/groups/hooks/useGroupUI";
+import { useGroupActions } from "@/features/groups/hooks/useGroupActions";
+import { useGroupPage } from "@/features/groups/hooks/useGroupPage";
+
+import GroupHeader from "@/features/groups/components/GroupHeader";
 import GroupMenu from "@/features/groups/components/GroupMenu";
 import ExpenseList from "@/features/expenses/components/ExpenseList1";
 import BalanceList from "@/features/balances/components/BalanceList";
 import ExpenseFormModal from "@/features/expenses/components/ExpenseFormModal";
+import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
+
 import ShareModal from "@/components/modals/ShareModal";
 import ConfirmModal from "@/components/modals/ConfirmModal";
-import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
 import MembersModal from "@/components/modals/MembersModal";
-import { useGroupUI } from "@/features/groups/hooks/useGroupUI";
-import { useGroupActions } from "@/features/groups/hooks/useGroupActions";
-import GroupHeader from "@/features/groups/components/GroupHeader";
-import { mutate } from "swr";
+
+import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
+import Toast from "@/components/ui/Toast";
 
 export default function GroupDetailPage() {
   const params = useParams();
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
+
   const groupId = params.id as string;
 
+  // =========================
+  // DATA
+  // =========================
   const { group, loading, refreshing, fetchGroup } = useGroupDetail(groupId);
 
-  const { toast, setToast, addingExpense, setAddingExpense } = useGroupUI();
+  const { toast, setToast } = useGroupUI();
 
   const { addExpense, deleteGroup, exitGroup, deleteExpense } = useGroupActions(
     groupId,
@@ -36,25 +43,44 @@ export default function GroupDetailPage() {
     setToast,
   );
 
+
+  // =========================
+  // UI STATE
+  // =========================
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
   const [showMenu, setShowMenu] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showExit, setShowExit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditGroup, setShowEditGroup] = useState(false);
+
+  const [groupName, setGroupName] = useState("");
+
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [payerId, setPayerId] = useState("");
-  const [editingExpense, setEditingExpense] = useState<any>(null);
-  const [showMembers, setShowMembers] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showEditGroup, setShowEditGroup] = useState(false);
-  const [groupName, setGroupName] = useState(group?.name || "");
+
   const [updatingGroup, setUpdatingGroup] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState(false);
   const [exitingGroup, setExitingGroup] = useState(false);
+
+    const {
+    editingExpense,
+    setEditingExpense,
+    setDeleteId,
+    addingExpense,
+    setAddingExpense,
+    deleting,
+    handleDeleteExpense,
+    updateExpense,
+    createExpense,
+  } = useGroupPage(groupId, fetchGroup, setShowDeleteConfirm, setToast);
+
+
   // =========================
   // LOADING
   // =========================
@@ -67,6 +93,9 @@ export default function GroupDetailPage() {
     (m: any) => m.user.email === session?.user?.email,
   )?.user.id;
 
+  // =========================
+  // HANDLERS
+  // =========================
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
     setDescription(expense.description);
@@ -75,50 +104,6 @@ export default function GroupDetailPage() {
     setShowModal(true);
   };
 
-  const handleDeleteExpense = async () => {
-    if (!deleteId) return;
-
-    setDeleting(true);
-
-    try {
-      // 🔥 1. INSTANT UI UPDATE (no wait)
-      fetchGroup(
-        (prev: any) => ({
-          ...prev,
-          expenses: prev.expenses.filter((e: any) => e.id !== deleteId),
-        }),
-        false,
-      );
-
-      // 🔥 2. API CALL (background)
-      await deleteExpense(deleteId);
-
-      setToast({
-        message: "Expense deleted",
-        type: "success",
-        id: Date.now(),
-      });
-    } catch (err) {
-      console.error(err);
-
-      // ❗ rollback (optional advanced)
-      fetchGroup(); // re-fetch correct data
-
-      setToast({
-        message: "Failed to delete ❌",
-        type: "error",
-        id: Date.now(),
-      });
-    } finally {
-      setDeleting(false);
-      setShowDeleteConfirm(false);
-      setDeleteId(null);
-    }
-  };
-
-  const getName = (id: string) =>
-    members.find((m: any) => m.user.id === id)?.user.name || "User";
-
   const resetForm = () => {
     setEditingExpense(null);
     setDescription("");
@@ -126,13 +111,35 @@ export default function GroupDetailPage() {
     setPayerId("");
   };
 
+  const handleExpenseSave = async (data: any) => {
+    try {
+      setAddingExpense(true);
+
+      if (editingExpense) {
+        await updateExpense(data);
+      } else {
+        await createExpense(data, addExpense);
+      }
+
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+
+      setToast({
+        message: "Something went wrong ❌",
+        type: "error",
+        id: Date.now(),
+      });
+    } finally {
+      setAddingExpense(false);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       setDeletingGroup(true);
       await deleteGroup();
       router.push("/groups");
-    } catch (err) {
-      console.error(err);
     } finally {
       setDeletingGroup(false);
     }
@@ -143,8 +150,6 @@ export default function GroupDetailPage() {
       setExitingGroup(true);
       await exitGroup(currentUserId);
       router.push("/groups");
-    } catch (err) {
-      console.error(err);
     } finally {
       setExitingGroup(false);
     }
@@ -162,115 +167,25 @@ export default function GroupDetailPage() {
         body: JSON.stringify({ name: groupName }),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) throw new Error();
 
-      // ✅ Close edit mode immediately (UX boost)
       setShowEditGroup(false);
-
-      // ✅ Background refresh
-      fetchGroup();
-    } catch (err) {
-      console.error(err);
+      fetchGroup(); // background refresh
     } finally {
       setUpdatingGroup(false);
     }
   };
 
-  const createExpense = async (data: any) => {
-    await addExpense({
-      description: data.description,
-      amount: Number(data.amount),
-      payerId: data.payerId,
-    });
-
-    setToast({
-      message: "Expense added successfully",
-      type: "success",
-      id: Date.now(),
-    });
-  };
-
-  const updateExpense = async (data: any) => {
-    // 🔥 1. Optimistic UI update
-    fetchGroup(
-      (prev: any) => ({
-        ...prev,
-        expenses: prev.expenses.map((e: any) =>
-          e.id === editingExpense.id
-            ? {
-                ...e,
-                description: data.description,
-                amount: Number(data.amount),
-                paidById: data.payerId,
-              }
-            : e,
-        ),
-      }),
-      false,
-    );
-
-    // 🔥 2. API call
-    const res = await fetch(`/api/expenses/${editingExpense.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: data.description,
-        amount: Number(data.amount),
-        payerId: data.payerId,
-      }),
-    });
-
-    if (!res.ok) {
-      fetchGroup(); // rollback
-      throw new Error("Update failed");
-    }
-
-    setToast({
-      message: "Expense updated successfully",
-      type: "success",
-      id: Date.now(),
-    });
-  };
-
-  const handleExpenseSave = async (data: any) => {
-    try {
-      setAddingExpense(true);
-
-      if (editingExpense) {
-        await updateExpense(data);
-      } else {
-        await createExpense(data);
-      }
-
-      // ✅ Close immediately
-      setShowModal(false);
-
-      mutate((key) => typeof key === "string" && key.startsWith("/api/groups"));
-
-      // ✅ Background refresh
-      // fetchGroup();
-    } catch (err) {
-      console.error(err);
-
-      setToast({
-        message: "Something went wrong ❌",
-        type: "error",
-        id: Date.now(),
-      });
-    } finally {
-      setAddingExpense(false);
-    }
-  };
-
-  if (loading) return <GroupDetailSkeleton />;
-
+  // =========================
+  // UI
+  // =========================
   return (
-    <div className="max-w-md mx-auto p-4 pb-24 relative h-screen flex flex-col">
+    <div className="max-w-md mx-auto p-4 pb-24 h-screen flex flex-col overflow-hidden">
       {/* HEADER */}
       <GroupHeader
         groupName={group.name}
         onMenuClick={() => setShowMenu(!showMenu)}
-        groupMembers={group.members || []}
+        groupMembers={group.members}
         buttonRef={buttonRef}
       />
 
@@ -278,49 +193,39 @@ export default function GroupDetailPage() {
       <GroupMenu
         show={showMenu}
         onClose={() => setShowMenu(false)}
+        anchorRef={buttonRef}
         onEditGroup={() => {
           setShowMenu(false);
           setGroupName(group.name);
           setShowEditGroup(true);
         }}
-        onShare={() => {
-          setShowMenu(false);
-          setShowShare(true);
-        }}
-        onMembers={() => {
-          setShowMenu(false);
-          setShowMembers(true);
-        }}
-        onExit={() => {
-          setShowMenu(false);
-          setShowExit(true);
-        }}
-        onDelete={() => {
-          setShowMenu(false);
-          setShowDelete(true);
-        }}
-        anchorRef={buttonRef}
+        onShare={() => setShowShare(true)}
+        onMembers={() => setShowMembers(true)}
+        onExit={() => setShowExit(true)}
+        onDelete={() => setShowDelete(true)}
       />
 
-      {/* EXPENSES */}
-      {group?.expenses?.length > 0 ? (
+      {/* CONTENT */}
+      {group.expenses?.length > 0 ? (
         <>
-          {/* BALANCES */}
           <h2 className="my-2 font-semibold text-lg">Balances</h2>
 
           <BalanceList
             members={members}
-            expenses={group.expenses || []}
+            expenses={group.expenses}
             currentUserId={currentUserId}
-            getName={getName}
+            getName={(id: string) =>
+              members.find((m: any) => m.user.id === id)?.user.name || "User"
+            }
           />
 
           <h2 className="my-2 font-semibold text-lg">Expenses</h2>
-          <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth mb-20">
+
+          <div className="flex-1 overflow-y-auto no-scrollbar mb-20">
             <ExpenseList
               expenses={group.expenses}
-              members={group.members}
-              currentUserId={session?.user?.id}
+              members={members}
+              currentUserId={currentUserId}
               onEdit={handleEdit}
               onDelete={(id) => {
                 setDeleteId(id);
@@ -332,47 +237,33 @@ export default function GroupDetailPage() {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          {/* ICON */}
-          <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-            <span className="text-3xl">💸</span>
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+            💸
           </div>
-
-          {/* TITLE */}
-          <h3 className="text-lg font-semibold text-gray-700">
-            No expenses yet
-          </h3>
-
-          {/* SUBTEXT */}
-          <p className="text-sm text-gray-400 mt-1 max-w-xs">
-            Tap the + button below to add your first expense
+          <h3 className="text-lg font-semibold mt-4">No expenses yet</h3>
+          <p className="text-sm text-gray-400 mt-1">
+            Tap + to add your first expense
           </p>
         </div>
       )}
 
+      {/* FLOAT BUTTON */}
       <AddExpenseButton
         onClick={() => {
-          setEditingExpense(null); // reset edit mode
-          setDescription("");
-          setAmount("");
-
-          // ✅ SET DEFAULT PAYER = CURRENT USER
-          setPayerId(session?.user?.id || "");
-
+          resetForm();
+          setPayerId(currentUserId || "");
           setShowModal(true);
         }}
       />
 
-      {/* ========================= */}
       {/* MODALS */}
-      {/* ========================= */}
-
       <ExpenseFormModal
         show={showModal}
         onClose={() => {
           setShowModal(false);
           resetForm();
         }}
-        members={group.members || []}
+        members={members}
         description={description}
         setDescription={setDescription}
         amount={amount}
@@ -381,7 +272,7 @@ export default function GroupDetailPage() {
         setPayerId={setPayerId}
         loading={addingExpense}
         editingExpense={editingExpense}
-        currentUserId={session?.user?.id}
+        currentUserId={currentUserId}
         onSave={handleExpenseSave}
       />
 
@@ -396,29 +287,8 @@ export default function GroupDetailPage() {
       <MembersModal
         show={showMembers}
         onClose={() => setShowMembers(false)}
-        members={group.members || []}
-        currentUserId={currentUserId || ""}
-      />
-
-      <ConfirmModal
-        show={showExit}
-        title="Exit this group?"
-        description="You will lose access to all group expenses."
-        confirmText={exitingGroup ? "Exiting..." : "Exit"}
-        loading={exitingGroup}
-        onConfirm={handleExit}
-        onClose={() => !exitingGroup && setShowExit(false)}
-      />
-
-      <ConfirmModal
-        show={showDelete}
-        title="Delete this group?"
-        description="This action cannot be undone. All expenses will be lost."
-        confirmText={deletingGroup ? "Deleting..." : "Delete"}
-        type="danger"
-        loading={deletingGroup}
-        onConfirm={handleDelete}
-        onClose={() => !deletingGroup && setShowDelete(false)} // 🔒 block close
+        members={members}
+        currentUserId={currentUserId}
       />
 
       <ConfirmModal
@@ -426,71 +296,67 @@ export default function GroupDetailPage() {
         title="Delete expense?"
         description="This action cannot be undone."
         confirmText={deleting ? "Deleting..." : "Delete"}
-        type="danger"
         loading={deleting}
-        onConfirm={handleDeleteExpense}
+        type="danger"
+        onConfirm={() => handleDeleteExpense(deleteExpense)}
         onClose={() => setShowDeleteConfirm(false)}
       />
 
+      <ConfirmModal
+        show={showDelete}
+        title="Delete group?"
+        description="This cannot be undone."
+        confirmText={deletingGroup ? "Deleting..." : "Delete"}
+        loading={deletingGroup}
+        type="danger"
+        onConfirm={handleDelete}
+        onClose={() => setShowDelete(false)}
+      />
+
+      <ConfirmModal
+        show={showExit}
+        title="Exit group?"
+        description="You will lose access."
+        confirmText={exitingGroup ? "Exiting..." : "Exit"}
+        loading={exitingGroup}
+        onConfirm={handleExit}
+        onClose={() => setShowExit(false)}
+      />
+
+      {/* EDIT GROUP */}
       {showEditGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* BACKDROP */}
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40"
             onClick={() => setShowEditGroup(false)}
           />
+          <div className="relative bg-white p-6 rounded-2xl w-[90%] max-w-md">
+            <input
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="w-full border p-3 rounded-xl"
+            />
 
-          {/* MODAL */}
-          <div className="relative w-[90%] max-w-md rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl border border-white/20 p-6 animate-in fade-in zoom-in-95 duration-200">
-            {/* TITLE */}
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Edit Group Name
-            </h2>
-
-            {/* INPUT */}
-            <div className="mb-5">
-              <input
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                placeholder="Enter group name"
-                autoFocus
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-              />
-            </div>
-
-            {/* ACTIONS */}
-            <div className="flex gap-3">
-              {/* CANCEL */}
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowEditGroup(false)}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 transition active:scale-[0.97]"
+                className="flex-1 border rounded-xl py-2"
               >
                 Cancel
               </button>
 
-              {/* UPDATE */}
               <button
-                disabled={updatingGroup}
                 onClick={handleUpdateGroup}
-                className={`flex-1 py-3 rounded-xl text-white font-semibold transition ${
-                  updatingGroup
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-500 hover:bg-green-600 active:scale-[0.97]"
-                }`}
+                className="flex-1 bg-green-500 text-white rounded-xl py-2"
               >
-                {updatingGroup ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Updating...
-                  </div>
-                ) : (
-                  "Update"
-                )}
+                {updatingGroup ? "Updating..." : "Update"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* TOAST */}
       {toast && (
         <Toast key={toast.id} message={toast.message} type={toast.type} />
       )}
