@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -33,16 +33,10 @@ export default function GroupDetailPage() {
   // =========================
   // DATA
   // =========================
-  const { group, loading, refreshing, fetchGroup } = useGroupDetail(groupId);
-
+  const { group, loading } = useGroupDetail(groupId);
   const { toast, setToast } = useGroupUI();
 
-  const { addExpense, deleteGroup, exitGroup, deleteExpense } = useGroupActions(
-    groupId,
-    fetchGroup,
-    setToast,
-  );
-
+  const { deleteGroup, exitGroup } = useGroupActions(groupId, setToast);
 
   // =========================
   // UI STATE
@@ -60,82 +54,54 @@ export default function GroupDetailPage() {
 
   const [groupName, setGroupName] = useState("");
 
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [payerId, setPayerId] = useState("");
-
   const [updatingGroup, setUpdatingGroup] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState(false);
   const [exitingGroup, setExitingGroup] = useState(false);
 
-    const {
+  // =========================
+  // GROUP PAGE LOGIC (SWR)
+  // =========================
+  const {
     editingExpense,
     setEditingExpense,
     setDeleteId,
-    addingExpense,
-    setAddingExpense,
     deleting,
     handleDeleteExpense,
     updateExpense,
     createExpense,
-  } = useGroupPage(groupId, fetchGroup, setShowDeleteConfirm, setToast);
-
+  } = useGroupPage(groupId, setShowDeleteConfirm, setToast);
 
   // =========================
   // LOADING
   // =========================
+  const members = useMemo(() => group?.members ?? [], [group]);
+
+  const currentUserId = useMemo(() => {
+    return members.find((m: any) => m.user.email === session?.user?.email)?.user
+      .id;
+  }, [members, session]);
+
   if (loading) return <GroupDetailSkeleton />;
   if (!group) return <div className="p-6">Group not found</div>;
-
-  const members = group.members || [];
-
-  const currentUserId = members.find(
-    (m: any) => m.user.email === session?.user?.email,
-  )?.user.id;
 
   // =========================
   // HANDLERS
   // =========================
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
-    setDescription(expense.description);
-    setAmount(String(expense.amount));
-    setPayerId(String(expense.paidById));
     setShowModal(true);
   };
 
-  const resetForm = () => {
-    setEditingExpense(null);
-    setDescription("");
-    setAmount("");
-    setPayerId("");
-  };
-
-  const handleExpenseSave = async (data: any) => {
-    try {
-      setAddingExpense(true);
-
-      if (editingExpense) {
-        await updateExpense(data);
-      } else {
-        await createExpense(data, addExpense);
-      }
-
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-
-      setToast({
-        message: "Something went wrong ❌",
-        type: "error",
-        id: Date.now(),
-      });
-    } finally {
-      setAddingExpense(false);
+  const handleExpenseSave = (data: any) => {
+    if (editingExpense) {
+      updateExpense(data);
+    } else {
+      createExpense(data);
     }
+    setShowModal(false);
   };
 
-  const handleDelete = async () => {
+  const handleDeleteGroup = async () => {
     try {
       setDeletingGroup(true);
       await deleteGroup();
@@ -145,7 +111,7 @@ export default function GroupDetailPage() {
     }
   };
 
-  const handleExit = async () => {
+  const handleExitGroup = async () => {
     try {
       setExitingGroup(true);
       await exitGroup(currentUserId);
@@ -170,7 +136,6 @@ export default function GroupDetailPage() {
       if (!res.ok) throw new Error();
 
       setShowEditGroup(false);
-      fetchGroup(); // background refresh
     } finally {
       setUpdatingGroup(false);
     }
@@ -185,7 +150,7 @@ export default function GroupDetailPage() {
       <GroupHeader
         groupName={group.name}
         onMenuClick={() => setShowMenu(!showMenu)}
-        groupMembers={group.members}
+        groupMembers={members}
         buttonRef={buttonRef}
       />
 
@@ -231,7 +196,7 @@ export default function GroupDetailPage() {
                 setDeleteId(id);
                 setShowDeleteConfirm(true);
               }}
-              loading={refreshing}
+              loading={false}
             />
           </div>
         </>
@@ -250,8 +215,7 @@ export default function GroupDetailPage() {
       {/* FLOAT BUTTON */}
       <AddExpenseButton
         onClick={() => {
-          resetForm();
-          setPayerId(currentUserId || "");
+          setEditingExpense(null);
           setShowModal(true);
         }}
       />
@@ -259,18 +223,9 @@ export default function GroupDetailPage() {
       {/* MODALS */}
       <ExpenseFormModal
         show={showModal}
-        onClose={() => {
-          setShowModal(false);
-          resetForm();
-        }}
+        onClose={() => setShowModal(false)}
         members={members}
-        description={description}
-        setDescription={setDescription}
-        amount={amount}
-        setAmount={setAmount}
-        payerId={payerId}
-        setPayerId={setPayerId}
-        loading={addingExpense}
+        loading={false}
         editingExpense={editingExpense}
         currentUserId={currentUserId}
         onSave={handleExpenseSave}
@@ -298,7 +253,7 @@ export default function GroupDetailPage() {
         confirmText={deleting ? "Deleting..." : "Delete"}
         loading={deleting}
         type="danger"
-        onConfirm={() => handleDeleteExpense(deleteExpense)}
+        onConfirm={handleDeleteExpense}
         onClose={() => setShowDeleteConfirm(false)}
       />
 
@@ -309,7 +264,7 @@ export default function GroupDetailPage() {
         confirmText={deletingGroup ? "Deleting..." : "Delete"}
         loading={deletingGroup}
         type="danger"
-        onConfirm={handleDelete}
+        onConfirm={handleDeleteGroup}
         onClose={() => setShowDelete(false)}
       />
 
@@ -319,7 +274,7 @@ export default function GroupDetailPage() {
         description="You will lose access."
         confirmText={exitingGroup ? "Exiting..." : "Exit"}
         loading={exitingGroup}
-        onConfirm={handleExit}
+        onConfirm={handleExitGroup}
         onClose={() => setShowExit(false)}
       />
 
