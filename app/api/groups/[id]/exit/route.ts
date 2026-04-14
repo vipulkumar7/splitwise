@@ -1,33 +1,47 @@
 import { prisma } from "@/lib/db/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
+import { NextResponse } from "next/server";
 
-export async function POST(req: Request, context: any) {
-    const { id } = context.params;
+export async function POST(
+  _req: Request,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const session = await getServerSession(authOptions);
 
-    try {
-        const body = await req.json();
-        const { userId } = body;
-
-        if (!userId) {
-            return Response.json(
-                { error: "User ID required" },
-                { status: 400 }
-            );
-        }
-
-        // ✅ Remove user from group
-        await prisma.groupMember.deleteMany({
-            where: {
-                groupId: id,
-                userId: userId,
-            },
-        });
-
-        return Response.json({ success: true });
-    } catch (err) {
-        console.error("EXIT GROUP ERROR:", err);
-        return Response.json(
-            { error: "Failed to exit group" },
-            { status: 500 }
-        );
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // ✅ Get user from DB (no need from frontend)
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const result = await prisma.groupMember.deleteMany({
+      where: {
+        groupId: params.id,
+        userId: user.id,
+      },
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "User not in group" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("EXIT GROUP ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Failed to exit group" },
+      { status: 500 },
+    );
+  }
 }
