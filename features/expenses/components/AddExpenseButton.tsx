@@ -4,7 +4,11 @@ import { FiPlus } from "react-icons/fi";
 
 export default function AddExpenseButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="fixed bottom-20 right-0 pr-4 z-[999] group sm:right-6">
+    <button
+      onClick={onClick}
+      className="fixed bottom-20 pr-4 z-[999] group sm:right-6"
+      style={{ right: "16px" }}
+    >
       <div className="relative">
         {/* Glow */}
         <div className="absolute inset-0 rounded-full bg-green-400 blur-xl opacity-30 group-hover:opacity-50 transition" />
