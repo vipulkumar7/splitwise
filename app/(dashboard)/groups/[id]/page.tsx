@@ -202,11 +202,12 @@ export default function GroupDetailPage() {
             members={members}
             expenses={group.expenses}
             currentUserId={currentUserId}
-            getName={(id: string) =>
-              members
-                .find((m: any) => m.user.id === id)
-                ?.user?.name?.toUpperCase() || "User"
-            }
+            getName={(id: string) => {
+              const name = members.find((m: any) => m.user.id === id)?.user
+                ?.name;
+              if (!name) return "User";
+              return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+            }}
           />
 
           <h2 className="my-2 font-semibold text-lg">Expenses</h2>
