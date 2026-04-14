@@ -161,6 +161,7 @@ export default function GroupsPage() {
       <div className="mt-3 flex gap-3 bg-white p-3 rounded-2xl border">
         <input
           value={name}
+          name="create a new group"
           onChange={(e) => setName(e.target.value)}
           placeholder="Create a new group..."
           className="flex-1 outline-none"
@@ -180,12 +181,12 @@ export default function GroupsPage() {
 
       {/* LIST */}
       {!loading && (
-        <div className="flex-1 overflow-y-auto space-y-4 mt-4 mb-32">
+        <div className="flex-1 overflow-y-auto space-y-4 mt-4 mb-36 no-scrollbar">
           {sortedGroups.map((group) => (
             <div
               key={group.id}
               onClick={() => router.push(`/groups/${group.id}`)}
-              className="p-4 rounded-2xl border bg-white flex justify-between"
+              className="p-4 rounded-2xl border bg-white flex justify-between cursor-pointer"
             >
               <div className="flex items-center gap-4">
                 {/* 🔥 AVATAR STACK */}

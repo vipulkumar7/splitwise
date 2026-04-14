@@ -1,6 +1,6 @@
 export default function GroupSkeleton() {
     return (
-        <div className="space-y-3 animate-pulse">
+        <div className="space-y-3 animate-pulse mt-4">
             {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="p-4 border rounded-xl">
                     <div className="flex justify-between items-center">

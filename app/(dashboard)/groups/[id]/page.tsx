@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -11,7 +11,7 @@ import { useGroupPage } from "@/features/groups/hooks/useGroupPage";
 
 import GroupHeader from "@/features/groups/components/GroupHeader";
 import GroupMenu from "@/features/groups/components/GroupMenu";
-import ExpenseList from "@/features/expenses/components/ExpenseList1";
+import ExpenseList from "@/features/expenses/components/ExpenseList";
 import BalanceList from "@/features/balances/components/BalanceList";
 import ExpenseFormModal from "@/features/expenses/components/ExpenseFormModal";
 import AddExpenseButton from "@/features/expenses/components/AddExpenseButton";
@@ -54,12 +54,23 @@ export default function GroupDetailPage() {
 
   const [groupName, setGroupName] = useState("");
 
-  const [updatingGroup, setUpdatingGroup] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState(false);
   const [exitingGroup, setExitingGroup] = useState(false);
+  const [updatingGroup, setUpdatingGroup] = useState(false);
 
   // =========================
-  // GROUP PAGE LOGIC (SWR)
+  // MEMOIZED DATA
+  // =========================
+  const members = useMemo(() => group?.members ?? [], [group]);
+
+  const currentUserId = useMemo(() => {
+    return members.find((m: any) => m.user.email === session?.user?.email)?.user
+      ?.id;
+  }, [members, session]);
+
+  // =========================
+  // GROUP PAGE LOGIC
   // =========================
   const {
     editingExpense,
@@ -69,39 +80,45 @@ export default function GroupDetailPage() {
     handleDeleteExpense,
     updateExpense,
     createExpense,
-  } = useGroupPage(groupId, setShowDeleteConfirm, setToast);
-
-  // =========================
-  // LOADING
-  // =========================
-  const members = useMemo(() => group?.members ?? [], [group]);
-
-  const currentUserId = useMemo(() => {
-    return members.find((m: any) => m.user.email === session?.user?.email)?.user
-      .id;
-  }, [members, session]);
-
-  if (loading) return <GroupDetailSkeleton />;
-  if (!group) return <div className="p-6">Group not found</div>;
+  } = useGroupPage(groupId, members, setShowDeleteConfirm, setToast);
 
   // =========================
   // HANDLERS
   // =========================
-  const handleEdit = (expense: any) => {
-    setEditingExpense(expense);
-    setShowModal(true);
-  };
+  const handleEdit = useCallback(
+    (expense: any) => {
+      setEditingExpense(expense);
+      setShowModal(true);
+    },
+    [setEditingExpense],
+  );
 
-  const handleExpenseSave = (data: any) => {
-    if (editingExpense) {
-      updateExpense(data);
-    } else {
-      createExpense(data);
-    }
-    setShowModal(false);
-  };
+  const handleExpenseSave = useCallback(
+    async (data: any) => {
+      try {
+        setSaving(true);
 
-  const handleDeleteGroup = async () => {
+        let success = false;
+
+        if (editingExpense) {
+          success = await updateExpense(data);
+        } else {
+          success = await createExpense(data);
+        }
+
+        if (success) {
+          setShowModal(false);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [editingExpense, updateExpense, createExpense],
+  );
+
+  const handleDeleteGroup = useCallback(async () => {
     try {
       setDeletingGroup(true);
       await deleteGroup();
@@ -109,9 +126,9 @@ export default function GroupDetailPage() {
     } finally {
       setDeletingGroup(false);
     }
-  };
+  }, [deleteGroup, router]);
 
-  const handleExitGroup = async () => {
+  const handleExitGroup = useCallback(async () => {
     try {
       setExitingGroup(true);
       await exitGroup(currentUserId);
@@ -119,9 +136,9 @@ export default function GroupDetailPage() {
     } finally {
       setExitingGroup(false);
     }
-  };
+  }, [exitGroup, currentUserId, router]);
 
-  const handleUpdateGroup = async () => {
+  const handleUpdateGroup = useCallback(async () => {
     if (!groupName.trim()) return;
 
     try {
@@ -139,7 +156,13 @@ export default function GroupDetailPage() {
     } finally {
       setUpdatingGroup(false);
     }
-  };
+  }, [groupId, groupName]);
+
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) return <GroupDetailSkeleton />;
+  if (!group) return <div className="p-6">Group not found</div>;
 
   // =========================
   // UI
@@ -149,7 +172,7 @@ export default function GroupDetailPage() {
       {/* HEADER */}
       <GroupHeader
         groupName={group.name}
-        onMenuClick={() => setShowMenu(!showMenu)}
+        onMenuClick={() => setShowMenu((p) => !p)}
         groupMembers={members}
         buttonRef={buttonRef}
       />
@@ -180,7 +203,9 @@ export default function GroupDetailPage() {
             expenses={group.expenses}
             currentUserId={currentUserId}
             getName={(id: string) =>
-              members.find((m: any) => m.user.id === id)?.user.name || "User"
+              members
+                .find((m: any) => m.user.id === id)
+                ?.user?.name?.toUpperCase() || "User"
             }
           />
 
@@ -220,17 +245,18 @@ export default function GroupDetailPage() {
         }}
       />
 
-      {/* MODALS */}
+      {/* MODAL */}
       <ExpenseFormModal
         show={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => !saving && setShowModal(false)}
         members={members}
-        loading={false}
+        loading={saving}
         editingExpense={editingExpense}
         currentUserId={currentUserId}
         onSave={handleExpenseSave}
       />
 
+      {/* OTHER MODALS */}
       <ShareModal
         show={showShare}
         onClose={() => setShowShare(false)}

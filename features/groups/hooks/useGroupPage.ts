@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { mutate } from "swr";
+
+type ToastType = {
+  message: string;
+  type: "success" | "error" | "info";
+  id: number;
+};
 
 export const useGroupPage = (
   groupId: string,
+  members: any[],
   setShowDeleteConfirm: (v: boolean) => void,
-  setToast: (t: any) => void,
+  setToast: (t: ToastType) => void,
 ) => {
   const [editingExpense, setEditingExpense] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -16,38 +23,30 @@ export const useGroupPage = (
   const key = `/api/groups/${groupId}`;
 
   // =========================
-  // DELETE
+  // DELETE EXPENSE
   // =========================
-  const handleDeleteExpense = async () => {
+  const handleDeleteExpense = useCallback(async () => {
     if (!deleteId) return;
 
-    setDeleting(true);
-
-    mutate(
-      key,
-      (prev: any) => ({
-        ...prev,
-        expenses: prev.expenses.filter((e: any) => e.id !== deleteId),
-      }),
-      false,
-    );
-
     try {
+      setDeleting(true);
+
       const res = await fetch(`/api/expenses/${deleteId}`, {
         method: "DELETE",
       });
 
       if (!res.ok) throw new Error();
 
-      mutate(key);
+      // ✅ fresh data from backend
+      await mutate(key);
 
       setToast({
         message: "Expense deleted",
         type: "success",
         id: Date.now(),
       });
-    } catch {
-      mutate(key);
+    } catch (err) {
+      console.error(err);
 
       setToast({
         message: "Delete failed",
@@ -59,136 +58,109 @@ export const useGroupPage = (
       setShowDeleteConfirm(false);
       setDeleteId(null);
     }
-  };
+  }, [deleteId, key, setShowDeleteConfirm, setToast]);
 
   // =========================
-  // UPDATE
+  // UPDATE EXPENSE
   // =========================
-  const updateExpense = async (data: any) => {
-    if (!editingExpense) return;
+  const updateExpense = useCallback(
+    async (data: any) => {
+      if (!editingExpense) return false;
 
-    const id = editingExpense.id;
+      try {
+        const res = await fetch(`/api/expenses/${editingExpense.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: data.description,
+            amount: Number(data.amount || 0),
+            payerId: data.payerId,
+          }),
+        });
 
-    mutate(
-      key,
-      (prev: any) => ({
-        ...prev,
-        expenses: prev.expenses.map((e: any) =>
-          e.id === id
-            ? {
-                ...e,
-                description: data.description,
-                amount: Number(data.amount),
-                paidById: data.payerId,
-                paidBy: prev.members.find(
-                  (m: any) => m.user.id === data.payerId,
-                ),
-              }
-            : e,
-        ),
-      }),
-      false,
-    );
+        if (!res.ok) throw new Error();
 
-    try {
-      const res = await fetch(`/api/expenses/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+        // ✅ sync UI with backend
+        await mutate(key);
 
-      if (!res.ok) throw new Error();
+        setToast({
+          message: "Expense updated",
+          type: "success",
+          id: Date.now(),
+        });
 
-      mutate(key);
-    } catch {
-      mutate(key);
+        return true;
+      } catch (err) {
+        console.error(err);
 
-      setToast({
-        message: "Update failed",
-        type: "error",
-        id: Date.now(),
-      });
-    }
-  };
+        setToast({
+          message: "Update failed",
+          type: "error",
+          id: Date.now(),
+        });
+
+        return false;
+      }
+    },
+    [editingExpense, key, setToast],
+  );
 
   // =========================
-  // CREATE
+  // CREATE EXPENSE (NO TEMP)
   // =========================
-  const createExpense = async (data: any) => {
-    const tempId = "temp-" + Date.now();
+  const createExpense = useCallback(
+    async (data: any) => {
+      try {
+        const res = await fetch("/api/expenses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            description: data.description,
+            amount: Number(data.amount || 0),
+            payerId: data.payerId,
+            groupId,
+          }),
+        });
 
-    const tempExpense = {
-      id: tempId,
-      description: data.description,
-      amount: Number(data.amount),
-      paidById: data.payerId,
-      paidBy: {
-        user: {
-          id: data.payerId,
-          name: "You",
-        },
-      },
-      createdAt: new Date().toISOString(),
-    };
+        if (!res.ok) throw new Error();
 
-    // ✅ optimistic
-    mutate(
-      key,
-      (prev: any) => ({
-        ...prev,
-        expenses: [tempExpense, ...prev.expenses],
-      }),
-      false,
-    );
+        // ✅ always use backend as source of truth
+        await mutate(key);
 
-    try {
-      const res = await fetch("/api/expenses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          groupId, // 🔥 FIX
-        }),
-      });
+        setToast({
+          message: "Expense added 🎉",
+          type: "success",
+          id: Date.now(),
+        });
 
-      if (!res.ok) throw new Error();
+        return true;
+      } catch (err) {
+        console.error(err);
 
-      const newExpense = await res.json();
+        setToast({
+          message: "Expense failed",
+          type: "error",
+          id: Date.now(),
+        });
 
-      mutate(
-        key,
-        (prev: any) => ({
-          ...prev,
-          expenses: prev.expenses.map((e: any) =>
-            e.id === tempId ? newExpense : e,
-          ),
-        }),
-        false,
-      );
-
-      mutate(key);
-    } catch (err) {
-      console.error(err);
-
-      // ❌ rollback
-      mutate(
-        key,
-        (prev: any) => ({
-          ...prev,
-          expenses: prev.expenses.filter((e: any) => e.id !== tempId),
-        }),
-        false,
-      );
-    }
-  };
+        return false;
+      }
+    },
+    [groupId, key, setToast],
+  );
 
   return {
+    // state
     editingExpense,
     setEditingExpense,
     setDeleteId,
+
+    // loading
     deleting,
+
+    // actions
     handleDeleteExpense,
     updateExpense,
     createExpense,
