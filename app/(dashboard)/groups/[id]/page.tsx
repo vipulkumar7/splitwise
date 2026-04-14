@@ -168,7 +168,7 @@ export default function GroupDetailPage() {
   // UI
   // =========================
   return (
-    <div className="max-w-md mx-auto p-4 pb-24 h-screen flex flex-col overflow-hidden">
+    <div className="max-w-md mx-auto p-4 h-screen flex flex-col overflow-hidden">
       {/* HEADER */}
       <GroupHeader
         groupName={group.name}
@@ -212,7 +212,7 @@ export default function GroupDetailPage() {
 
           <h2 className="my-2 font-semibold text-lg">Expenses</h2>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar mb-20">
+          <div className="flex-1 overflow-y-auto no-scrollbar mb-28">
             <ExpenseList
               expenses={group.expenses}
               members={members}
