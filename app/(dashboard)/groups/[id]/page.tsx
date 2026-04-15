@@ -175,7 +175,7 @@ export default function GroupDetailPage() {
   // UI
   // =========================
   return (
-    <div className="max-w-md mx-auto p-4 h-screen flex flex-col overflow-hidden">
+    <div className="max-w-md mx-auto p-4 h-screen flex flex-col overflow-hidden bg-zinc-950 text-white">
       {/* HEADER */}
       <GroupHeader
         groupName={group.name}
@@ -323,13 +323,13 @@ export default function GroupDetailPage() {
             <input
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full border p-3 rounded-xl"
+              className="w-full border p-3 rounded-xl text-zinc-700"
             />
 
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowEditGroup(false)}
-                className="flex-1 border rounded-xl py-2"
+                className="flex-1 border rounded-xl py-2 text-black"
               >
                 Cancel
               </button>

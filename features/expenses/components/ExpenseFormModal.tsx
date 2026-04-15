@@ -92,7 +92,7 @@ export default function ExpenseFormModal({
       >
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-white">
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </h2>
 
@@ -113,7 +113,7 @@ export default function ExpenseFormModal({
             placeholder="Description"
             {...register("description")}
             className={
-              errors.description ? "border-red-400 focus:ring-red-400" : ""
+              errors.description ? "border-red-400 focus:ring-red-400" : "text-black"
             }
           />
         </FormField>
@@ -133,7 +133,7 @@ export default function ExpenseFormModal({
             type="number"
             placeholder="Amount"
             {...register("amount")}
-            className={errors.amount ? "border-red-400 focus:ring-red-400" : ""}
+            className={errors.amount ? "border-red-400 focus:ring-red-400" : "text-black"}
           />
         </FormField>
 

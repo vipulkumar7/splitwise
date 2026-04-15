@@ -38,11 +38,11 @@ export default function Navbar() {
   );
 
   return (
-    <div className="flex justify-between items-center px-4 sm:px-6 py-3 border-b bg-white/70 backdrop-blur-md sticky top-0 z-50">
+    <div className="flex justify-between items-center px-4 sm:px-6 py-3 border-b backdrop-blur-md sticky top-0 z-50 bg-zinc-950 text-white">
       {/* LOGO */}
       <button
         onClick={() => router.push("/groups")}
-        className="font-bold text-xl sm:text-2xl text-gray-800"
+        className="font-bold text-xl sm:text-2xl text-white"
       >
         Splitwise
       </button>
@@ -78,7 +78,7 @@ export default function Navbar() {
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border overflow-hidden animate-fadeIn">
                 {/* USER INFO */}
                 <div className="px-4 py-3 border-b">
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium text-black">
                     {user?.name}
                   </p>
                   <p className="text-xs text-gray-500 truncate">

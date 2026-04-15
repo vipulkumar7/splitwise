@@ -130,7 +130,7 @@ export default function ExpenseList({
           <FiFileText size={28} />
         </div>
 
-        <h3 className="text-lg font-semibold text-gray-300">No expenses yet</h3>
+        <h3 className="text-lg font-semibold text-white">No expenses yet</h3>
 
         <p className="text-sm text-gray-400 mt-1">
           Start tracking by adding your first expense
@@ -146,7 +146,7 @@ export default function ExpenseList({
     <div className="space-y-6">
       {Object.entries(groupedExpenses).map(([date, items]) => (
         <div key={date}>
-          <p className="text-xs font-semibold text-gray-400 my-2 uppercase">
+          <p className="text-xs font-semibold text-white my-2 uppercase">
             {date}
           </p>
 
@@ -163,10 +163,10 @@ export default function ExpenseList({
                   <div className="flex items-center gap-3">
                     {/* AVATAR */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
+                      className={`w-10 h-10 rounded-full flex items-center text-black justify-center text-sm font-semibold ${
                         currentUserId === exp.paidById
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-green-700 text-green-700"
+                          : "bg-red-700 text-red-700"
                       }`}
                     >
                       {payerName?.charAt(0)?.toUpperCase()}
@@ -174,7 +174,7 @@ export default function ExpenseList({
 
                     {/* TEXT */}
                     <div>
-                      <p className="font-semibold text-gray-800">
+                      <p className="font-semibold text-zinc-700">
                         {exp.description}
                       </p>
 
@@ -185,7 +185,7 @@ export default function ExpenseList({
                           </span>
                         ) : (
                           <>
-                            <span className="font-medium text-gray-800">
+                            <span className="font-medium text-black">
                               {payerName}
                             </span>{" "}
                             paid ₹{exp.amount}
@@ -217,7 +217,7 @@ export default function ExpenseList({
                           <div className="absolute right-0 mt-2 z-50 bg-white rounded-xl shadow-lg border p-1">
                             <button
                               onClick={() => handleEditClick(exp)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm w-full hover:bg-gray-100"
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-gray-900"
                             >
                               <FiEdit2 size={14} />
                               Edit
@@ -225,7 +225,7 @@ export default function ExpenseList({
 
                             <button
                               onClick={() => handleDeleteClick(exp.id)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-600 hover:bg-red-50"
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-red-500"
                             >
                               <FiTrash2 size={14} />
                               Delete

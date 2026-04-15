@@ -19,7 +19,7 @@ export default function GroupHeader({
     return (
         <div className="m-2">
             <div className="flex justify-between items-center relative">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-white">
                     {groupName}
                 </h1>
 

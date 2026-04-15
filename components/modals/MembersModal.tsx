@@ -57,7 +57,7 @@ export default function MembersModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 text-black">
           <h2 className="text-lg font-semibold">Members</h2>
           <button
             onClick={onClose}
@@ -81,7 +81,7 @@ export default function MembersModal({
             return (
               <div
                 key={user.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition text-black"
               >
                 {/* AVATAR */}
                 <div className="w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center font-semibold shrink-0">
@@ -89,7 +89,7 @@ export default function MembersModal({
                 </div>
 
                 {/* NAME */}
-                <span className="text-sm font-medium truncate">
+                <span className="text-sm font-medium truncate text-black">
                   {isYou ? "You" : name}
                 </span>
               </div>

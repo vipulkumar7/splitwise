@@ -156,21 +156,21 @@ export default function GroupsPage() {
   // UI
   // =========================
   return (
-    <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4">
+    <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4 bg-zinc-950 text-white">
       {/* CREATE */}
-      <div className="mt-3 flex gap-3 bg-white p-3 rounded-2xl border">
+      <div className="mt-3 flex gap-3 bg-zinc-900 p-3 rounded-2xl border border-zinc-700">
         <input
+          name="create group"
           value={name}
-          name="create a new group"
           onChange={(e) => setName(e.target.value)}
           placeholder="Create a new group..."
-          className="flex-1 outline-none"
+          className="flex-1 bg-transparent text-white placeholder:text-white outline-none"
         />
 
         <button
           onClick={createGroup}
           disabled={!name.trim()}
-          className="px-5 py-2 rounded-xl bg-green-500 text-white"
+          className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50"
         >
           + Add
         </button>
@@ -207,7 +207,7 @@ export default function GroupsPage() {
                   )}
                 </div>
                 <div>
-                  <h2 className="font-semibold">{group.name}</h2>
+                  <h2 className="font-semibold text-black">{group.name}</h2>
 
                   {/* 🔥 FIXED */}
                   <p className="text-sm text-gray-500">

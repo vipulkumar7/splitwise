@@ -84,16 +84,16 @@ export default function NotificationBell() {
       {/* Dropdown */}
       {open && (
         <div className="absolute -left-40 mt-2 w-56 bg-white border rounded-xl shadow-lg z-50">
-          <div className="p-3 font-semibold border-b">Notifications</div>
+          <div className="p-3 font-semibold border-b text-black">Notifications</div>
 
           <div className="max-h-80 overflow-y-auto no-scrollbar scroll-smooth">
             {notifications.length === 0 ? (
-              <p className="p-4 text-sm text-gray-500">No notifications</p>
+              <p className="p-4 text-sm text-black">No notifications</p>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`p-3 text-sm border-b cursor-pointer ${
+                  className={`p-3 text-sm border-b cursor-pointer text-black ${
                     !n.read ? "bg-blue-50 font-medium" : ""
                   }`}
                 >

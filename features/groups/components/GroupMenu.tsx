@@ -62,28 +62,28 @@ export default function GroupMenu({
         >
             <button
                 onClick={onEditGroup}
-                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
+                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100 text-black"
             >
                 <FiEdit2 /> Edit Group Name
             </button>
 
             <button
                 onClick={onMembers}
-                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
+                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100 text-black"
             >
                 <FiUsers /> View Members
             </button>
 
             <button
                 onClick={onShare}
-                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
+                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100 text-black"
             >
                 <FiShare2 /> Share Invite
             </button>
 
             <button
                 onClick={onExit}
-                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100"
+                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-100 text-black"
             >
                 <FiLogOut /> Exit Group
             </button>

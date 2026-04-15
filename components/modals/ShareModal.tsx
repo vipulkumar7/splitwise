@@ -130,7 +130,7 @@ export default function ShareModal({
       >
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Share Group</h2>
+          <h2 className="text-lg font-semibold text-black">Share Group</h2>
 
           <button
             onClick={onClose}
@@ -149,7 +149,7 @@ export default function ShareModal({
             className="flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-green-50 active:scale-95 transition"
           >
             <FaWhatsapp className="text-green-500 text-xl" />
-            <span className="font-medium">Share on WhatsApp</span>
+            <span className="font-medium text-black">Share on WhatsApp</span>
           </button>
 
           {/* COPY */}
@@ -159,7 +159,7 @@ export default function ShareModal({
             className="flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-gray-100 active:scale-95 transition disabled:opacity-60"
           >
             <FaCopy className="text-gray-700 text-lg" />
-            <span className="font-medium">
+            <span className="font-medium text-black">
               {loadingCopy ? "Copying..." : "Copy Link"}
             </span>
           </button>

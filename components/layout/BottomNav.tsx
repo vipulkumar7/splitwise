@@ -38,8 +38,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 left-0 w-full z-50">
       <div className="bg-white/80 backdrop-blur-xl border-t shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
-        {" "}
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-16 bg-zinc-950 text-white">
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.path);
 
