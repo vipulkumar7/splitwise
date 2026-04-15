@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, RefObject } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -23,6 +23,7 @@ import MembersModal from "@/components/modals/MembersModal";
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 import Toast from "@/components/ui/Toast";
 import { mutate } from "swr";
+import Button from "@/components/ui/form/Button";
 
 export default function GroupDetailPage() {
   const params = useParams();
@@ -181,7 +182,7 @@ export default function GroupDetailPage() {
         groupName={group.name}
         onMenuClick={() => setShowMenu((p) => !p)}
         groupMembers={members}
-        buttonRef={buttonRef}
+        buttonRef={buttonRef as RefObject<HTMLButtonElement>}
       />
 
       {/* MENU */}
@@ -321,25 +322,28 @@ export default function GroupDetailPage() {
           />
           <div className="relative bg-white p-6 rounded-2xl w-[90%] max-w-md">
             <input
+              name={groupName}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full border p-3 rounded-xl text-zinc-700"
+              className="w-full border p-3 rounded-xl text-black"
             />
 
             <div className="flex gap-2 mt-4">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setShowEditGroup(false)}
-                className="flex-1 border rounded-xl py-2 text-black"
               >
                 Cancel
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="primary"
+                loading={updatingGroup}
+                disabled={updatingGroup}
                 onClick={handleUpdateGroup}
-                className="flex-1 bg-green-500 text-white rounded-xl py-2"
               >
                 {updatingGroup ? "Updating..." : "Update"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

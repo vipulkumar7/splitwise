@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FaWhatsapp, FaCopy, FaEnvelope } from "react-icons/fa";
+import { FaWhatsapp, FaCopy } from "react-icons/fa";
+import { SiGmail } from "react-icons/si";
 import { IoClose } from "react-icons/io5";
 
 interface IShareModalProps {
@@ -167,22 +168,23 @@ export default function ShareModal({
           {/* EMAIL */}
           <div className="flex gap-2 mt-2">
             <input
+              name={email}
               type="email"
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
             />
 
             <button
               onClick={handleEmail}
               disabled={loadingEmail}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-xl flex items-center justify-center disabled:opacity-60"
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 rounded-xl flex items-center justify-center disabled:opacity-60"
             >
               {loadingEmail ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <FaEnvelope />
+                <SiGmail />
               )}
             </button>
           </div>

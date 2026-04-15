@@ -113,7 +113,9 @@ export default function ExpenseFormModal({
             placeholder="Description"
             {...register("description")}
             className={
-              errors.description ? "border-red-400 focus:ring-red-400" : "text-black"
+              errors.description
+                ? "border-red-400 focus:ring-red-400"
+                : "text-black"
             }
           />
         </FormField>
@@ -133,7 +135,9 @@ export default function ExpenseFormModal({
             type="number"
             placeholder="Amount"
             {...register("amount")}
-            className={errors.amount ? "border-red-400 focus:ring-red-400" : "text-black"}
+            className={
+              errors.amount ? "border-red-400 focus:ring-red-400" : "text-black"
+            }
           />
         </FormField>
 
@@ -171,7 +175,11 @@ export default function ExpenseFormModal({
         {/* ========================= */}
         {/* BUTTON */}
         {/* ========================= */}
-        <Button loading={loading} onClick={handleSubmit(onSubmit)}>
+        <Button
+          loading={loading}
+          variant="primary"
+          onClick={handleSubmit(onSubmit)}
+        >
           {loading
             ? editingExpense
               ? "Updating..."

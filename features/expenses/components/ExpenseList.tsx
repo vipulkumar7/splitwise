@@ -163,10 +163,10 @@ export default function ExpenseList({
                   <div className="flex items-center gap-3">
                     {/* AVATAR */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center text-black justify-center text-sm font-semibold ${
-                        currentUserId === exp.paidById
-                          ? "bg-green-700 text-green-700"
-                          : "bg-red-700 text-red-700"
+                      className={`w-10 h-10 rounded-full flex items-center text-white justify-center text-sm font-semibold ${
+                        String(currentUserId) === String(exp.paidById)
+                          ? "bg-green-500 shadow-md"
+                          : "bg-red-500 shadow-md"
                       }`}
                     >
                       {payerName?.charAt(0)?.toUpperCase()}
@@ -174,7 +174,7 @@ export default function ExpenseList({
 
                     {/* TEXT */}
                     <div>
-                      <p className="font-semibold text-zinc-700">
+                      <p className="font-semibold text-black">
                         {exp.description}
                       </p>
 
