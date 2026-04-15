@@ -29,7 +29,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Analytics />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t z-50">
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-zinc-950 border-t z-50">
             <BottomNav />
           </div>
           <InstallPrompt />
