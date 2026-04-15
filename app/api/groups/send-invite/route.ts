@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     // ✅ generate invite link
-    const inviteLink = `${process.env.NEXTAUTH_URL}/${invite.token}`;
+    const inviteLink = `${process.env.NEXTAUTH_URL}/invite/${invite.token}`;
 
     // =========================
     // 📧 EMAIL CONFIG (GMAIL)

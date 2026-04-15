@@ -132,7 +132,7 @@ model VerificationToken {
 
 model GroupInvite {
   id      String @id @default(cuid())
-  email   String
+  email   String?
   token   String @unique
   groupId String
 
