@@ -65,6 +65,7 @@ export const useGroupPage = (
   // =========================
   const updateExpense = useCallback(
     async (data: any) => {
+      const amount = parseFloat(data.amount);
       if (!editingExpense) return false;
 
       try {
@@ -73,7 +74,7 @@ export const useGroupPage = (
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             description: data.description,
-            amount: Number(data.amount || 0),
+            amount,
             payerId: data.payerId,
           }),
         });

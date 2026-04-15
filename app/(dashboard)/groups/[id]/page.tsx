@@ -22,6 +22,7 @@ import MembersModal from "@/components/modals/MembersModal";
 
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 import Toast from "@/components/ui/Toast";
+import { mutate } from "swr";
 
 export default function GroupDetailPage() {
   const params = useParams();
@@ -119,10 +120,13 @@ export default function GroupDetailPage() {
   );
 
   const handleDeleteGroup = useCallback(async () => {
+    setDeletingGroup(true);
+    router.replace("/groups");
+
     try {
-      setDeletingGroup(true);
       await deleteGroup();
-      router.push("/groups");
+    } catch (err) {
+      console.error(err);
     } finally {
       setDeletingGroup(false);
     }
@@ -151,7 +155,10 @@ export default function GroupDetailPage() {
       });
 
       if (!res.ok) throw new Error();
-
+      await mutate(
+        (prev: any) => (prev ? { ...prev, name: groupName } : prev),
+        false,
+      );
       setShowEditGroup(false);
     } finally {
       setUpdatingGroup(false);
@@ -161,7 +168,7 @@ export default function GroupDetailPage() {
   // =========================
   // LOADING
   // =========================
-  if (loading) return <GroupDetailSkeleton />;
+  if (loading || !group) return <GroupDetailSkeleton />;
   if (!group) return <div className="p-6">Group not found</div>;
 
   // =========================

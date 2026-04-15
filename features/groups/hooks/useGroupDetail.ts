@@ -9,8 +9,9 @@ const fetcher = async (url: string) => {
 };
 
 export const useGroupDetail = (groupId: string) => {
+  const shouldFetch = !!groupId;
   const { data, error, isLoading, mutate } = useSWR(
-    groupId ? `/api/groups/${groupId}` : null,
+    shouldFetch ? `/api/groups/${groupId}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
