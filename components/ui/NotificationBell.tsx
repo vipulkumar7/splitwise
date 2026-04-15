@@ -83,7 +83,7 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute -left-40 mt-2 w-64 bg-white border rounded-xl shadow-lg z-50">
+        <div className="absolute -left-40 mt-2 w-56 bg-white border rounded-xl shadow-lg z-50">
           <div className="p-3 font-semibold border-b">Notifications</div>
 
           <div className="max-h-80 overflow-y-auto no-scrollbar scroll-smooth">
