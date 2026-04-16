@@ -8,7 +8,6 @@ export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // ✅ Memoized nav items (avoid recreation)
   const navItems = useMemo(
     () => [
       {
@@ -25,7 +24,6 @@ export default function BottomNav() {
     [],
   );
 
-  // ✅ Stable navigation handler
   const handleNavigate = useCallback(
     (path: string) => {
       if (pathname !== path) {
@@ -44,10 +42,10 @@ export default function BottomNav() {
 
             return (
               <button
-                key={item.path} // ✅ better than index
+                key={item.path}
                 onClick={() => handleNavigate(item.path)}
                 className="flex flex-col items-center justify-center gap-1 relative active:scale-95 transition-transform"
-                aria-label={item.label} // ✅ accessibility
+                aria-label={item.label}
               >
                 {/* ICON */}
                 <div

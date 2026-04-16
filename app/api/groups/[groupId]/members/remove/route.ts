@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     // =========================
-    // ✅ DELETE (optimized)
+    // ✅ DELETE
     // =========================
     const result = await prisma.groupMember.deleteMany({
       where: {

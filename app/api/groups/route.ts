@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
 // =========================
-// GET GROUPS (Optimized)
+// GET GROUPS
 // =========================
 export async function GET() {
   try {
@@ -66,7 +66,7 @@ export async function GET() {
 }
 
 // =========================
-// CREATE GROUP (Optimized)
+// CREATE GROUP
 // =========================
 export async function POST(req: Request) {
   try {

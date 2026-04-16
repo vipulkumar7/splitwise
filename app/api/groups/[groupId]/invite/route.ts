@@ -10,7 +10,7 @@ export async function POST(
     const { groupId } = await context.params;
 
     if (!groupId) {
-      return Response.json({ error: "Missing groupId" }, { status: 400 });
+      return NextResponse.json({ error: "Missing groupId" }, { status: 400 });
     }
 
     let invite = await prisma.groupInvite.findFirst({
@@ -36,10 +36,13 @@ export async function POST(
 
     const inviteLink = `${origin}/invite/${invite.token}`;
 
-    return Response.json({ inviteLink });
-  } catch (err: any) {
+    return NextResponse.json({ inviteLink });
+  } catch (err: unknown) {
     console.error("INVITE ERROR:", err);
 
-    return Response.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Something went wrong" },
+      { status: 500 },
+    );
   }
 }

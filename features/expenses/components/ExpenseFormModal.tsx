@@ -15,9 +15,6 @@ import Select from "@/components/ui/form/Select";
 import Button from "@/components/ui/form/Button";
 import { IExpenseFormData, IExpenseFormModalProps } from "@/types";
 
-// =========================
-// ZOD SCHEMA
-// =========================
 const schema = z.object({
   description: z.string().trim().min(1, "Description is required"),
   amount: z
@@ -73,9 +70,6 @@ export default function ExpenseFormModal({
     }
   }, [show, editingExpense, currentUserId, reset]);
 
-  // =========================
-  // SUBMIT
-  // =========================
   const onSubmit = handleSubmit(async (data) => {
     await onSave(data as IExpenseFormData);
   });
@@ -105,9 +99,6 @@ export default function ExpenseFormModal({
           </button>
         </div>
 
-        {/* ========================= */}
-        {/* DESCRIPTION */}
-        {/* ========================= */}
         <FormField icon={FiFileText}>
           <Input
             disabled={loading}
@@ -127,9 +118,6 @@ export default function ExpenseFormModal({
           </p>
         )}
 
-        {/* ========================= */}
-        {/* AMOUNT */}
-        {/* ========================= */}
         <FormField icon={FaRupeeSign}>
           <Input
             disabled={loading}
@@ -148,9 +136,6 @@ export default function ExpenseFormModal({
           </p>
         )}
 
-        {/* ========================= */}
-        {/* PAYER */}
-        {/* ========================= */}
         <FormField icon={FiUser} rightIcon={<FiChevronDown />}>
           <Select
             disabled={loading}
@@ -174,9 +159,6 @@ export default function ExpenseFormModal({
           </p>
         )}
 
-        {/* ========================= */}
-        {/* BUTTON */}
-        {/* ========================= */}
         <Button loading={loading} variant="primary" onClick={onSubmit}>
           {loading
             ? editingExpense

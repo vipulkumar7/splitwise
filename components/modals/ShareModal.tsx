@@ -46,10 +46,6 @@ export default function ShareModal({
     }
   }, [groupId, inviteLink]);
 
-  // =========================
-  // ACTIONS
-  // =========================
-
   const handleCopy = async () => {
     try {
       setLoadingCopy(true);
@@ -105,7 +101,7 @@ export default function ShareModal({
     try {
       setLoadingEmail(true);
 
-      const link = await getLink(); // ✅ IMPORTANT
+      const link = await getLink();
 
       const res = await fetch("/api/groups/invite/send", {
         method: "POST",
@@ -142,9 +138,6 @@ export default function ShareModal({
 
   if (!show) return null;
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4"

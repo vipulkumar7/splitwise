@@ -10,7 +10,6 @@ export default function MembersModal({
   members,
   currentUserId,
 }: IMembersModalProps) {
-  // ✅ close on ESC
   const handleEsc = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();

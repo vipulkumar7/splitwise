@@ -6,7 +6,7 @@ import { mutate } from "swr";
 
 export const useGroupPage = (
   groupId: string,
-  _members: unknown[], // kept for compatibility (not used)
+  _members: unknown[],
   setShowDeleteConfirm: (v: boolean) => void,
   setToast: (t: IToast) => void,
 ) => {
@@ -32,9 +32,6 @@ export const useGroupPage = (
     throw new Error(data?.error || "Something went wrong");
   };
 
-  // =========================
-  // DELETE EXPENSE
-  // =========================
   const handleDeleteExpense = useCallback(async () => {
     if (!deleteId) return;
 

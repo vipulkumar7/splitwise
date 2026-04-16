@@ -3,19 +3,20 @@
 import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { token } = await req.json();
 
     if (!token) {
-      return Response.json({ error: "Missing token" }, { status: 400 });
+      return NextResponse.json({ error: "Missing token" }, { status: 400 });
     }
 
     // ✅ find invite
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     });
 
     if (!invite) {
-      return Response.json({ error: "Invalid invite" }, { status: 404 });
+      return NextResponse.json({ error: "Invalid invite" }, { status: 404 });
     }
 
     // ✅ get or create user
@@ -60,13 +61,13 @@ export async function POST(req: Request) {
       data: { accepted: true },
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       groupId: invite.groupId,
     });
   } catch (error) {
     console.error("JOIN ERROR:", error);
 
-    return Response.json({ error: "Join failed" }, { status: 500 });
+    return NextResponse.json({ error: "Join failed" }, { status: 500 });
   }
 }

@@ -23,7 +23,7 @@ export default function InvitePage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ token }), // ✅ IMPORTANT
+          body: JSON.stringify({ token }),
         });
 
         const data = await res.json();

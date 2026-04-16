@@ -49,3 +49,7 @@ export interface IToastProps {
   type: ToastType;
   duration: number;
 }
+
+export interface IDashboardLayoutProps {
+  children: ReactNode;
+}

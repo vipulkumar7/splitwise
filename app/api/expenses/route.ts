@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
+import { IMember, ISplit, ISplitsInput } from "@/types";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -29,69 +31,73 @@ export async function POST(req: Request) {
     }
 
     // =========================
-    // 🚀 TRANSACTION (BIG WIN)
+    // 🚀 TRANSACTION
     // =========================
-    const result = await prisma.$transaction(async (tx) => {
-      // ✅ Create expense
-      const expense = await tx.expense.create({
-        data: {
-          amount,
-          description,
-          groupId,
-          paidById: payerId,
-        },
-        select: { id: true },
-      });
+    const result = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        // ✅ Create expense
+        const expense = await tx.expense.create({
+          data: {
+            amount,
+            description,
+            groupId,
+            paidById: payerId,
+          },
+          select: { id: true },
+        });
 
-      // ✅ Get members (lightweight)
-      const members = await tx.groupMember.findMany({
-        where: { groupId },
-        select: { userId: true },
-      });
+        // ✅ Get members (lightweight)
+        const members = await tx.groupMember.findMany({
+          where: { groupId },
+          select: { userId: true },
+        });
 
-      // =========================
-      // 🔔 NOTIFICATIONS
-      // =========================
-      const notifications = members
-        .filter((m) => m.userId !== payerId)
-        .map((m) => ({
-          userId: m.userId,
-          message: `${description} added in group 💸`,
-        }));
+        // =========================
+        // 🔔 NOTIFICATIONS
+        // =========================
+        const notifications = members
+          .filter((m: IMember) => m.userId !== payerId)
+          .map((m: IMember) => ({
+            userId: m.userId,
+            message: `${description} added in group 💸`,
+          }));
 
-      // =========================
-      // 💸 SPLITS
-      // =========================
-      let splitData: any[] = [];
+        // =========================
+        // 💸 SPLITS
+        // =========================
+        let splitData: ISplit[] = [];
 
-      if (splitType === "equal") {
-        const splitAmount = amount / members.length;
+        if (splitType === "equal") {
+          const splitAmount = amount / members.length;
 
-        splitData = members.map((m) => ({
-          userId: m.userId,
-          expenseId: expense.id,
-          amount: splitAmount,
-        }));
-      }
+          splitData = (members as IMember[]).map((m) => ({
+            userId: m.userId,
+            expenseId: expense.id,
+            amount: splitAmount,
+          }));
+        }
 
-      if (splitType === "custom") {
-        splitData = Object.entries(splits).map(([userId, value]: any) => ({
-          userId,
-          expenseId: expense.id,
-          amount: Number(value),
-        }));
-      }
+        if (splitType === "custom") {
+          splitData = Object.entries(splits as ISplitsInput).map(
+            ([userId, value]) => ({
+              userId,
+              expenseId: expense.id,
+              amount: Number(value),
+            }),
+          );
+        }
 
-      // ✅ Run in parallel inside transaction
-      await Promise.all([
-        notifications.length &&
-          tx.notification.createMany({ data: notifications }),
+        // ✅ Run in parallel inside transaction
+        await Promise.all([
+          notifications.length &&
+            tx.notification.createMany({ data: notifications }),
 
-        splitData.length && tx.split.createMany({ data: splitData }),
-      ]);
+          splitData.length && tx.split.createMany({ data: splitData }),
+        ]);
 
-      return expense.id;
-    });
+        return expense.id;
+      },
+    );
 
     return NextResponse.json({
       success: true,

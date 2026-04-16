@@ -58,9 +58,6 @@ export const authOptions: AuthOptions = {
       return true;
     },
 
-    // =========================
-    // JWT (🔥 IMPORTANT)
-    // =========================
     async jwt({ token, user }) {
       // ✅ runs only on login
       if (user) {

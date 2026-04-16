@@ -16,7 +16,6 @@ export default function Navbar() {
 
   const user = session?.user;
 
-  // ✅ stable outside click handler
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (ref.current && !ref.current.contains(e.target as Node)) {
       setOpen(false);
@@ -28,7 +27,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [handleClickOutside]);
 
-  // ✅ navigation helper
   const navigate = useCallback(
     (path: string) => {
       router.push(path);
@@ -78,9 +76,7 @@ export default function Navbar() {
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border overflow-hidden animate-fadeIn">
                 {/* USER INFO */}
                 <div className="px-4 py-3 border-b">
-                  <p className="text-sm font-medium text-black">
-                    {user?.name}
-                  </p>
+                  <p className="text-sm font-medium text-black">{user?.name}</p>
                   <p className="text-xs text-gray-500 truncate">
                     {user?.email}
                   </p>

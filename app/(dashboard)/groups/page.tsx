@@ -73,6 +73,7 @@ export default function GroupsPage() {
       ],
       expenses: [],
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       isTemp: true,
     };
 
@@ -97,6 +98,7 @@ export default function GroupsPage() {
           g.id === tempId
             ? {
                 ...newGroup,
+                updatedAt: new Date().toISOString(),
                 members:
                   newGroup.members?.length > 0 ? newGroup.members : g.members,
               }
@@ -123,9 +125,6 @@ export default function GroupsPage() {
     }
   };
 
-  // =========================
-  // HELPERS
-  // =========================
   const getMemberCount = (group: IGroup) => {
     if (group.members?.length > 0) return group.members.length;
     if (group.isTemp) return 1;
@@ -135,9 +134,6 @@ export default function GroupsPage() {
   const getTotalAmount = (group: IGroup) =>
     group.expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4 bg-zinc-950 text-white">
       {/* CREATE */}

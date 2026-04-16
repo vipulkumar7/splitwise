@@ -6,7 +6,7 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: isDev, // ❗ VERY IMPORTANT
+  disable: isDev,
 
   runtimeCaching: [
     {

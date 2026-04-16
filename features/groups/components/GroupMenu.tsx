@@ -1,7 +1,7 @@
 "use client";
 
 import { IGroupMenuProps, IPosition } from "@/types";
-import { useEffect, useRef, useState, RefObject, memo } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { FiEdit2, FiUsers, FiShare2, FiLogOut, FiTrash2 } from "react-icons/fi";
 
 function GroupMenu({
@@ -29,7 +29,6 @@ function GroupMenu({
     });
   }, [anchorRef, show]);
 
-  // ✅ Close on outside click
   useEffect(() => {
     if (!show) return;
 

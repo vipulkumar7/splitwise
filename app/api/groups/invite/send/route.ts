@@ -1,11 +1,12 @@
 import { sendEmail } from "@/lib/services/email";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const { email, inviteLink } = await req.json();
 
     if (!email || !inviteLink) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Missing email or invite link" },
         { status: 400 },
       );
@@ -86,13 +87,16 @@ export async function POST(req: Request) {
       html,
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       message: "Invite sent successfully",
     });
   } catch (error) {
     console.error("INVITE ERROR:", error);
 
-    return Response.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 },
+    );
   }
 }

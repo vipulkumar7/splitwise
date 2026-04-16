@@ -38,9 +38,6 @@ export default function ExpenseList({
     });
   }, []);
 
-  // =========================
-  // GROUP + SORT
-  // =========================
   const groupedExpenses = useMemo<Record<string, IExpense[]>>(() => {
     if (!expenses.length) return {};
 
@@ -56,9 +53,6 @@ export default function ExpenseList({
     }, {});
   }, [expenses, formatDate]);
 
-  // =========================
-  // GET PAYER NAME (FAST 🚀)
-  // =========================
   const getPayerName = useCallback(
     (payerId: string) => {
       if (!payerId) return "Unknown";
@@ -71,9 +65,6 @@ export default function ExpenseList({
     [memberMap, currentUserId],
   );
 
-  // =========================
-  // HANDLERS
-  // =========================
   const toggleMenu = useCallback((id: string) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   }, []);
@@ -94,9 +85,6 @@ export default function ExpenseList({
     [onDelete],
   );
 
-  // =========================
-  // LOADING
-  // =========================
   if (loading) {
     return (
       <div className="space-y-3">
@@ -110,9 +98,6 @@ export default function ExpenseList({
     );
   }
 
-  // =========================
-  // EMPTY
-  // =========================
   if (!expenses.length) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -129,9 +114,6 @@ export default function ExpenseList({
     );
   }
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="space-y-6">
       {Object.entries(groupedExpenses).map(([date, items]) => (

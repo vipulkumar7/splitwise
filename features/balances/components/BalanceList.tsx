@@ -37,17 +37,11 @@ export default function BalanceList({
     return result;
   }, [members, expenses]);
 
-  // =========================
-  // SORT
-  // =========================
   const sortedBalances = useMemo(
     () => Object.entries(balances).sort(([, a], [, b]) => b - a),
     [balances],
   );
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="mt-4 space-y-3">
       {sortedBalances.map(([userId, amount]) => {

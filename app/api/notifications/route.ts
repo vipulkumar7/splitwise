@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
+import { NextResponse } from "next/server";
 
 export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-        return Response.json([], { status: 401 });
+        return NextResponse.json([], { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -19,5 +20,5 @@ export async function GET() {
         take: 20,
     });
 
-    return Response.json(notifications);
+    return NextResponse.json(notifications);
 }

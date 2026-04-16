@@ -1,9 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { NextResponse } from "next/server";
 
-// =========================
-// GET
-// =========================
 export async function GET(
   req: Request,
   context: { params: Promise<{ groupId: string }> },
@@ -41,7 +38,7 @@ export async function GET(
 }
 
 // =========================
-// DELETE (OPTIMIZED)
+// DELETE
 // =========================
 export async function DELETE(
   _req: Request,
@@ -72,11 +69,14 @@ export async function DELETE(
     ]);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("DELETE ERROR:", error);
 
     return NextResponse.json(
-      { error: "Delete failed", details: error.message },
+      {
+        error: "Delete failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }
@@ -95,7 +95,7 @@ export async function PUT(
     const name = body?.name?.trim();
 
     if (!name) {
-      return NextResponse.json({ error: "Name required" }, { status: 400 });
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
     const updated = await prisma.group.update({
@@ -105,11 +105,14 @@ export async function PUT(
     });
 
     return NextResponse.json(updated);
-  } catch (err: any) {
-    console.error("UPDATE GROUP ERROR:", err);
+  } catch (error: unknown) {
+    console.error("UPDATE GROUP ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed", details: err.message },
+      {
+        error: "Delete failed",
+        details: error instanceof Error ? error.message : "Update failed",
+      },
       { status: 500 },
     );
   }

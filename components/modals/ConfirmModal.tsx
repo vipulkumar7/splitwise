@@ -15,7 +15,6 @@ export default function ConfirmModal({
   loading = false,
   type = "default",
 }: IConfirmModal) {
-  // ✅ close on ESC
   const handleEsc = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -34,7 +33,6 @@ export default function ConfirmModal({
 
   if (!show) return null;
 
-  // ✅ button styles (cleaner)
   const buttonStyles =
     type === "danger"
       ? loading
