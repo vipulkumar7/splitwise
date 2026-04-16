@@ -1,17 +1,18 @@
 import { prisma } from "@/lib/db/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
 // =========================
 // GET
 // =========================
-export async function GET(req: Request, context: any) {
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ groupId: string }> },
+) {
   try {
-    const { id } = await context.params;
+    const { groupId } = await context.params;
 
     const group = await prisma.group.findUnique({
-      where: { id },
+      where: { id: groupId },
       include: {
         members: {
           include: { user: true },
@@ -42,9 +43,12 @@ export async function GET(req: Request, context: any) {
 // =========================
 // DELETE (OPTIMIZED)
 // =========================
-export async function DELETE(_req: Request, context: any) {
+export async function DELETE(
+  _req: Request,
+  context: { params: Promise<{ groupId: string }> },
+) {
   try {
-    const { id: groupId } = await context.params;
+    const { groupId } = await context.params;
 
     // 🚀 single transaction (fast + safe)
     await prisma.$transaction([
@@ -83,10 +87,10 @@ export async function DELETE(_req: Request, context: any) {
 // =========================
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ groupId: string }> },
 ) {
   try {
-    const { id } = await context.params;
+    const { groupId } = await context.params;
     const body = await req.json().catch(() => null);
     const name = body?.name?.trim();
 
@@ -95,7 +99,7 @@ export async function PUT(
     }
 
     const updated = await prisma.group.update({
-      where: { id: id },
+      where: { id: groupId },
       data: { name },
       select: { id: true, name: true },
     });

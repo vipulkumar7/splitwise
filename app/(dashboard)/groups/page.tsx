@@ -170,7 +170,7 @@ export default function GroupsPage() {
         <button
           onClick={createGroup}
           disabled={!name.trim()}
-          className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50"
+          className={`px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50 ${!name && "cursor-not-allowed"}`}
         >
           + Add
         </button>

@@ -73,7 +73,10 @@ export const useGroupActions = (
         body: JSON.stringify({ userId }),
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to exit group");
+      }
 
       mutate(
         (k: string) => typeof k === "string" && k.startsWith("/api/groups"),

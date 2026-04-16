@@ -5,9 +5,9 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   _req: Request,
-  context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ groupId: string }> },
 ) {
-  const { id } = await context.params;
+  const { groupId } = await context.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,7 +27,7 @@ export async function POST(
 
     const result = await prisma.groupMember.deleteMany({
       where: {
-        groupId: id,
+        groupId: groupId,
         userId: user.id,
       },
     });

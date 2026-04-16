@@ -32,19 +32,29 @@ export default function ShareModal({
   // =========================
   // 🔥 GET LINK (CACHED)
   // =========================
-  const getLink = useCallback(async () => {
-    if (inviteLink) return inviteLink; // ✅ reuse
+  const getLink = useCallback(async (): Promise<string | null> => {
+    if (inviteLink) return inviteLink;
 
-    const res = await fetch("/api/groups/invite-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupId }),
-    });
+    try {
+      const res = await fetch(`/api/groups/${groupId}/invite`, {
+        method: "POST",
+      });
 
-    const data = await res.json();
-    setInviteLink(data.inviteLink);
+      if (!res.ok) throw new Error("Failed to generate link");
 
-    return data.inviteLink;
+      const data: { inviteLink: string } = await res.json();
+
+      setInviteLink(data.inviteLink);
+      return data.inviteLink;
+    } catch (error) {
+      console.error(error);
+      setToast({
+        message: "Failed to generate invite link",
+        type: "error",
+        id: Date.now(),
+      });
+      return null;
+    }
   }, [groupId, inviteLink]);
 
   // =========================
@@ -56,9 +66,16 @@ export default function ShareModal({
       setLoadingCopy(true);
 
       const link = await getLink();
+      if (!link) throw new Error("No link");
+
       await navigator.clipboard.writeText(link);
 
-      setToast({ message: "Link copied", type: "success", id: Date.now() });
+      setToast({
+        message: "Link copied",
+        type: "success",
+        id: Date.now(),
+      });
+
       onClose();
     } catch {
       setToast({
@@ -74,7 +91,9 @@ export default function ShareModal({
   const handleWhatsApp = async () => {
     try {
       const link = await getLink();
-      const message = `Join my group "${groupName}" 💸\n${link}`;
+      if (!link) throw new Error("No link");
+
+      const message = `Join my group "${groupName}" 👇\n${link}`;
 
       window.open(
         `https://wa.me/?text=${encodeURIComponent(message)}`,
@@ -83,7 +102,11 @@ export default function ShareModal({
 
       onClose();
     } catch {
-      setToast({ message: "Failed to share", type: "error", id: Date.now() });
+      setToast({
+        message: "Failed to share",
+        type: "error",
+        id: Date.now(),
+      });
     }
   };
 
@@ -93,11 +116,16 @@ export default function ShareModal({
     try {
       setLoadingEmail(true);
 
-      await fetch("/api/groups/send-invite", {
+      const res = await fetch("/api/groups/invite/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, groupId }),
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to send invite");
+      }
 
       setToast({ message: "Invite sent", type: "success", id: Date.now() });
       setEmail("");
@@ -157,7 +185,7 @@ export default function ShareModal({
           <button
             onClick={handleCopy}
             disabled={loadingCopy}
-            className="flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-gray-100 active:scale-95 transition disabled:opacity-60"
+            className={`flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-gray-100 active:scale-95 transition disabled:opacity-60 ${loadingCopy && "cursor-not-allowed"}`}
           >
             <FaCopy className="text-gray-700 text-lg" />
             <span className="font-medium text-black">
@@ -173,13 +201,13 @@ export default function ShareModal({
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 text-black"
             />
 
             <button
               onClick={handleEmail}
               disabled={loadingEmail}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 rounded-xl flex items-center justify-center disabled:opacity-60"
+              className={`bg-gray-500 hover:bg-gray-600 text-white px-4 rounded-xl flex items-center justify-center disabled:opacity-60 ${loadingEmail && "cursor-not-allowed"}`}
             >
               {loadingEmail ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

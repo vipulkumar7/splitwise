@@ -9,7 +9,7 @@ export default async function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br p-6 bg-zinc-950 text-white">
       {/* CENTER CARD */}
       <div className="max-w-xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg border p-6">
+        <div className="bg-white rounded-2xl shadow-lg border p-6 bg-zinc-950">
           {/* HEADER */}
           <div className="flex items-center gap-4">
             {/* AVATAR */}
@@ -28,7 +28,7 @@ export default async function ProfilePage() {
             {/* NAME + EMAIL */}
             <div>
               <h1 className="text-xl font-semibold text-white">{user?.name}</h1>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <p className="text-sm text-white">{user?.email}</p>
             </div>
           </div>
 
