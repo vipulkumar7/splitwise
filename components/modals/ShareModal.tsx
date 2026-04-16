@@ -116,10 +116,15 @@ export default function ShareModal({
     try {
       setLoadingEmail(true);
 
+      const link = await getLink(); // ✅ IMPORTANT
+
       const res = await fetch("/api/groups/invite/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, groupId }),
+        body: JSON.stringify({
+          email,
+          inviteLink: link,
+        }),
       });
 
       if (!res.ok) {
@@ -127,10 +132,15 @@ export default function ShareModal({
         throw new Error(data?.error || "Failed to send invite");
       }
 
-      setToast({ message: "Invite sent", type: "success", id: Date.now() });
+      setToast({
+        message: "Invite sent",
+        type: "success",
+        id: Date.now(),
+      });
+
       setEmail("");
       onClose();
-    } catch {
+    } catch (err) {
       setToast({
         message: "Failed to send invite",
         type: "error",
