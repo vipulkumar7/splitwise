@@ -1,13 +1,6 @@
 "use client";
 
-import { ReactNode, ComponentType } from "react";
-
-interface IFormFieldProps {
-  icon?: ComponentType<{ className?: string }>;
-  children: ReactNode;
-  rightIcon?: ReactNode;
-  className?: string;
-}
+import { IFormFieldProps } from "@/types";
 
 export default function FormField({
   icon: Icon,

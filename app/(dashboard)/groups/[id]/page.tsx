@@ -22,38 +22,10 @@ import ConfirmModal from "@/components/modals/ConfirmModal";
 import MembersModal from "@/components/modals/MembersModal";
 
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
-import Toast, { ToastType } from "@/components/ui/Toast";
+import Toast from "@/components/ui/Toast";
 import Button from "@/components/ui/form/Button";
+import { IExpense, IExpenseFormData, IGroup, IGroupMember } from "@/types";
 
-// =========================
-// TYPES
-// =========================
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IExpense {
-  id: string;
-  amount: number;
-  paidById: string;
-}
-
-interface IGroup {
-  id: string;
-  name: string;
-  members: IGroupMember[];
-  expenses: IExpense[];
-}
-
-// =========================
-// COMPONENT
-// =========================
 export default function GroupDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -61,17 +33,11 @@ export default function GroupDetailPage() {
 
   const groupId = params?.id;
 
-  // =========================
-  // DATA
-  // =========================
   const { group, loading } = useGroupDetail(groupId);
   const { toast, setToast } = useGroupUI();
 
   const { deleteGroup, exitGroup } = useGroupActions(groupId, setToast);
 
-  // =========================
-  // STATE
-  // =========================
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   const [showMenu, setShowMenu] = useState(false);
@@ -90,12 +56,9 @@ export default function GroupDetailPage() {
   const [exitingGroup, setExitingGroup] = useState(false);
   const [updatingGroup, setUpdatingGroup] = useState(false);
 
-  // =========================
-  // MEMO
-  // =========================
   const members = useMemo<IGroupMember[]>(() => group?.members ?? [], [group]);
 
-  const currentUserId = useMemo<string | undefined>(() => {
+  const currentUserId = useMemo<string | null | undefined>(() => {
     return members.find((m) => m.user.email === session?.user?.email)?.user.id;
   }, [members, session?.user?.email]);
 
@@ -131,15 +94,15 @@ export default function GroupDetailPage() {
   }, []);
 
   const handleExpenseSave = useCallback(
-    async (data: Partial<IExpense>) => {
+    async (data: Partial<IExpenseFormData>) => {
       if (saving) return;
 
       try {
         setSaving(true);
 
         const success = editingExpense
-          ? await updateExpense(data)
-          : await createExpense(data);
+          ? await updateExpense(data as IExpenseFormData)
+          : await createExpense(data as IExpenseFormData);
 
         if (success) setShowModal(false);
       } catch (err) {
@@ -252,7 +215,7 @@ export default function GroupDetailPage() {
           <BalanceList
             members={members}
             expenses={group.expenses}
-            currentUserId={currentUserId}
+            currentUserId={currentUserId as string}
             getName={getUserName}
           />
 
@@ -262,7 +225,7 @@ export default function GroupDetailPage() {
             <ExpenseList
               expenses={group.expenses}
               members={members}
-              currentUserId={currentUserId}
+              currentUserId={currentUserId as string}
               onEdit={handleEdit}
               onDelete={(id) => {
                 setDeleteId(id);
@@ -299,7 +262,7 @@ export default function GroupDetailPage() {
         members={members}
         loading={saving}
         editingExpense={editingExpense}
-        currentUserId={currentUserId}
+        currentUserId={currentUserId as string}
         onSave={handleExpenseSave}
       />
 
@@ -315,7 +278,7 @@ export default function GroupDetailPage() {
         show={showMembers}
         onClose={() => setShowMembers(false)}
         members={members}
-        currentUserId={currentUserId}
+        currentUserId={currentUserId as string}
       />
 
       {/* CONFIRMATIONS */}
@@ -388,7 +351,7 @@ export default function GroupDetailPage() {
       )}
 
       {/* TOAST */}
-      {toast && <Toast key={toast.id} {...toast} />}
+      {toast && <Toast key={toast.id} {...toast} duration={3000} />}
     </div>
   );
 }

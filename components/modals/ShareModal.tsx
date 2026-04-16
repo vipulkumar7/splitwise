@@ -4,18 +4,7 @@ import { useState, useCallback } from "react";
 import { FaWhatsapp, FaCopy } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import { IoClose } from "react-icons/io5";
-
-interface IShareModalProps {
-  show: boolean;
-  onClose: () => void;
-  groupId: string;
-  groupName: string;
-  setToast: (data: {
-    message: string;
-    type: "success" | "error";
-    id: number;
-  }) => void;
-}
+import { IShareModalProps } from "@/types";
 
 export default function ShareModal({
   show,

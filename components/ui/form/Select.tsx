@@ -1,10 +1,7 @@
 "use client";
 
-import { forwardRef, SelectHTMLAttributes } from "react";
-
-interface ISelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  className?: string;
-}
+import { ISelectProps } from "@/types";
+import { forwardRef } from "react";
 
 const Select = forwardRef<HTMLSelectElement, ISelectProps>(
   ({ className = "", children, ...props }, ref) => {

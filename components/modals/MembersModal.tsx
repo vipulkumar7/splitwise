@@ -2,23 +2,7 @@
 
 import { FiX } from "react-icons/fi";
 import { useEffect, useCallback } from "react";
-
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IMember {
-  user: IUser;
-}
-
-interface IMembersModalProps {
-  show: boolean;
-  onClose: () => void;
-  members: IMember[];
-  currentUserId?: string;
-}
+import { IMembersModalProps } from "@/types";
 
 export default function MembersModal({
   show,

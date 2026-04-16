@@ -1,35 +1,14 @@
 "use client";
 
+import { IBalanceList } from "@/types";
 import { useMemo } from "react";
-
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IExpense {
-  amount: number;
-  paidById: string;
-}
-
-interface IBalanceListProps {
-  members: IGroupMember[];
-  expenses: IExpense[];
-  currentUserId?: string;
-  getName: (id: string) => string;
-}
 
 export default function BalanceList({
   members,
   expenses,
   currentUserId,
   getName,
-}: IBalanceListProps) {
+}: IBalanceList) {
   const balances = useMemo<Record<string, number>>(() => {
     if (!members.length) return {};
 
@@ -37,7 +16,7 @@ export default function BalanceList({
 
     // init
     members.forEach((m) => {
-      result[m.user.id] = 0;
+      result[m.user.id as string] = 0;
     });
 
     expenses.forEach((exp) => {
@@ -50,7 +29,7 @@ export default function BalanceList({
         if (id === exp.paidById) {
           result[id] += amount - split;
         } else {
-          result[id] -= split;
+          result[id as string] -= split;
         }
       });
     });

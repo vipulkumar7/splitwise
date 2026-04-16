@@ -1,43 +1,18 @@
 "use client";
 
+import { IAvatarGroup } from "@/types";
 import { useSession } from "next-auth/react";
 import { useState, useMemo, useCallback } from "react";
 
-// =========================
-// TYPES
-// =========================
-interface IUser {
-  id?: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IAvatarGroupProps {
-  members?: IGroupMember[];
-}
-
-// =========================
-// COMPONENT
-// =========================
-export default function AvatarGroup({ members = [] }: IAvatarGroupProps) {
+export default function AvatarGroup({ members = [] }: IAvatarGroup) {
   const { data: session } = useSession();
 
   const currentUserId = session?.user?.id ?? undefined;
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // =========================
-  // MEMO
-  // =========================
   const visibleMembers = useMemo(() => members.slice(0, 4), [members]);
 
-  // =========================
-  // HELPERS (memoized)
-  // =========================
   const getInitial = useCallback((name?: string | null) => {
     return name?.charAt(0)?.toUpperCase() || "?";
   }, []);
@@ -47,9 +22,6 @@ export default function AvatarGroup({ members = [] }: IAvatarGroupProps) {
     [currentUserId],
   );
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="flex items-center -space-x-3 mt-1">
       {visibleMembers.map((m, i) => {
@@ -59,7 +31,7 @@ export default function AvatarGroup({ members = [] }: IAvatarGroupProps) {
         const id = user?.id ?? `temp-${i}`;
 
         const name = user?.name || user?.email || "User";
-        const isYou = isCurrentUser(user?.id);
+        const isYou = isCurrentUser(user?.id as string);
 
         return (
           <div

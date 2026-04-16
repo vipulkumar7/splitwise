@@ -1,35 +1,9 @@
 "use client";
 
+import { IGroup, IToast } from "@/types";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 
-// =========================
-// TYPES
-// =========================
-type ToastType = "success" | "error" | "info";
-
-interface IToast {
-  message: string;
-  type: ToastType;
-  id: number;
-}
-
-interface IUser {
-  id: string;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IGroup {
-  id: string;
-  members: IGroupMember[];
-}
-
-// =========================
-// HOOK
-// =========================
 export const useGroupActions = (
   groupId: string,
   setToast: (t: IToast) => void,
@@ -43,9 +17,6 @@ export const useGroupActions = (
   const revalidateGroups = () =>
     mutate((k: string) => k.startsWith("/api/groups"));
 
-  // =========================
-  // DELETE GROUP
-  // =========================
   const deleteGroup = async () => {
     try {
       // 🔥 optimistic clear (list will refresh)
@@ -79,9 +50,6 @@ export const useGroupActions = (
     }
   };
 
-  // =========================
-  // EXIT GROUP
-  // =========================
   const exitGroup = async (userId: string) => {
     try {
       // 🔥 optimistic update (safe)

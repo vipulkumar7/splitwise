@@ -1,38 +1,14 @@
 "use client";
 
+import { IExpense, IExpenseFormData, IToast, ToastType } from "@/types";
 import { useState, useCallback } from "react";
 import { mutate } from "swr";
 
-// =========================
-// TYPES
-// =========================
-type ToastType = {
-  message: string;
-  type: "success" | "error" | "info";
-  id: number;
-};
-
-interface IExpense {
-  id: string;
-  description: string;
-  amount: number;
-  paidById: string;
-}
-
-interface IExpenseFormData {
-  description: string;
-  amount: string;
-  payerId: string;
-}
-
-// =========================
-// HOOK
-// =========================
 export const useGroupPage = (
   groupId: string,
   _members: unknown[], // kept for compatibility (not used)
   setShowDeleteConfirm: (v: boolean) => void,
-  setToast: (t: ToastType) => void,
+  setToast: (t: IToast) => void,
 ) => {
   const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
 
@@ -44,9 +20,13 @@ export const useGroupPage = (
   // =========================
   // COMMON HELPERS
   // =========================
-  const showToast = (message: string, type: ToastType["type"]) =>
-    setToast({ message, type, id: Date.now() });
-
+  const showToast = (message: string, type: ToastType) => {
+    setToast({
+      message,
+      type,
+      id: Date.now(),
+    });
+  };
   const handleError = async (res: Response) => {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error || "Something went wrong");
@@ -81,9 +61,6 @@ export const useGroupPage = (
     }
   }, [deleteId, key, setShowDeleteConfirm]);
 
-  // =========================
-  // UPDATE EXPENSE
-  // =========================
   const updateExpense = useCallback(
     async (data: IExpenseFormData): Promise<boolean> => {
       if (!editingExpense) return false;
@@ -119,9 +96,6 @@ export const useGroupPage = (
     [editingExpense, key],
   );
 
-  // =========================
-  // CREATE EXPENSE
-  // =========================
   const createExpense = useCallback(
     async (data: IExpenseFormData): Promise<boolean> => {
       try {

@@ -1,34 +1,8 @@
 "use client";
 
+import { IExpense, IExpenseList, IUser } from "@/types";
 import { useMemo, useState, useCallback } from "react";
 import { FiMoreVertical, FiTrash2, FiEdit2, FiFileText } from "react-icons/fi";
-
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IExpense {
-  id: string;
-  description: string;
-  amount: number;
-  paidById: string;
-  createdAt: string;
-}
-
-interface IProps {
-  expenses: IExpense[];
-  members: IGroupMember[];
-  currentUserId?: string;
-  onEdit: (expense: IExpense) => void;
-  onDelete: (id: string) => void;
-  loading?: boolean;
-}
 
 export default function ExpenseList({
   expenses,
@@ -37,23 +11,17 @@ export default function ExpenseList({
   onEdit,
   onDelete,
   loading = false,
-}: IProps) {
+}: IExpenseList) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // =========================
-  // MEMBER MAP (O(1) lookup 🚀)
-  // =========================
   const memberMap = useMemo(() => {
     const map = new Map<string, IUser>();
     members.forEach((m) => {
-      map.set(m.user.id, m.user);
+      map.set(m.user.id as string, m?.user as IUser);
     });
     return map;
   }, [members]);
 
-  // =========================
-  // FORMAT DATE
-  // =========================
   const formatDate = useCallback((date: string) => {
     const d = new Date(date);
     const today = new Date();
@@ -174,7 +142,7 @@ export default function ExpenseList({
 
           <div className="space-y-2">
             {items.map((exp) => {
-              const payerName = getPayerName(exp.paidById);
+              const payerName = getPayerName(exp.paidById as string);
               const isYou = exp.paidById === currentUserId;
 
               return (
@@ -222,7 +190,7 @@ export default function ExpenseList({
 
                     <div className="relative">
                       <button
-                        onClick={() => toggleMenu(exp.id)}
+                        onClick={() => toggleMenu(exp.id as string)}
                         className="p-1 text-gray-400 hover:text-gray-700"
                       >
                         <FiMoreVertical size={18} />
@@ -245,7 +213,9 @@ export default function ExpenseList({
                             </button>
 
                             <button
-                              onClick={() => handleDeleteClick(exp.id)}
+                              onClick={() =>
+                                handleDeleteClick(exp.id as string)
+                              }
                               className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-500 hover:bg-red-50"
                             >
                               <FiTrash2 size={14} />

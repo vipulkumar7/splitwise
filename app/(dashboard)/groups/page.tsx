@@ -5,38 +5,9 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 import GroupSkeleton from "@/components/ui/GroupSkeleton";
-import Toast, { ToastType } from "@/components/ui/Toast";
+import Toast from "@/components/ui/Toast";
+import { IGroup, IToast } from "@/types";
 
-// =========================
-// TYPES
-// =========================
-interface IUser {
-  id?: string;
-  name?: string;
-  email?: string;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IExpense {
-  amount: number;
-}
-
-interface IGroup {
-  id: string;
-  name: string;
-  members: IGroupMember[];
-  expenses: IExpense[];
-  createdAt?: string;
-  updatedAt?: string;
-  isTemp?: boolean;
-}
-
-// =========================
-// COMPONENT
-// =========================
 export default function GroupsPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -45,15 +16,8 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
 
-  const [toast, setToast] = useState<{
-    message: string;
-    type: ToastType;
-    id: number;
-  } | null>(null);
+  const [toast, setToast] = useState<IToast | null>(null);
 
-  // =========================
-  // FETCH
-  // =========================
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
@@ -101,7 +65,7 @@ export default function GroupsPage() {
       members: [
         {
           user: {
-            id: session?.user?.id,
+            id: session?.user?.id as string,
             name: session?.user?.name || "You",
             email: session?.user?.email as string,
           },
@@ -169,7 +133,7 @@ export default function GroupsPage() {
   };
 
   const getTotalAmount = (group: IGroup) =>
-    group.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+    group.expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
   // =========================
   // UI
@@ -188,7 +152,7 @@ export default function GroupsPage() {
         <button
           onClick={createGroup}
           disabled={!name.trim()}
-          className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50"
+          className={`px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50 ${!name && "cursor-not-allowed"}`}
         >
           + Add
         </button>
@@ -242,7 +206,7 @@ export default function GroupsPage() {
       )}
 
       {/* TOAST */}
-      {toast && <Toast key={toast.id} {...toast} />}
+      {toast && <Toast key={toast.id} {...toast} duration={3000} />}
     </div>
   );
 }

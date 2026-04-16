@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ToastType } from "@/components/ui/Toast";
+import { IToast } from "@/types";
 
 export const useGroupUI = () => {
-    const [toast, setToast] = useState<{
-        message: string;
-        type: ToastType;
-        id: number;
-    } | null>(null);
+    const [toast, setToast] = useState<IToast | null>(null);
 
     const [addingExpense, setAddingExpense] = useState(false);
 

@@ -2,31 +2,15 @@
 
 import AvatarGroup from "@/components/ui/AvatarGroup";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { RefObject, memo } from "react";
-
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IGroupHeaderProps {
-  groupName: string;
-  onMenuClick: () => void;
-  groupMembers: IGroupMember[];
-  buttonRef?: RefObject<HTMLButtonElement | null>;
-}
+import { memo } from "react";
+import { IGroupHeader } from "@/types";
 
 function GroupHeader({
   groupName,
   onMenuClick,
   groupMembers,
   buttonRef,
-}: IGroupHeaderProps) {
+}: IGroupHeader) {
   return (
     <div className="m-2">
       <div className="flex justify-between items-center relative">

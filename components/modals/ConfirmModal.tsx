@@ -3,17 +3,7 @@
 import { motion } from "framer-motion";
 import { FiAlertTriangle } from "react-icons/fi";
 import { useEffect, useCallback } from "react";
-
-interface IConfirmModalProps {
-  show: boolean;
-  title: string;
-  description?: string;
-  confirmText?: string;
-  onConfirm: () => void;
-  onClose: () => void;
-  loading?: boolean;
-  type?: "default" | "danger";
-}
+import { IConfirmModal } from "@/types";
 
 export default function ConfirmModal({
   show,
@@ -24,7 +14,7 @@ export default function ConfirmModal({
   onClose,
   loading = false,
   type = "default",
-}: IConfirmModalProps) {
+}: IConfirmModal) {
   // ✅ close on ESC
   const handleEsc = useCallback(
     (e: KeyboardEvent) => {

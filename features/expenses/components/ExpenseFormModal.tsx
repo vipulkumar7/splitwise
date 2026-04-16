@@ -13,33 +13,7 @@ import FormField from "@/components/ui/form/FormField";
 import Input from "@/components/ui/form/Input";
 import Select from "@/components/ui/form/Select";
 import Button from "@/components/ui/form/Button";
-
-interface IUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-}
-
-interface IGroupMember {
-  user: IUser;
-}
-
-interface IExpense {
-  id: string;
-  description: string;
-  amount: number;
-  paidById: string;
-}
-
-interface IExpenseFormModalProps {
-  show: boolean;
-  onClose: () => void;
-  members: IGroupMember[];
-  onSave: (data: FormData) => Promise<void>;
-  loading?: boolean;
-  editingExpense?: IExpense | null;
-  currentUserId?: string;
-}
+import { IExpenseFormData, IExpenseFormModalProps } from "@/types";
 
 // =========================
 // ZOD SCHEMA
@@ -103,7 +77,7 @@ export default function ExpenseFormModal({
   // SUBMIT
   // =========================
   const onSubmit = handleSubmit(async (data) => {
-    await onSave(data);
+    await onSave(data as IExpenseFormData);
   });
 
   if (!show) return null;
@@ -187,7 +161,7 @@ export default function ExpenseFormModal({
           >
             <option value="">Select payer</option>
             {members.map((m) => (
-              <option key={m.user.id} value={m.user.id}>
+              <option key={m.user.id} value={m.user.id as string}>
                 {m.user.name || m.user.email || "User"}
               </option>
             ))}

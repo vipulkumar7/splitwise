@@ -1,21 +1,9 @@
 "use client";
 
+import { INotification } from "@/types";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { IoNotifications } from "react-icons/io5";
 
-// =========================
-// TYPES
-// =========================
-interface INotification {
-  id: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-}
-
-// =========================
-// COMPONENT
-// =========================
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<INotification[]>([]);
@@ -23,9 +11,6 @@ export default function NotificationBell() {
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  // =========================
-  // FETCH COUNT
-  // =========================
   const fetchCount = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications/unread");
@@ -38,9 +23,6 @@ export default function NotificationBell() {
     }
   }, []);
 
-  // =========================
-  // FETCH NOTIFICATIONS
-  // =========================
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications");
@@ -53,9 +35,6 @@ export default function NotificationBell() {
     }
   }, []);
 
-  // =========================
-  // HANDLE OPEN
-  // =========================
   const handleOpen = useCallback(async () => {
     setOpen((prev) => !prev);
 
@@ -75,9 +54,6 @@ export default function NotificationBell() {
     }
   }, [open, fetchNotifications]);
 
-  // =========================
-  // OUTSIDE CLICK
-  // =========================
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -89,16 +65,10 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // =========================
-  // INITIAL LOAD
-  // =========================
   useEffect(() => {
     fetchCount();
   }, [fetchCount]);
 
-  // =========================
-  // UI
-  // =========================
   return (
     <div className="relative" ref={ref}>
       {/* 🔔 Bell */}

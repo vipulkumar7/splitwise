@@ -1,47 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { IToastProps, ToastType } from "@/types";
+import { JSX, useEffect, useState } from "react";
 import { FiCheckCircle, FiXCircle, FiInfo } from "react-icons/fi";
 
-export type ToastType = "success" | "error" | "info";
+export default function Toast({ message, type, duration = 3000 }: IToastProps) {
+  const [visible, setVisible] = useState(false);
 
-export default function Toast({
-    message,
-    type = "success",
-    duration = 3000,
-}: {
-    message: string;
-    type: ToastType;
-    duration?: number;
-}) {
-    const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    setVisible(true);
 
-    useEffect(() => {
-        setVisible(true);
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, duration);
 
-        const timer = setTimeout(() => {
-            setVisible(false);
-        }, duration);
+    return () => clearTimeout(timer);
+  }, [duration]);
 
-        return () => clearTimeout(timer);
-    }, [duration]);
+  const iconMap: Record<ToastType, JSX.Element> = {
+    success: <FiCheckCircle className="text-green-400" size={20} />,
+    error: <FiXCircle className="text-red-400" size={20} />,
+    info: <FiInfo className="text-blue-400" size={20} />,
+  };
 
-    const iconMap = {
-        success: <FiCheckCircle className="text-green-400" size={20} />,
-        error: <FiXCircle className="text-red-400" size={20} />,
-        info: <FiInfo className="text-blue-400" size={20} />,
-    };
-
-    return (
-        <div
-            className={`
+  return (
+    <div
+      className={`
         fixed bottom-20 left-1/2 -translate-x-1/2 z-50
         transition-all duration-500
         ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}
       `}
-        >
-            <div
-                className="
+    >
+      <div
+        className="
           flex items-center gap-3
           px-5 py-3
           rounded-2xl
@@ -51,13 +42,15 @@ export default function Toast({
           shadow-[0_8px_30px_rgba(0,0,0,0.4)]
           text-white
         "
-            >
-                {/* ICON */}
-                <div>{iconMap[type]}</div>
+      >
+        {/* ICON */}
+        <div>{iconMap[type]}</div>
 
-                {/* MESSAGE */}
-                <p className="text-sm text-gray-500 font-medium tracking-wide">{message}</p>
-            </div>
-        </div>
-    );
+        {/* MESSAGE */}
+        <p className="text-sm text-gray-500 font-medium tracking-wide">
+          {message}
+        </p>
+      </div>
+    </div>
+  );
 }

@@ -1,21 +1,7 @@
 "use client";
 
-import { ButtonHTMLAttributes, ReactNode } from "react";
+import { ButtonVariant, IButtonProps } from "@/types";
 
-// =========================
-// TYPES
-// =========================
-type ButtonVariant = "primary" | "secondary";
-
-interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  loading?: boolean;
-  children: ReactNode;
-  variant?: ButtonVariant;
-}
-
-// =========================
-// COMPONENT
-// =========================
 export default function Button({
   loading = false,
   children,

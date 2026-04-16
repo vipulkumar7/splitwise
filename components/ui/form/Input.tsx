@@ -1,10 +1,7 @@
 "use client";
 
-import { forwardRef, InputHTMLAttributes } from "react";
-
-interface IInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  className?: string;
-}
+import { IInputProps } from "@/types";
+import { forwardRef } from "react";
 
 const Input = forwardRef<HTMLInputElement, IInputProps>(
   ({ className = "", ...props }, ref) => {

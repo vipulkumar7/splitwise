@@ -1,19 +1,7 @@
 "use client";
 
+import { IGroupListProps } from "@/types";
 import { memo } from "react";
-
-interface IGroup {
-  id: string;
-  name: string;
-}
-
-interface IGroupListProps {
-  groups: IGroup[];
-  selectedGroupId?: string;
-  onSelect: (groupId: string) => void;
-  onAddExpense: (groupId: string) => void;
-  onDelete: (groupId: string) => void;
-}
 
 function GroupList({
   groups,
