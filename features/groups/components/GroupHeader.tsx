@@ -6,8 +6,8 @@ import { RefObject, memo } from "react";
 
 interface IUser {
   id: string;
-  name?: string;
-  email?: string;
+  name?: string | null;
+  email?: string | null;
 }
 
 interface IGroupMember {
@@ -18,7 +18,7 @@ interface IGroupHeaderProps {
   groupName: string;
   onMenuClick: () => void;
   groupMembers: IGroupMember[];
-  buttonRef?: RefObject<HTMLButtonElement>;
+  buttonRef?: RefObject<HTMLButtonElement | null>;
 }
 
 function GroupHeader({

@@ -7,11 +7,41 @@ import { useSession } from "next-auth/react";
 import GroupSkeleton from "@/components/ui/GroupSkeleton";
 import Toast, { ToastType } from "@/components/ui/Toast";
 
+// =========================
+// TYPES
+// =========================
+interface IUser {
+  id?: string;
+  name?: string;
+  email?: string;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IExpense {
+  amount: number;
+}
+
+interface IGroup {
+  id: string;
+  name: string;
+  members: IGroupMember[];
+  expenses: IExpense[];
+  createdAt?: string;
+  updatedAt?: string;
+  isTemp?: boolean;
+}
+
+// =========================
+// COMPONENT
+// =========================
 export default function GroupsPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<IGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
 
@@ -27,11 +57,11 @@ export default function GroupsPage() {
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/groups", { cache: "no-store" });
 
+      const res = await fetch("/api/groups", { cache: "no-store" });
       if (!res.ok) throw new Error();
 
-      const data = await res.json();
+      const data: IGroup[] = await res.json();
       setGroups(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -46,33 +76,34 @@ export default function GroupsPage() {
   }, [fetchGroups]);
 
   // =========================
-  // SORT
+  // SORT (stable)
   // =========================
   const sortedGroups = useMemo(() => {
-    return [...groups].sort(
-      (a, b) =>
-        new Date(b.updatedAt || b.createdAt).getTime() -
-        new Date(a.updatedAt || a.createdAt).getTime(),
-    );
+    return [...groups].sort((a, b) => {
+      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
   }, [groups]);
 
   // =========================
-  // CREATE GROUP (FIXED)
+  // CREATE GROUP
   // =========================
   const createGroup = async () => {
     if (!name.trim()) return;
 
     const tempId = "temp-" + Date.now();
+    const groupName = name; // preserve before clearing
 
-    const tempGroup = {
+    const tempGroup: IGroup = {
       id: tempId,
-      name,
+      name: groupName,
       members: [
         {
           user: {
             id: session?.user?.id,
             name: session?.user?.name || "You",
-            email: session?.user?.email,
+            email: session?.user?.email as string,
           },
         },
       ],
@@ -81,41 +112,34 @@ export default function GroupsPage() {
       isTemp: true,
     };
 
-    // ✅ Optimistic UI
+    // ✅ Optimistic insert at top
     setGroups((prev) => [tempGroup, ...prev]);
     setName("");
 
     try {
       const res = await fetch("/api/groups", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: groupName }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create group");
-      }
+      if (!res.ok) throw new Error();
 
-      const newGroup = await res.json();
+      const newGroup: IGroup = await res.json();
 
-      // ✅ Merge (IMPORTANT FIX)
+      // ✅ Replace WITHOUT changing position
       setGroups((prev) =>
-        prev.map((g) => {
-          if (g.id !== tempId) return g;
-
-          return {
-            ...newGroup,
-            members:
-              newGroup.members && newGroup.members.length > 0
-                ? newGroup.members
-                : g.members, // keep optimistic
-          };
-        }),
+        prev.map((g) =>
+          g.id === tempId
+            ? {
+                ...newGroup,
+                members:
+                  newGroup.members?.length > 0 ? newGroup.members : g.members,
+              }
+            : g,
+        ),
       );
 
-      // ✅ SUCCESS TOAST
       setToast({
         message: "Group created 🎉",
         type: "success",
@@ -124,10 +148,9 @@ export default function GroupsPage() {
     } catch (err) {
       console.error(err);
 
-      // ❌ Rollback
+      // ❌ rollback
       setGroups((prev) => prev.filter((g) => g.id !== tempId));
 
-      // ❌ ERROR TOAST (THIS IS WHAT YOU ASKED)
       setToast({
         message: "Something went wrong ❌",
         type: "error",
@@ -137,20 +160,16 @@ export default function GroupsPage() {
   };
 
   // =========================
-  // HELPER (🔥 FIX HERE)
+  // HELPERS
   // =========================
-  const getMemberCount = (group: any) => {
-    // ✅ if members exist
-    if (group.members?.length > 0) {
-      return group.members.length;
-    }
-
-    // ✅ if it's newly created group → show 1
+  const getMemberCount = (group: IGroup) => {
+    if (group.members?.length > 0) return group.members.length;
     if (group.isTemp) return 1;
-
-    // ✅ fallback
     return 0;
   };
+
+  const getTotalAmount = (group: IGroup) =>
+    group.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
 
   // =========================
   // UI
@@ -160,7 +179,6 @@ export default function GroupsPage() {
       {/* CREATE */}
       <div className="mt-3 flex gap-3 bg-zinc-900 p-3 rounded-2xl border border-zinc-700">
         <input
-          name="create group"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Create a new group..."
@@ -170,7 +188,7 @@ export default function GroupsPage() {
         <button
           onClick={createGroup}
           disabled={!name.trim()}
-          className={`px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50 ${!name && "cursor-not-allowed"}`}
+          className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium active:scale-95 transition disabled:opacity-50"
         >
           + Add
         </button>
@@ -189,12 +207,12 @@ export default function GroupsPage() {
               className="p-4 rounded-2xl border bg-white flex justify-between cursor-pointer"
             >
               <div className="flex items-center gap-4">
-                {/* 🔥 AVATAR STACK */}
+                {/* AVATAR */}
                 <div className="flex -space-x-2">
-                  {group.members?.slice(0, 3).map((m: any, i: number) => (
+                  {group.members?.slice(0, 3).map((m, i) => (
                     <div
                       key={i}
-                      className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 text-white flex items-center justify-center text-sm font-semibold border-2 border-white shadow"
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 text-white flex items-center justify-center text-sm font-semibold border-2 border-white"
                     >
                       {m.user.name?.[0]}
                     </div>
@@ -206,10 +224,9 @@ export default function GroupsPage() {
                     </div>
                   )}
                 </div>
+
                 <div>
                   <h2 className="font-semibold text-black">{group.name}</h2>
-
-                  {/* 🔥 FIXED */}
                   <p className="text-sm text-gray-500">
                     {getMemberCount(group)} members
                   </p>
@@ -217,11 +234,7 @@ export default function GroupsPage() {
               </div>
 
               <p className="text-green-600 font-semibold">
-                ₹
-                {group.expenses?.reduce(
-                  (sum: number, e: any) => sum + e.amount,
-                  0,
-                ) || 0}
+                ₹{getTotalAmount(group)}
               </p>
             </div>
           ))}

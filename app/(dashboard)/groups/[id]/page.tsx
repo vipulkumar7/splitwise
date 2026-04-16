@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback, RefObject } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { mutate } from "swr";
 
 import { useGroupDetail } from "@/features/groups/hooks/useGroupDetail";
 import { useGroupUI } from "@/features/groups/hooks/useGroupUI";
@@ -21,16 +22,44 @@ import ConfirmModal from "@/components/modals/ConfirmModal";
 import MembersModal from "@/components/modals/MembersModal";
 
 import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
-import Toast from "@/components/ui/Toast";
-import { mutate } from "swr";
+import Toast, { ToastType } from "@/components/ui/Toast";
 import Button from "@/components/ui/form/Button";
 
+// =========================
+// TYPES
+// =========================
+interface IUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IExpense {
+  id: string;
+  amount: number;
+  paidById: string;
+}
+
+interface IGroup {
+  id: string;
+  name: string;
+  members: IGroupMember[];
+  expenses: IExpense[];
+}
+
+// =========================
+// COMPONENT
+// =========================
 export default function GroupDetailPage() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
 
-  const groupId = params.id as string;
+  const groupId = params?.id;
 
   // =========================
   // DATA
@@ -41,7 +70,7 @@ export default function GroupDetailPage() {
   const { deleteGroup, exitGroup } = useGroupActions(groupId, setToast);
 
   // =========================
-  // UI STATE
+  // STATE
   // =========================
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -62,17 +91,26 @@ export default function GroupDetailPage() {
   const [updatingGroup, setUpdatingGroup] = useState(false);
 
   // =========================
-  // MEMOIZED DATA
+  // MEMO
   // =========================
-  const members = useMemo(() => group?.members ?? [], [group]);
+  const members = useMemo<IGroupMember[]>(() => group?.members ?? [], [group]);
 
-  const currentUserId = useMemo(() => {
-    return members.find((m: any) => m.user.email === session?.user?.email)?.user
-      ?.id;
-  }, [members, session]);
+  const currentUserId = useMemo<string | undefined>(() => {
+    return members.find((m) => m.user.email === session?.user?.email)?.user.id;
+  }, [members, session?.user?.email]);
+
+  const getUserName = useCallback(
+    (id: string) => {
+      const name = members.find((m) => m.user.id === id)?.user.name;
+      return name
+        ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+        : "User";
+    },
+    [members],
+  );
 
   // =========================
-  // GROUP PAGE LOGIC
+  // GROUP LOGIC
   // =========================
   const {
     editingExpense,
@@ -87,45 +125,37 @@ export default function GroupDetailPage() {
   // =========================
   // HANDLERS
   // =========================
-  const handleEdit = useCallback(
-    (expense: any) => {
-      setEditingExpense(expense);
-      setShowModal(true);
-    },
-    [setEditingExpense],
-  );
+  const handleEdit = useCallback((expense: IExpense) => {
+    setEditingExpense(expense);
+    setShowModal(true);
+  }, []);
 
   const handleExpenseSave = useCallback(
-    async (data: any) => {
+    async (data: Partial<IExpense>) => {
+      if (saving) return;
+
       try {
         setSaving(true);
 
-        let success = false;
+        const success = editingExpense
+          ? await updateExpense(data)
+          : await createExpense(data);
 
-        if (editingExpense) {
-          success = await updateExpense(data);
-        } else {
-          success = await createExpense(data);
-        }
-
-        if (success) {
-          setShowModal(false);
-        }
+        if (success) setShowModal(false);
       } catch (err) {
         console.error(err);
       } finally {
         setSaving(false);
       }
     },
-    [editingExpense, updateExpense, createExpense],
+    [editingExpense, updateExpense, createExpense, saving],
   );
 
   const handleDeleteGroup = useCallback(async () => {
-    setDeletingGroup(true);
-    router.replace("/groups");
-
     try {
+      setDeletingGroup(true);
       await deleteGroup();
+      router.replace("/groups");
     } catch (err) {
       console.error(err);
     } finally {
@@ -134,6 +164,15 @@ export default function GroupDetailPage() {
   }, [deleteGroup, router]);
 
   const handleExitGroup = useCallback(async () => {
+    if (!currentUserId) {
+      setToast({
+        message: "User not found ❌",
+        type: "error",
+        id: Date.now(),
+      });
+      return;
+    }
+
     try {
       setExitingGroup(true);
       await exitGroup(currentUserId);
@@ -141,7 +180,7 @@ export default function GroupDetailPage() {
     } finally {
       setExitingGroup(false);
     }
-  }, [exitGroup, currentUserId, router]);
+  }, [exitGroup, currentUserId, router, setToast]);
 
   const handleUpdateGroup = useCallback(async () => {
     if (!groupName.trim()) return;
@@ -156,10 +195,14 @@ export default function GroupDetailPage() {
       });
 
       if (!res.ok) throw new Error();
+
       await mutate(
-        (prev: any) => (prev ? { ...prev, name: groupName } : prev),
+        `/api/groups/${groupId}`,
+        (prev: IGroup | undefined) =>
+          prev ? { ...prev, name: groupName } : prev,
         false,
       );
+
       setShowEditGroup(false);
     } finally {
       setUpdatingGroup(false);
@@ -167,9 +210,9 @@ export default function GroupDetailPage() {
   }, [groupId, groupName]);
 
   // =========================
-  // LOADING
+  // UI GUARD
   // =========================
-  if (loading || !group) return <GroupDetailSkeleton />;
+  if (loading) return <GroupDetailSkeleton />;
   if (!group) return <div className="p-6">Group not found</div>;
 
   // =========================
@@ -182,7 +225,7 @@ export default function GroupDetailPage() {
         groupName={group.name}
         onMenuClick={() => setShowMenu((p) => !p)}
         groupMembers={members}
-        buttonRef={buttonRef as RefObject<HTMLButtonElement>}
+        buttonRef={buttonRef}
       />
 
       {/* MENU */}
@@ -210,12 +253,7 @@ export default function GroupDetailPage() {
             members={members}
             expenses={group.expenses}
             currentUserId={currentUserId}
-            getName={(id: string) => {
-              const name = members.find((m: any) => m.user.id === id)?.user
-                ?.name;
-              if (!name) return "User";
-              return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-            }}
+            getName={getUserName}
           />
 
           <h2 className="my-2 font-semibold text-lg">Expenses</h2>
@@ -246,7 +284,7 @@ export default function GroupDetailPage() {
         </div>
       )}
 
-      {/* FLOAT BUTTON */}
+      {/* ADD BUTTON */}
       <AddExpenseButton
         onClick={() => {
           setEditingExpense(null);
@@ -254,7 +292,7 @@ export default function GroupDetailPage() {
         }}
       />
 
-      {/* MODAL */}
+      {/* MODALS */}
       <ExpenseFormModal
         show={showModal}
         onClose={() => !saving && setShowModal(false)}
@@ -265,7 +303,6 @@ export default function GroupDetailPage() {
         onSave={handleExpenseSave}
       />
 
-      {/* OTHER MODALS */}
       <ShareModal
         show={showShare}
         onClose={() => setShowShare(false)}
@@ -281,6 +318,7 @@ export default function GroupDetailPage() {
         currentUserId={currentUserId}
       />
 
+      {/* CONFIRMATIONS */}
       <ConfirmModal
         show={showDeleteConfirm}
         title="Delete expense?"
@@ -322,7 +360,7 @@ export default function GroupDetailPage() {
           />
           <div className="relative bg-white p-6 rounded-2xl w-[90%] max-w-md">
             <input
-              name={groupName}
+              name="groupName"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               className="w-full border p-3 rounded-xl text-black"
@@ -350,9 +388,7 @@ export default function GroupDetailPage() {
       )}
 
       {/* TOAST */}
-      {toast && (
-        <Toast key={toast.id} message={toast.message} type={toast.type} />
-      )}
+      {toast && <Toast key={toast.id} {...toast} />}
     </div>
   );
 }
