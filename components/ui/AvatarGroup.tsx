@@ -1,28 +1,65 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 
-export default function AvatarGroup({ members = [] }: { members: any[] }) {
+// =========================
+// TYPES
+// =========================
+interface IUser {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IAvatarGroupProps {
+  members?: IGroupMember[];
+}
+
+// =========================
+// COMPONENT
+// =========================
+export default function AvatarGroup({ members = [] }: IAvatarGroupProps) {
   const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+
+  const currentUserId = session?.user?.id ?? undefined;
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // ✅ Memoized sliced members
+  // =========================
+  // MEMO
+  // =========================
   const visibleMembers = useMemo(() => members.slice(0, 4), [members]);
 
-  const getInitial = (name: string) => name?.charAt(0)?.toUpperCase() || "?";
+  // =========================
+  // HELPERS (memoized)
+  // =========================
+  const getInitial = useCallback((name?: string | null) => {
+    return name?.charAt(0)?.toUpperCase() || "?";
+  }, []);
 
-  const isCurrentUser = (id: string) => String(id) === String(currentUserId);
+  const isCurrentUser = useCallback(
+    (id?: string) => id && currentUserId && id === currentUserId,
+    [currentUserId],
+  );
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="flex items-center -space-x-3 mt-1">
-      {visibleMembers.map((m: any, i: number) => {
+      {visibleMembers.map((m, i) => {
         const user = m?.user;
-        const id = user?.id || i;
+
+        // ✅ always string id
+        const id = user?.id ?? `temp-${i}`;
+
         const name = user?.name || user?.email || "User";
-        const isYou = isCurrentUser(id);
+        const isYou = isCurrentUser(user?.id);
 
         return (
           <div
@@ -50,7 +87,7 @@ export default function AvatarGroup({ members = [] }: { members: any[] }) {
 
             {/* Tooltip */}
             {activeId === id && (
-              <div className="absolute bottom-11 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded-md shadow-md z-50 animate-fadeIn">
+              <div className="absolute bottom-11 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded-md shadow-md z-50">
                 {isYou ? "You" : name}
               </div>
             )}

@@ -3,36 +3,62 @@
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 
+// =========================
+// TYPES
+// =========================
+type ToastType = "success" | "error" | "info";
+
+interface IToast {
+  message: string;
+  type: ToastType;
+  id: number;
+}
+
+interface IUser {
+  id: string;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IGroup {
+  id: string;
+  members: IGroupMember[];
+}
+
+// =========================
+// HOOK
+// =========================
 export const useGroupActions = (
   groupId: string,
-  setToast: (t: any) => void,
+  setToast: (t: IToast) => void,
 ) => {
   const router = useRouter();
-
   const key = `/api/groups/${groupId}`;
+
+  // =========================
+  // COMMON REVALIDATE
+  // =========================
+  const revalidateGroups = () =>
+    mutate((k: string) => k.startsWith("/api/groups"));
 
   // =========================
   // DELETE GROUP
   // =========================
   const deleteGroup = async () => {
     try {
-      // 🔥 optimistic remove (optional if list page uses SWR)
-      mutate(
-        (k: string) => typeof k === "string" && k.startsWith("/api/groups"),
-        undefined,
-        false,
-      );
+      // 🔥 optimistic clear (list will refresh)
+      revalidateGroups();
 
-      const res = await fetch(`/api/groups/${groupId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(key, { method: "DELETE" });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Delete failed");
+      }
 
-      // ✅ revalidate all groups
-      mutate(
-        (k: string) => typeof k === "string" && k.startsWith("/api/groups"),
-      );
+      revalidateGroups();
 
       setToast({
         message: "Group deleted successfully",
@@ -41,11 +67,12 @@ export const useGroupActions = (
       });
 
       router.push("/groups");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
 
       setToast({
-        message: "Failed to delete group ❌",
+        message:
+          err instanceof Error ? err.message : "Failed to delete group ❌",
         type: "error",
         id: Date.now(),
       });
@@ -57,17 +84,21 @@ export const useGroupActions = (
   // =========================
   const exitGroup = async (userId: string) => {
     try {
-      // 🔥 optimistic remove (optional)
-      mutate(
+      // 🔥 optimistic update (safe)
+      mutate<IGroup>(
         key,
-        (prev: any) => ({
-          ...prev,
-          members: prev.members.filter((m: any) => m.user.id !== userId),
-        }),
+        (prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            members: prev.members.filter((m) => m.user.id !== userId),
+          };
+        },
         false,
       );
 
-      const res = await fetch(`/api/groups/${groupId}/exit`, {
+      const res = await fetch(`${key}/exit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId }),
@@ -78,9 +109,7 @@ export const useGroupActions = (
         throw new Error(data?.error || "Failed to exit group");
       }
 
-      mutate(
-        (k: string) => typeof k === "string" && k.startsWith("/api/groups"),
-      );
+      revalidateGroups();
 
       setToast({
         message: "You left the group",
@@ -89,13 +118,14 @@ export const useGroupActions = (
       });
 
       router.push("/groups");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
 
-      mutate(key); // rollback
+      // ❌ rollback
+      mutate(key);
 
       setToast({
-        message: "Failed to exit group ❌",
+        message: err instanceof Error ? err.message : "Failed to exit group ❌",
         type: "error",
         id: Date.now(),
       });

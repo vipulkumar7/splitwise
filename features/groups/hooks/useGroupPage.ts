@@ -3,24 +3,54 @@
 import { useState, useCallback } from "react";
 import { mutate } from "swr";
 
+// =========================
+// TYPES
+// =========================
 type ToastType = {
   message: string;
   type: "success" | "error" | "info";
   id: number;
 };
 
+interface IExpense {
+  id: string;
+  description: string;
+  amount: number;
+  paidById: string;
+}
+
+interface IExpenseFormData {
+  description: string;
+  amount: string;
+  payerId: string;
+}
+
+// =========================
+// HOOK
+// =========================
 export const useGroupPage = (
   groupId: string,
-  members: any[],
+  _members: unknown[], // kept for compatibility (not used)
   setShowDeleteConfirm: (v: boolean) => void,
   setToast: (t: ToastType) => void,
 ) => {
-  const [editingExpense, setEditingExpense] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
 
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const key = `/api/groups/${groupId}`;
+
+  // =========================
+  // COMMON HELPERS
+  // =========================
+  const showToast = (message: string, type: ToastType["type"]) =>
+    setToast({ message, type, id: Date.now() });
+
+  const handleError = async (res: Response) => {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || "Something went wrong");
+  };
 
   // =========================
   // DELETE EXPENSE
@@ -35,37 +65,27 @@ export const useGroupPage = (
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) await handleError(res);
 
-      // ✅ fresh data from backend
       await mutate(key);
 
-      setToast({
-        message: "Expense deleted",
-        type: "success",
-        id: Date.now(),
-      });
-    } catch (err) {
+      showToast("Expense deleted", "success");
+    } catch (err: unknown) {
       console.error(err);
 
-      setToast({
-        message: "Delete failed",
-        type: "error",
-        id: Date.now(),
-      });
+      showToast(err instanceof Error ? err.message : "Delete failed", "error");
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
       setDeleteId(null);
     }
-  }, [deleteId, key, setShowDeleteConfirm, setToast]);
+  }, [deleteId, key, setShowDeleteConfirm]);
 
   // =========================
   // UPDATE EXPENSE
   // =========================
   const updateExpense = useCallback(
-    async (data: any) => {
-      const amount = parseFloat(data.amount);
+    async (data: IExpenseFormData): Promise<boolean> => {
       if (!editingExpense) return false;
 
       try {
@@ -74,49 +94,40 @@ export const useGroupPage = (
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             description: data.description,
-            amount,
+            amount: Number(data.amount),
             payerId: data.payerId,
           }),
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) await handleError(res);
 
-        // ✅ sync UI with backend
         await mutate(key);
 
-        setToast({
-          message: "Expense updated",
-          type: "success",
-          id: Date.now(),
-        });
-
+        showToast("Expense updated", "success");
         return true;
-      } catch (err) {
+      } catch (err: unknown) {
         console.error(err);
 
-        setToast({
-          message: "Update failed",
-          type: "error",
-          id: Date.now(),
-        });
+        showToast(
+          err instanceof Error ? err.message : "Update failed",
+          "error",
+        );
 
         return false;
       }
     },
-    [editingExpense, key, setToast],
+    [editingExpense, key],
   );
 
   // =========================
-  // CREATE EXPENSE (NO TEMP)
+  // CREATE EXPENSE
   // =========================
   const createExpense = useCallback(
-    async (data: any) => {
+    async (data: IExpenseFormData): Promise<boolean> => {
       try {
         const res = await fetch("/api/expenses", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             description: data.description,
             amount: Number(data.amount || 0),
@@ -125,31 +136,24 @@ export const useGroupPage = (
           }),
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) await handleError(res);
 
-        // ✅ always use backend as source of truth
         await mutate(key);
 
-        setToast({
-          message: "Expense added 🎉",
-          type: "success",
-          id: Date.now(),
-        });
-
+        showToast("Expense added 🎉", "success");
         return true;
-      } catch (err) {
+      } catch (err: unknown) {
         console.error(err);
 
-        setToast({
-          message: "Expense failed",
-          type: "error",
-          id: Date.now(),
-        });
+        showToast(
+          err instanceof Error ? err.message : "Expense failed",
+          "error",
+        );
 
         return false;
       }
     },
-    [groupId, key, setToast],
+    [groupId, key],
   );
 
   return {

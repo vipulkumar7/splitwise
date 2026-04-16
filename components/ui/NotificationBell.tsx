@@ -1,57 +1,86 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { IoNotifications } from "react-icons/io5";
 
+// =========================
+// TYPES
+// =========================
+interface INotification {
+  id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+// =========================
+// COMPONENT
+// =========================
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
   const [count, setCount] = useState(0);
 
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   // =========================
-  // FETCH UNREAD COUNT
+  // FETCH COUNT
   // =========================
-  const fetchCount = async () => {
-    const res = await fetch("/api/notifications/unread");
-    const data = await res.json();
-    setCount(data.count || 0);
-  };
+  const fetchCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications/unread");
+      if (!res.ok) throw new Error();
+
+      const data: { count: number } = await res.json();
+      setCount(data.count || 0);
+    } catch (err) {
+      console.error("Count fetch error:", err);
+    }
+  }, []);
 
   // =========================
   // FETCH NOTIFICATIONS
   // =========================
-  const fetchNotifications = async () => {
-    const res = await fetch("/api/notifications");
-    const data = await res.json();
-    setNotifications(data || []);
-  };
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error();
+
+      const data: INotification[] = await res.json();
+      setNotifications(data || []);
+    } catch (err) {
+      console.error("Notification fetch error:", err);
+    }
+  }, []);
 
   // =========================
-  // OPEN DROPDOWN
+  // HANDLE OPEN
   // =========================
-  const handleOpen = async () => {
-    setOpen(!open);
+  const handleOpen = useCallback(async () => {
+    setOpen((prev) => !prev);
 
+    // ✅ only run when opening
     if (!open) {
       await fetchNotifications();
 
-      // ✅ mark as read
-      await fetch("/api/notifications/read", {
-        method: "POST",
-      });
+      try {
+        await fetch("/api/notifications/read", {
+          method: "POST",
+        });
+      } catch (err) {
+        console.error("Mark read error:", err);
+      }
 
       setCount(0);
     }
-  };
+  }, [open, fetchNotifications]);
 
   // =========================
-  // CLOSE ON OUTSIDE CLICK
+  // OUTSIDE CLICK
   // =========================
   useEffect(() => {
-    const handleClickOutside = (e: any) => {
-      if (ref.current && !ref.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -61,12 +90,15 @@ export default function NotificationBell() {
   }, []);
 
   // =========================
-  // LOAD COUNT
+  // INITIAL LOAD
   // =========================
   useEffect(() => {
     fetchCount();
-  }, []);
+  }, [fetchCount]);
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="relative" ref={ref}>
       {/* 🔔 Bell */}
@@ -83,10 +115,12 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute -left-40 mt-2 w-56 bg-white border rounded-xl shadow-lg z-50">
-          <div className="p-3 font-semibold border-b text-black">Notifications</div>
+        <div className="absolute -left-40 mt-2 w-64 bg-white border rounded-xl shadow-lg z-50">
+          <div className="p-3 font-semibold border-b text-black">
+            Notifications
+          </div>
 
-          <div className="max-h-80 overflow-y-auto no-scrollbar scroll-smooth">
+          <div className="max-h-80 overflow-y-auto no-scrollbar">
             {notifications.length === 0 ? (
               <p className="p-4 text-sm text-black">No notifications</p>
             ) : (
@@ -98,6 +132,7 @@ export default function NotificationBell() {
                   }`}
                 >
                   {n.message}
+
                   <div className="text-xs text-gray-400 mt-1">
                     {new Date(n.createdAt).toLocaleString()}
                   </div>

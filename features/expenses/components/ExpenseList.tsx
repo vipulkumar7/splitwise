@@ -3,27 +3,56 @@
 import { useMemo, useState, useCallback } from "react";
 import { FiMoreVertical, FiTrash2, FiEdit2, FiFileText } from "react-icons/fi";
 
-type Props = {
-  expenses: any[];
-  members: any[];
+interface IUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IExpense {
+  id: string;
+  description: string;
+  amount: number;
+  paidById: string;
+  createdAt: string;
+}
+
+interface IProps {
+  expenses: IExpense[];
+  members: IGroupMember[];
   currentUserId?: string;
-  onEdit: (expense: any) => void;
+  onEdit: (expense: IExpense) => void;
   onDelete: (id: string) => void;
   loading?: boolean;
-};
+}
 
 export default function ExpenseList({
-  expenses = [],
-  members = [],
+  expenses,
+  members,
   currentUserId,
   onEdit,
   onDelete,
-  loading,
-}: Props) {
+  loading = false,
+}: IProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // =========================
-  // FORMAT DATE (MEMO SAFE)
+  // MEMBER MAP (O(1) lookup 🚀)
+  // =========================
+  const memberMap = useMemo(() => {
+    const map = new Map<string, IUser>();
+    members.forEach((m) => {
+      map.set(m.user.id, m.user);
+    });
+    return map;
+  }, [members]);
+
+  // =========================
+  // FORMAT DATE
   // =========================
   const formatDate = useCallback((date: string) => {
     const d = new Date(date);
@@ -42,9 +71,9 @@ export default function ExpenseList({
   }, []);
 
   // =========================
-  // GROUP + SORT (MEMOIZED)
+  // GROUP + SORT
   // =========================
-  const groupedExpenses = useMemo(() => {
+  const groupedExpenses = useMemo<Record<string, IExpense[]>>(() => {
     if (!expenses.length) return {};
 
     const sorted = [...expenses].sort(
@@ -52,44 +81,37 @@ export default function ExpenseList({
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
-    const grouped: Record<string, any[]> = {};
-
-    sorted.forEach((exp) => {
+    return sorted.reduce<Record<string, IExpense[]>>((acc, exp) => {
       const key = formatDate(exp.createdAt);
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(exp);
-    });
-
-    return grouped;
+      (acc[key] ||= []).push(exp);
+      return acc;
+    }, {});
   }, [expenses, formatDate]);
 
   // =========================
-  // GET PAYER NAME (FAST)
+  // GET PAYER NAME (FAST 🚀)
   // =========================
   const getPayerName = useCallback(
     (payerId: string) => {
       if (!payerId) return "Unknown";
 
-      if (currentUserId && payerId === currentUserId) {
-        return "You";
-      }
+      if (payerId === currentUserId) return "You";
 
-      const member = members.find((m: any) => m.user.id === payerId);
-
-      return member?.user?.name || member?.user?.email || "Unknown";
+      const user = memberMap.get(payerId);
+      return user?.name || user?.email || "Unknown";
     },
-    [members, currentUserId],
+    [memberMap, currentUserId],
   );
 
   // =========================
-  // HANDLERS (STABLE)
+  // HANDLERS
   // =========================
   const toggleMenu = useCallback((id: string) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   }, []);
 
   const handleEditClick = useCallback(
-    (exp: any) => {
+    (exp: IExpense) => {
       setOpenMenuId(null);
       onEdit(exp);
     },
@@ -121,7 +143,7 @@ export default function ExpenseList({
   }
 
   // =========================
-  // EMPTY STATE
+  // EMPTY
   // =========================
   if (!expenses.length) {
     return (
@@ -153,6 +175,7 @@ export default function ExpenseList({
           <div className="space-y-2">
             {items.map((exp) => {
               const payerName = getPayerName(exp.paidById);
+              const isYou = exp.paidById === currentUserId;
 
               return (
                 <div
@@ -163,13 +186,11 @@ export default function ExpenseList({
                   <div className="flex items-center gap-3">
                     {/* AVATAR */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center text-white justify-center text-sm font-semibold ${
-                        String(currentUserId) === String(exp.paidById)
-                          ? "bg-green-500 shadow-md"
-                          : "bg-red-500 shadow-md"
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white ${
+                        isYou ? "bg-green-500" : "bg-red-500"
                       }`}
                     >
-                      {payerName?.charAt(0)?.toUpperCase()}
+                      {payerName.charAt(0).toUpperCase()}
                     </div>
 
                     {/* TEXT */}
@@ -179,7 +200,7 @@ export default function ExpenseList({
                       </p>
 
                       <p className="text-sm text-gray-500">
-                        {currentUserId === exp.paidById ? (
+                        {isYou ? (
                           <span className="text-green-600 font-medium">
                             You paid ₹{exp.amount}
                           </span>
@@ -217,7 +238,7 @@ export default function ExpenseList({
                           <div className="absolute right-0 mt-2 z-50 bg-white rounded-xl shadow-lg border p-1">
                             <button
                               onClick={() => handleEditClick(exp)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-gray-900"
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-gray-100"
                             >
                               <FiEdit2 size={14} />
                               Edit
@@ -225,7 +246,7 @@ export default function ExpenseList({
 
                             <button
                               onClick={() => handleDeleteClick(exp.id)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-red-500"
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-500 hover:bg-red-50"
                             >
                               <FiTrash2 size={14} />
                               Delete

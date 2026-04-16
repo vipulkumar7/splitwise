@@ -14,11 +14,38 @@ import Input from "@/components/ui/form/Input";
 import Select from "@/components/ui/form/Select";
 import Button from "@/components/ui/form/Button";
 
+interface IUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+interface IGroupMember {
+  user: IUser;
+}
+
+interface IExpense {
+  id: string;
+  description: string;
+  amount: number;
+  paidById: string;
+}
+
+interface IExpenseFormModalProps {
+  show: boolean;
+  onClose: () => void;
+  members: IGroupMember[];
+  onSave: (data: FormData) => Promise<void>;
+  loading?: boolean;
+  editingExpense?: IExpense | null;
+  currentUserId?: string;
+}
+
 // =========================
-// ✅ ZOD SCHEMA
+// ZOD SCHEMA
 // =========================
 const schema = z.object({
-  description: z.string().min(1, "Description is required"),
+  description: z.string().trim().min(1, "Description is required"),
   amount: z
     .string()
     .min(1, "Amount is required")
@@ -31,16 +58,15 @@ type FormData = z.infer<typeof schema>;
 export default function ExpenseFormModal({
   show,
   onClose,
-  members = [],
+  members,
   onSave,
-  loading,
+  loading = false,
   editingExpense,
   currentUserId,
-}: any) {
+}: IExpenseFormModalProps) {
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm<FormData>({
@@ -52,22 +78,23 @@ export default function ExpenseFormModal({
     },
   });
 
+  // =========================
+  // RESET FORM
+  // =========================
   useEffect(() => {
     if (!show) return;
 
     if (editingExpense) {
-      // ✅ EDIT MODE (full reset)
       reset({
-        description: editingExpense.description || "",
-        amount: String(editingExpense.amount || ""),
-        payerId: String(editingExpense.paidById || ""),
+        description: editingExpense.description ?? "",
+        amount: String(editingExpense.amount ?? ""),
+        payerId: editingExpense.paidById ?? "",
       });
     } else {
-      // ✅ ADD MODE (FULL RESET — FIX)
       reset({
         description: "",
         amount: "",
-        payerId: currentUserId || "",
+        payerId: currentUserId ?? "",
       });
     }
   }, [show, editingExpense, currentUserId, reset]);
@@ -75,24 +102,24 @@ export default function ExpenseFormModal({
   // =========================
   // SUBMIT
   // =========================
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = handleSubmit(async (data) => {
     await onSave(data);
-  };
+  });
 
   if (!show) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md px-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[360px] rounded-3xl bg-white/95 shadow-2xl p-6 border"
+        className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl p-6 border"
       >
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-black">
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </h2>
 
@@ -152,15 +179,16 @@ export default function ExpenseFormModal({
         {/* ========================= */}
         <FormField icon={FiUser} rightIcon={<FiChevronDown />}>
           <Select
+            disabled={loading}
             {...register("payerId")}
             className={
               errors.payerId ? "border-red-400 focus:ring-red-400" : ""
             }
           >
             <option value="">Select payer</option>
-            {members.map((m: any) => (
-              <option key={m.user.id} value={String(m.user.id)}>
-                {m.user.name || m.user.email}
+            {members.map((m) => (
+              <option key={m.user.id} value={m.user.id}>
+                {m.user.name || m.user.email || "User"}
               </option>
             ))}
           </Select>
@@ -175,11 +203,7 @@ export default function ExpenseFormModal({
         {/* ========================= */}
         {/* BUTTON */}
         {/* ========================= */}
-        <Button
-          loading={loading}
-          variant="primary"
-          onClick={handleSubmit(onSubmit)}
-        >
+        <Button loading={loading} variant="primary" onClick={onSubmit}>
           {loading
             ? editingExpense
               ? "Updating..."
