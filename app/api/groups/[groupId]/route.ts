@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
+  req: NextRequest,
   context: { params: Promise<{ groupId: string }> },
 ) {
   try {
@@ -41,7 +41,7 @@ export async function GET(
 // DELETE
 // =========================
 export async function DELETE(
-  _req: Request,
+  _req: NextRequest,
   context: { params: Promise<{ groupId: string }> },
 ) {
   try {
@@ -86,7 +86,7 @@ export async function DELETE(
 // PUT (UPDATE GROUP NAME)
 // =========================
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   context: { params: Promise<{ groupId: string }> },
 ) {
   try {

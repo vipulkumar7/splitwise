@@ -1,7 +1,7 @@
 import { sendEmail } from "@/lib/services/email";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { email, inviteLink } = await req.json();
 
@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Email HTML template
     const html = `
       <div style="background:#f4f6f8;padding:20px 0;font-family:Arial,sans-serif;">
         <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.08);">
@@ -80,7 +79,6 @@ export async function POST(req: Request) {
       </div>
       `;
 
-    // ✅ Send email
     await sendEmail({
       to: email,
       subject: "You're invited to join a group 🎉",

@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { randomBytes } from "crypto";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   context: { params: Promise<{ groupId: string }> },
 ) {
   try {

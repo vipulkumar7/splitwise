@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 // ======================
 // ✏️ UPDATE EXPENSE
 // ======================
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -46,7 +46,7 @@ export async function PUT(
 // 🗑 DELETE EXPENSE
 // ======================
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
