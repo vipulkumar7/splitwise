@@ -57,15 +57,6 @@ export interface IShareModalProps {
   }) => void;
 }
 
-
-export interface IGroupListProps {
-  groups: IGroup[];
-  selectedGroupId?: string;
-  onSelect: (groupId: string) => void;
-  onAddExpense: (groupId: string) => void;
-  onDelete: (groupId: string) => void;
-}
-
 export interface IGroupMenuProps {
   show: boolean;
   onClose: () => void;
