@@ -3,22 +3,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
-export async function GET() {
-    const session = await getServerSession(authOptions);
+export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-        return NextResponse.json([], { status: 401 });
-    }
+  if (!session?.user?.email) {
+    return NextResponse.json([], { status: 401 });
+  }
 
-    const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-    });
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
 
-    const notifications = await prisma.notification.findMany({
-        where: { userId: user?.id },
-        orderBy: { createdAt: "desc" },
-        take: 20,
-    });
+  const { searchParams } = new URL(req.url);
+  const groupId = searchParams.get("groupId"); // 🔥 optional filter
 
-    return NextResponse.json(notifications);
+  const notifications = await prisma.notification.findMany({
+    where: {
+      userId: user?.id,
+      ...(groupId && { groupId }),
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+
+  return NextResponse.json(notifications);
 }

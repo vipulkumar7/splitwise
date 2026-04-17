@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     const splitType = body?.splitType || "equal";
     const splits = body?.splits || {};
 
-    if (!amount || !groupId || !payerId) {
+    // ⚠️ Fix: amount check
+    if (amount == null || !groupId || !payerId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
@@ -46,21 +47,35 @@ export async function POST(req: NextRequest) {
           select: { id: true },
         });
 
-        // ✅ Get members (lightweight)
+        // ✅ Get members
         const members = await tx.groupMember.findMany({
           where: { groupId },
           select: { userId: true },
         });
 
-        // =========================
+        // ==============================
         // 🔔 NOTIFICATIONS
-        // =========================
-        const notifications = members
+        // ==============================
+
+        const payer = await tx.user.findUnique({
+          where: { id: payerId },
+          select: { name: true },
+        });
+
+        const notificationData = members
           .filter((m: IMember) => m.userId !== payerId)
           .map((m: IMember) => ({
             userId: m.userId,
-            message: `${description} added in group 💸`,
+            groupId,
+            type: "EXPENSE_ADDED" as const,
+            message: `${payer?.name || "Someone"} added ₹${amount} for ${description}`,
           }));
+
+        if (notificationData.length > 0) {
+          await tx.notification.createMany({
+            data: notificationData,
+          });
+        }
 
         // =========================
         // 💸 SPLITS
@@ -70,7 +85,7 @@ export async function POST(req: NextRequest) {
         if (splitType === "equal") {
           const splitAmount = amount / members.length;
 
-          splitData = (members as IMember[]).map((m) => ({
+          splitData = members.map((m: any) => ({
             userId: m.userId,
             expenseId: expense.id,
             amount: splitAmount,
@@ -87,13 +102,10 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // ✅ Run in parallel inside transaction
-        await Promise.all([
-          notifications.length &&
-            tx.notification.createMany({ data: notifications }),
-
-          splitData.length && tx.split.createMany({ data: splitData }),
-        ]);
+        // ✅ Only splits here (notification already handled)
+        if (splitData.length > 0) {
+          await tx.split.createMany({ data: splitData });
+        }
 
         return expense.id;
       },

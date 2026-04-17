@@ -59,7 +59,7 @@ export default function AvatarGroup({ members = [] }: IAvatarGroup) {
 
             {/* Tooltip */}
             {activeId === id && (
-              <div className="absolute bottom-11 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded-md shadow-md z-50">
+              <div className="absolute bottom-11 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white text-black text-xs p-1 rounded-md shadow-md z-50">
                 {isYou ? "You" : name}
               </div>
             )}

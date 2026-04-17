@@ -16,23 +16,59 @@ export async function PUT(
 
     if (!id) {
       return NextResponse.json(
-        {
-          error: "Missing expense id",
-        },
+        { error: "Missing expense id" },
         { status: 400 },
       );
     }
 
-    const updated = await prisma.expense.update({
+    // 🔍 get existing expense (needed for groupId)
+    const existing = await prisma.expense.findUnique({
       where: { id },
-      data: {
-        description,
-        amount: Number(amount),
-        paidById: payerId,
-      },
+      select: { groupId: true },
     });
 
-    return NextResponse.json(updated);
+    if (!existing) {
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+    }
+
+    // 🚀 TRANSACTION (update + notification)
+    const result = await prisma.$transaction(async (tx: any) => {
+      // ✅ update expense
+      const updated = await tx.expense.update({
+        where: { id },
+        data: {
+          description,
+          amount: Number(amount),
+          paidById: payerId,
+        },
+      });
+
+      // 👥 get members
+      const members = await tx.groupMember.findMany({
+        where: { groupId: existing.groupId },
+        select: { userId: true },
+      });
+
+      // 👤 payer name
+      const payer = await tx.user.findUnique({
+        where: { id: payerId },
+        select: { name: true },
+      });
+
+      // 🔔 notifications
+      await tx.notification.createMany({
+        data: members.map((m: any) => ({
+          userId: m.userId,
+          groupId: existing.groupId,
+          type: "EXPENSE_UPDATED" as const,
+          message: `${payer?.name || "Someone"} updated ₹${amount} for ${description}`,
+        })),
+      });
+
+      return updated;
+    });
+
+    return NextResponse.json(result);
   } catch (error: unknown) {
     console.error("UPDATE ERROR:", error);
     return NextResponse.json(
@@ -52,9 +88,14 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
-    // check exists
+    // 🔍 get existing expense (needed for notification)
     const existing = await prisma.expense.findUnique({
       where: { id },
+      select: {
+        groupId: true,
+        description: true,
+        paidById: true,
+      },
     });
 
     if (!existing) {
@@ -64,20 +105,45 @@ export async function DELETE(
       );
     }
 
-    // delete splits
-    await prisma.split.deleteMany({
-      where: { expenseId: id },
-    });
+    // 🚀 TRANSACTION
+    await prisma.$transaction(async (tx: any) => {
+      // 👥 members
+      const members = await tx.groupMember.findMany({
+        where: { groupId: existing.groupId },
+        select: { userId: true },
+      });
 
-    // delete expense
-    await prisma.expense.delete({
-      where: { id },
+      // 👤 payer
+      const payer = await tx.user.findUnique({
+        where: { id: existing.paidById },
+        select: { name: true },
+      });
+
+      // 🔔 notifications BEFORE delete
+      await tx.notification.createMany({
+        data: members.map((m: any) => ({
+          userId: m.userId,
+          groupId: existing.groupId,
+          type: "EXPENSE_DELETED" as const,
+          message: `${payer?.name || "Someone"} deleted expense "${existing.description}"`,
+        })),
+      });
+
+      // 🗑 delete splits
+      await tx.split.deleteMany({
+        where: { expenseId: id },
+      });
+
+      // 🗑 delete expense
+      await tx.expense.delete({
+        where: { id },
+      });
     });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("DELETE ERROR:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: error instanceof Error ? error.message : "Delete failed" },
       { status: 500 },
     );

@@ -14,7 +14,6 @@ export async function GET() {
       return NextResponse.json([], { status: 200 });
     }
 
-    // ✅ Avoid upsert → use findUnique (faster)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true },
@@ -35,7 +34,6 @@ export async function GET() {
       select: {
         id: true,
         name: true,
-
         members: {
           select: {
             user: {
@@ -47,7 +45,6 @@ export async function GET() {
             },
           },
         },
-
         expenses: {
           select: {
             id: true,
@@ -83,33 +80,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
     }
 
-    // ✅ Only fetch id (lighter + faster)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // ✅ Single DB call (nested create already optimal)
-    const group = await prisma.group.create({
-      data: {
-        name,
-        members: {
-          create: {
-            userId: user.id,
+    // 🚀 TRANSACTION (group + notification)
+    const result = await prisma.$transaction(async (tx: any) => {
+      // ✅ create group
+      const group = await tx.group.create({
+        data: {
+          name,
+          members: {
+            create: {
+              userId: user.id,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        name: true,
-      },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      // 🔔 notification (optional but useful)
+      await tx.notification.create({
+        data: {
+          userId: user.id,
+          groupId: group.id,
+          type: "GROUP_CREATED" as const,
+          message: `You created group "${group.name}"`,
+        },
+      });
+
+      return group;
     });
 
-    return NextResponse.json(group);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("CREATE GROUP ERROR:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import NotificationBell from "../ui/NotificationBell";
+import NotificationBell from "../../features/notifications/components/NotificationBell";
 import { CgProfile } from "react-icons/cg";
 import LogoutButton from "../ui/Logout";
 

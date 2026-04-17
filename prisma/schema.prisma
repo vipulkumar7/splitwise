@@ -37,11 +37,12 @@ model Group {
   name      String
   createdAt DateTime @default(now())
 
-  members  GroupMember[]
-  expenses Expense[]
+  members   GroupMember[]
+  expenses  Expense[]
+  invites   GroupInvite[]
 
-  // ✅ ADD THIS LINE (FIX)
-  invites GroupInvite[]
+  // 🔥 THIS LINE IS REQUIRED
+  notifications Notification[]
 }
 
 //////////////////////////////
@@ -152,12 +153,15 @@ enum NotificationType {
 }
 
 model Notification {
-  id        String           @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  message   String
-  type      NotificationType @default(GENERAL) // ✅ only ONE type field
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
+  groupId   String?
 
-  user User @relation(fields: [userId], references: [id])
+  message   String
+  type      NotificationType @default(GENERAL)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group? @relation(fields: [groupId], references: [id])
 }

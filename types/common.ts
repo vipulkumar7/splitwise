@@ -29,11 +29,21 @@ export interface IFormFieldProps {
   className?: string;
 }
 
+export type NotificationType =
+  | "GENERAL"
+  | "USER_JOINED"
+  | "EXPENSE_ADDED"
+  | "EXPENSE_UPDATED"
+  | "EXPENSE_DELETED"
+  | "GROUP_CREATED";
+
 export interface INotification {
   id: string;
   message: string;
   read: boolean;
   createdAt: string;
+  type: NotificationType;
+  groupId?: string;
 }
 
 export type ToastType = "success" | "error" | "info";
