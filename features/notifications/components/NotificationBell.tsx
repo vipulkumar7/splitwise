@@ -80,6 +80,7 @@ export default function NotificationBell() {
           handleOpenLogic();
         }}
         className="relative p-2 rounded-full hover:bg-white/10 transition"
+        aria-label="Notification count"
       >
         <IoNotifications className="text-2xl text-white" />
 

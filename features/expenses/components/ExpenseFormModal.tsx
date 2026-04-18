@@ -94,6 +94,7 @@ export default function ExpenseFormModal({
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-200 transition"
+            aria-label="Close"
           >
             <IoClose size={20} />
           </button>

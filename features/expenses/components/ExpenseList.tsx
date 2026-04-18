@@ -174,6 +174,7 @@ export default function ExpenseList({
                       <button
                         onClick={() => toggleMenu(exp.id as string)}
                         className="p-1 text-gray-400 hover:text-gray-700"
+                        aria-label="Open menu"
                       >
                         <FiMoreVertical size={18} />
                       </button>
@@ -189,6 +190,7 @@ export default function ExpenseList({
                             <button
                               onClick={() => handleEditClick(exp)}
                               className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-gray-100"
+                              aria-label="Edit"
                             >
                               <FiEdit2 size={14} />
                               Edit
@@ -199,6 +201,7 @@ export default function ExpenseList({
                                 handleDeleteClick(exp.id as string)
                               }
                               className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-500 hover:bg-red-50"
+                              aria-label="Delete"
                             >
                               <FiTrash2 size={14} />
                               Delete

@@ -167,6 +167,7 @@ export default function ShareModal({
           {/* WHATSAPP */}
           <button
             onClick={handleWhatsApp}
+            aria-label="WhatsApp"
             className="flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-green-50 active:scale-95 transition"
           >
             <FaWhatsapp className="text-green-500 text-xl" />
@@ -177,6 +178,7 @@ export default function ShareModal({
           <button
             onClick={handleCopy}
             disabled={loadingCopy}
+            aria-label="Copy"
             className={`flex items-center gap-3 w-full p-3 rounded-xl border hover:bg-gray-100 active:scale-95 transition disabled:opacity-60 ${loadingCopy && "cursor-not-allowed"}`}
           >
             <FaCopy className="text-gray-700 text-lg" />
@@ -199,6 +201,7 @@ export default function ShareModal({
             <button
               onClick={handleEmail}
               disabled={loadingEmail}
+              aria-label="Email"
               className={`bg-gray-500 hover:bg-gray-600 text-white px-4 rounded-xl flex items-center justify-center disabled:opacity-60 ${loadingEmail && "cursor-not-allowed"}`}
             >
               {loadingEmail ? (

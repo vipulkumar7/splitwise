@@ -79,6 +79,7 @@ export default function ConfirmModal({
           <button
             disabled={loading}
             onClick={onConfirm}
+            aria-label="Confirm Text"
             className={`flex-1 py-3 rounded-xl text-white font-semibold transition active:scale-95 ${buttonStyles}`}
           >
             {loading ? (

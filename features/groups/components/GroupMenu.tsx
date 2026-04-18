@@ -80,6 +80,7 @@ function GroupMenu({
           key={item.label}
           onClick={item.onClick}
           className="flex items-center gap-3 w-full px-4 py-2 text-sm text-black hover:bg-gray-100 transition"
+          aria-label="Icon"
         >
           {item.icon}
           {item.label}
@@ -93,6 +94,7 @@ function GroupMenu({
       <button
         onClick={onDelete}
         className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+        aria-label="Delete Group"
       >
         <FiTrash2 size={16} />
         Delete Group

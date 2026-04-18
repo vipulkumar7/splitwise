@@ -25,6 +25,7 @@ export default function LogoutButton() {
     <button
       disabled={loading}
       onClick={handleLogout}
+      aria-label="Logout"
       className={`w-full flex items-center gap-3 px-4 py-2 transition
         ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-red-50"}
       `}

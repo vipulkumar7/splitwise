@@ -40,6 +40,7 @@ export default function Navbar() {
       {/* LOGO */}
       <button
         onClick={() => router.push("/groups")}
+        aria-label="Logo"
         className="font-bold text-xl sm:text-2xl text-white"
       >
         Splitwise
@@ -85,6 +86,7 @@ export default function Navbar() {
                 {/* PROFILE */}
                 <button
                   onClick={() => navigate("/profile")}
+                  aria-label="Profile"
                   className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-100 active:scale-95 transition"
                 >
                   <CgProfile className="text-lg text-gray-600" />

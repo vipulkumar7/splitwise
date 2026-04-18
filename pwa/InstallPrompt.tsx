@@ -105,6 +105,7 @@ export default function InstallPrompt() {
               <button
                 onClick={handleInstall}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition active:scale-95"
+                aria-label="Install app"
               >
                 <FiDownload size={16} />
                 Install
@@ -115,6 +116,7 @@ export default function InstallPrompt() {
             <button
               onClick={handleClose}
               className="absolute top-2 right-2 text-gray-300 hover:text-white"
+              aria-label="Close"
             >
               <FiX size={16} />
             </button>

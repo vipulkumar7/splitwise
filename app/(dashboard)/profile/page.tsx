@@ -50,7 +50,10 @@ export default async function ProfilePage() {
 
           {/* ACTION BUTTON */}
           <div className="mt-6">
-            <button className="w-full py-2 rounded-lg bg-green-500 text-white font-medium hover:bg-green-600 transition shadow-sm">
+            <button
+              aria-label="Edit"
+              className="w-full py-2 rounded-lg bg-green-500 text-white font-medium hover:bg-green-600 transition shadow-sm"
+            >
               Edit Profile (Coming Soon)
             </button>
           </div>

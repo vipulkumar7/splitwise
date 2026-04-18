@@ -25,6 +25,7 @@ export default function AddExpenseButton({ onClick }: { onClick: () => void }) {
             hover:scale-110 active:scale-95
           "
           style={{ width: "56px", height: "56px" }}
+          aria-label="Add Expense"
         >
           <FiPlus size={30} className="text-white" />
         </div>
