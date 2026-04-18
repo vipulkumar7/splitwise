@@ -1,6 +1,11 @@
 import { RefObject } from "react";
-import { IExpense } from "./expense";
+import { IExpense, IExpenseFormData } from "./expense";
 import { IUser } from "./user";
+import { IToast } from "../common";
+
+export interface IPageProps {
+  params: Promise<{ id: string }>;
+}
 
 interface IGroupMember {
   user: IUser;
@@ -21,6 +26,35 @@ export interface IGroupHeader {
   onMenuClick: () => void;
   groupMembers: IGroupMember[];
   buttonRef?: RefObject<HTMLButtonElement | null>;
+}
+
+export interface IGroupUIState {
+  showMenu: boolean;
+  showModal: boolean;
+  showShare: boolean;
+  showMembers: boolean;
+  showDelete: boolean;
+  showExit: boolean;
+  showDeleteConfirm: boolean;
+  showEditGroup: boolean;
+}
+
+export interface IGroupModalsProps {
+  ui: IGroupUIState;
+  setUI: React.Dispatch<React.SetStateAction<IGroupUIState>>;
+  group: IGroup;
+  members: IGroupMember[];
+  currentUserId: string;
+  editingExpense: IExpense | null;
+  handleDeleteExpense: () => void;
+  deleting: boolean;
+  handleSave: (data: Partial<IExpenseFormData>) => Promise<void>;
+  deleteGroup: () => void;
+  exitGroup: () => void;
+  setToast: (toast: IToast) => void;
+  saving: boolean;
+  deletingGroup: boolean;
+  exitingGroup: boolean;
 }
 
 export interface IAvatarGroup {
@@ -60,7 +94,7 @@ export interface IShareModalProps {
 export interface IGroupMenuProps {
   show: boolean;
   onClose: () => void;
-  anchorRef?: RefObject<HTMLElement | null>; // ✅ flexible (button/div/etc.)
+  anchorRef?: RefObject<HTMLElement | null>;
   onEditGroup: () => void;
   onShare: () => void;
   onExit: () => void;

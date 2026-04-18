@@ -5,6 +5,7 @@ import { IoNotifications } from "react-icons/io5";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNotifications } from "../hooks/useNotifications";
 import { getNotificationUI } from "./getNotificationUI";
+import { INotification } from "@/types";
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -131,7 +132,7 @@ export default function NotificationBell() {
           {/* ✅ SCROLL AREA (THIS WILL WORK NOW) */}
           <div className="flex-1">
             {notifications.map((n) => {
-              const { icon, color } = getNotificationUI(n as any);
+              const { icon, color } = getNotificationUI(n as INotification);
 
               return (
                 <div

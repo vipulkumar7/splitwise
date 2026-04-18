@@ -43,7 +43,7 @@ export default function BalanceList({
   );
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       {sortedBalances.map(([userId, amount]) => {
         const safeAmount = Number.isFinite(amount) ? amount : 0;
 

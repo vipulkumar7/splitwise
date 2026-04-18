@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         if (splitType === "equal") {
           const splitAmount = amount / members.length;
 
-          splitData = members.map((m: any) => ({
+          splitData = members.map((m: IMember) => ({
             userId: m.userId,
             expenseId: expense.id,
             amount: splitAmount,

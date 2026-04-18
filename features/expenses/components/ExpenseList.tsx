@@ -115,10 +115,10 @@ export default function ExpenseList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-2">
       {Object.entries(groupedExpenses).map(([date, items]) => (
         <div key={date}>
-          <p className="text-xs font-semibold text-white my-2 uppercase">
+          <p className="text-xs font-semibold text-white mt-2 mb-2 uppercase">
             {date}
           </p>
 
