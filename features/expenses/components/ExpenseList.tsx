@@ -47,7 +47,7 @@ export default function ExpenseList({
     );
 
     return sorted.reduce<Record<string, IExpense[]>>((acc, exp) => {
-      const key = formatDate(exp.createdAt);
+      const key = formatDate(exp.createdAt as any);
       (acc[key] ||= []).push(exp);
       return acc;
     }, {});
