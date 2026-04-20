@@ -103,6 +103,7 @@ export default function ExpenseFormModal({
         <FormField icon={FiFileText}>
           <Input
             disabled={loading}
+            isExpenseForm={true}
             placeholder="Description"
             {...register("description")}
             className={
@@ -122,6 +123,7 @@ export default function ExpenseFormModal({
         <FormField icon={FaRupeeSign}>
           <Input
             disabled={loading}
+            isExpenseForm={true}
             type="number"
             placeholder="Amount"
             {...register("amount")}

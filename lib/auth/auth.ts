@@ -59,9 +59,14 @@ export const authOptions: AuthOptions = {
     },
 
     async jwt({ token, user }) {
-      // ✅ runs only on login
-      if (user) {
-        token.id = user.id;
+      if (!token.id && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id; // ✅ THIS IS THE FIX
+        }
       }
       return token;
     },

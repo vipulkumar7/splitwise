@@ -16,6 +16,7 @@ export interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export interface IInputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
+  isExpenseForm?: boolean;
 }
 
 export interface ISelectProps extends SelectHTMLAttributes<HTMLSelectElement> {

@@ -8,6 +8,7 @@ export interface IPageProps {
 }
 
 interface IGroupMember {
+  userId?: string;
   user: IUser;
 }
 

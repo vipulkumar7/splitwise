@@ -1,12 +1,18 @@
 import { IGroupMember } from "./user";
 
+export interface IExpenseSplit {
+  userId: string;
+  amount: number;
+}
+
 export interface IExpense {
   id?: string;
   amount: number;
   paidById?: string;
   description: string | null;
-  createdAt: string;
+  createdAt: Date;
   payerId: string;
+  splits: IExpenseSplit[];
 }
 
 export interface IExpenseFormModalProps {

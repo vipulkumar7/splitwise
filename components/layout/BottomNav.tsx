@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { FiHome, FiUser } from "react-icons/fi";
+import { FaUserFriends } from "react-icons/fa";
 import { useCallback, useMemo } from "react";
 
 export default function BottomNav() {
@@ -10,6 +11,11 @@ export default function BottomNav() {
 
   const navItems = useMemo(
     () => [
+      {
+        icon: <FaUserFriends size={22} />,
+        label: "Friends",
+        path: "/friends",
+      },
       {
         icon: <FiHome size={22} />,
         label: "Groups",

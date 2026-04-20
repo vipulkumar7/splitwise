@@ -135,7 +135,7 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
   };
 
   if (loading) return <GroupDetailSkeleton />;
-  if (!group) return <div className="p-6">Group not found</div>;
+  if (!group) return <div className="p-6 text-white">Group not found</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-4 h-screen flex flex-col bg-zinc-950 text-white">

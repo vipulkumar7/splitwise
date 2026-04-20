@@ -13,7 +13,7 @@ export default function LoginClient() {
     setLoading(true);
 
     await signIn("google", {
-      callbackUrl: "/groups",
+      callbackUrl: "/friends",
     });
 
     setLoading(false);
