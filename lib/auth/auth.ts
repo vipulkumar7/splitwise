@@ -43,31 +43,37 @@ export const authOptions: AuthOptions = {
     async signIn({ user }) {
       if (!user.email) return false;
 
-      // ✅ Optional: only update name if changed
-      await prisma.user
-        .update({
-          where: { email: user.email },
-          data: {
-            name: user.name || "",
-          },
-        })
-        .catch(() => {
-          // ignore if not exists (adapter will create)
-        });
+      await prisma.user.upsert({
+        where: { email: user.email },
+        update: {
+          name: user.name || "",
+        },
+        create: {
+          email: user.email,
+          name: user.name || "",
+        },
+      });
 
       return true;
     },
 
     async jwt({ token, user }) {
-      if (!token.id && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
+      // When user logs in
+      if (user?.email) {
+        const dbUser = await prisma.user.upsert({
+          where: { email: user.email },
+          update: {
+            name: user.name || "",
+          },
+          create: {
+            email: user.email,
+            name: user.name || "",
+          },
         });
 
-        if (dbUser) {
-          token.id = dbUser.id; // ✅ THIS IS THE FIX
-        }
+        token.id = dbUser.id; // ALWAYS SET
       }
+
       return token;
     },
 

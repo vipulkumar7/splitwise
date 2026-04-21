@@ -67,12 +67,6 @@ export async function GET() {
 // =========================
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await req.json().catch(() => null);
     const name = body?.name?.trim();
 
@@ -80,49 +74,89 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true, name: true },
-    });
+    const session = await getServerSession(authOptions);
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 🚀 TRANSACTION (group + notification)
-    const result = await prisma.$transaction(async (tx: any) => {
-      // ✅ create group
-      const group = await tx.group.create({
-        data: {
-          name,
-          members: {
-            create: {
-              userId: user.id,
+    const dbUser = await prisma.user.upsert({
+      where: { email: session.user.email! },
+      update: {},
+      create: {
+        email: session.user.email!,
+        name: session.user.name || "User",
+      },
+    });
+
+    const userId = dbUser.id;
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ✅ Create group first
+    const group = await prisma.group.create({
+      data: {
+        name,
+      },
+    });
+
+    // ✅ Add user as member
+    await prisma.groupMember.create({
+      data: {
+        userId: userId,
+        groupId: group.id,
+      },
+    });
+
+    // ✅ Fetch complete group data
+    const completeGroup = await prisma.group.findUnique({
+      where: { id: group.id },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        members: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
             },
           },
         },
-        select: {
-          id: true,
-          name: true,
+        expenses: {
+          select: {
+            id: true,
+            amount: true,
+            paidById: true,
+          },
         },
-      });
-
-      // 🔔 notification (optional but useful)
-      await tx.notification.create({
-        data: {
-          userId: user.id,
-          groupId: group.id,
-          type: "GROUP_CREATED" as const,
-          message: `You created group "${group.name}"`,
-        },
-      });
-
-      return group;
+      },
     });
 
-    return NextResponse.json(result);
+    // 🔔 Create notification
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        groupId: group.id,
+        type: "GROUP_CREATED",
+        message: `You created group "${group.name}"`,
+      },
+    });
+
+    return NextResponse.json(completeGroup);
   } catch (error) {
     console.error("CREATE GROUP ERROR:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
   }
 }

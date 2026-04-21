@@ -88,7 +88,7 @@ export default function GroupsPage() {
         body: JSON.stringify({ name: groupName }),
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Failed to create group");
 
       const newGroup: IGroup = await res.json();
 

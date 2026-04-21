@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { FiArrowUpRight, FiArrowDownLeft } from "react-icons/fi";
 
 interface IFriend {
@@ -11,6 +12,7 @@ interface IFriend {
 }
 
 export default function FriendCard({ friend }: { friend: IFriend }) {
+  const router = useRouter();
   const isOwe = friend.balance < 0;
   const isOwed = friend.balance > 0;
 
@@ -58,7 +60,7 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
             isOwe ? "text-red-400" : isOwed ? "text-green-400" : "text-gray-400"
           }`}
         >
-          ₹{Math.abs(friend.balance)}
+          ₹{Math.abs(friend.balance).toFixed(2)}
         </p>
 
         {isOwe ? (
@@ -69,7 +71,11 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
 
         {/* SETTLE BUTTON */}
         {friend.balance !== 0 && (
-          <button className="text-xs bg-green-500 px-3 py-1 rounded-lg hover:bg-green-600 active:scale-95 transition">
+          <button
+          disabled
+            className="text-xs bg-green-500 px-3 py-2 rounded-lg hover:bg-green-600 active:scale-95 transition"
+            onClick={() => router.push(`/settle/${friend.id}`)}
+          >
             Settle
           </button>
         )}
