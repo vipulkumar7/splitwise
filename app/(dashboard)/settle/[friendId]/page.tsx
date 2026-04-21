@@ -9,11 +9,25 @@ export default function SettlePage() {
 
   const friendId = params.friendId as string;
 
-  const [amount, setAmount] = useState<number>(0);
+  const [amount, setAmount] = useState<string>("");
   const [upiId, setUpiId] = useState("");
 
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
   const handleUPIPay = () => {
-    const url = `upi://pay?pa=${upiId}&pn=Friend&am=${amount}&cu=INR`;
+    if (!isMobile) {
+      alert("UPI payment works only on mobile device");
+      return;
+    }
+
+    const txnRef = `TXN${Date.now()}`;
+
+    const url = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
+      "Friend",
+    )}&am=${Number(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(
+      "Split Payment",
+    )}&tr=${txnRef}`;
+
     window.location.href = url;
   };
 
@@ -38,7 +52,16 @@ export default function SettlePage() {
           type="number"
           placeholder="Amount"
           value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
+          onChange={(e) => {
+            let val = e.target.value;
+
+            // Remove leading zeros
+            if (val.length > 1 && val.startsWith("0")) {
+              val = val.replace(/^0+/, "");
+            }
+
+            setAmount(val);
+          }}
           className="w-full p-3 rounded bg-white/10"
         />
 
