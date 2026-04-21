@@ -45,9 +45,9 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
 
         {/* SUMMARY */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <SummaryCard label="You owe" value={totals.owe} type="owe" />
-          <SummaryCard label="You are owed" value={totals.owed} type="owed" />
-          <SummaryCard label="Net" value={totals.net} type="net" />
+          <SummaryCard label="You owe" value={parseInt(totals.owe.toFixed(2))} type="owe" />
+          <SummaryCard label="You are owed" value={parseInt(totals.owed.toFixed(2))} type="owed" />
+          <SummaryCard label="Net" value={parseInt(totals.net.toFixed(2))} type="net" />
         </div>
 
         {/* SEARCH */}

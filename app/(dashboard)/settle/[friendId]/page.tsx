@@ -52,7 +52,7 @@ export default function SettlePage() {
 
         <button
           onClick={handleUPIPay}
-          className="w-full bg-green-500 py-3 rounded"
+          className="w-full bg-green-500 py-3 rounded cursor-pointer hover:bg-green-600 active:scale-95 transition"
         >
           Pay via UPI
         </button>

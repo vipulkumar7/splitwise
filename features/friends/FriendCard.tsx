@@ -72,8 +72,7 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
         {/* SETTLE BUTTON */}
         {friend.balance !== 0 && (
           <button
-          disabled
-            className="text-xs bg-green-500 px-3 py-2 rounded-lg hover:bg-green-600 active:scale-95 transition"
+            className="text-xs bg-green-500 px-3 py-2 rounded-lg hover:bg-green-600 active:scale-95 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => router.push(`/settle/${friend.id}`)}
           >
             Settle
