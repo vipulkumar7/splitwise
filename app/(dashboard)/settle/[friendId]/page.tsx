@@ -4,6 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useMemo } from "react";
 import Image from "next/image";
 
+type UPIApp = "gpay" | "phonepe" | "paytm";
+
 export default function SettlePage() {
   const router = useRouter();
   const params = useParams();
@@ -12,16 +14,30 @@ export default function SettlePage() {
   const [amount, setAmount] = useState<string>("");
   const [upiId, setUpiId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState<UPIApp | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // 📱 Mobile detection
+  const UPI_APPS: {
+    key: UPIApp;
+    name: string;
+    icon: string;
+    color: string;
+  }[] = [
+    { key: "gpay", name: "GPay", icon: "/icons/gpay.png", color: "blue" },
+    {
+      key: "phonepe",
+      name: "PhonePe",
+      icon: "/icons/phonepe.png",
+      color: "purple",
+    },
+    { key: "paytm", name: "Paytm", icon: "/icons/paytm.png", color: "cyan" },
+  ];
+
   const isMobile = useMemo(() => {
     if (typeof window === "undefined") return false;
     return /Android|iPhone|iPad/i.test(navigator.userAgent);
   }, []);
 
-  // ✅ UPI validation
   const isValidUPI = (upi: string) => {
     const regex = /^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/;
     if (!regex.test(upi)) return false;
@@ -33,13 +49,11 @@ export default function SettlePage() {
     return Number(amount) > 0 && isValidUPI(upiId);
   }, [amount, upiId]);
 
-  // 🔔 Toast helper
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
 
-  // 🔥 Build UPI params
   const buildParams = () => {
     const txnRef = `TXN${Date.now()}`;
 
@@ -50,8 +64,8 @@ export default function SettlePage() {
     )}&tr=${txnRef}`;
   };
 
-  // 🚀 Open app
-  const openApp = (scheme: string, app: string) => {
+  // 🚀 MAIN FUNCTION
+  const openApp = (app: UPIApp) => {
     if (!isMobile) {
       showToast("Use mobile device 📱");
       return;
@@ -62,11 +76,34 @@ export default function SettlePage() {
       return;
     }
 
+    const params = buildParams();
+    const fallback = `upi://pay?${params}`;
+
+    let url = "";
+
+    switch (app) {
+      case "gpay":
+        url = `tez://upi/pay?${params}`;
+        break;
+      case "phonepe":
+        url = `phonepe://pay?${params}`;
+        break;
+      case "paytm":
+        url = `paytmmp://pay?${params}`;
+        break;
+    }
+
     setSelectedApp(app);
-    window.location.href = `${scheme}?${buildParams()}`;
+
+    // Try direct open
+    window.location.href = url;
+
+    // Fallback (important)
+    setTimeout(() => {
+      window.location.href = fallback;
+    }, 1200);
   };
 
-  // ✅ Confirm payment
   const handleConfirm = async () => {
     if (!isValid) {
       showToast("Invalid details");
@@ -94,17 +131,12 @@ export default function SettlePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black text-white relative overflow-hidden px-4">
-      {/* Glow */}
-      <div className="absolute w-[500px] h-[500px] bg-green-500/20 blur-3xl rounded-full top-[-100px] left-[-100px]" />
-      <div className="absolute w-[400px] h-[400px] bg-blue-500/20 blur-3xl rounded-full bottom-[-100px] right-[-100px]" />
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black text-white px-4">
       <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
-        <div className="w-full max-w-md p-6 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl space-y-6 z-10">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Settle Payment 💸
-          </h1>
+        <div className="w-full max-w-md p-6 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl space-y-6">
+          <h1 className="text-2xl font-semibold">Settle Payment 💸</h1>
 
-          {/* 💰 Amount */}
+          {/* Amount */}
           <input
             type="text"
             inputMode="decimal"
@@ -121,99 +153,72 @@ export default function SettlePage() {
                 setAmount(val);
               }
             }}
-            className="w-full p-4 rounded-xl bg-white/10 border border-white/10 focus:ring-2 focus:ring-green-500 outline-none text-lg"
+            className="w-full p-4 rounded-xl bg-white/10 border border-white/10 focus:ring-2 focus:ring-green-500"
           />
 
-          {/* 🏦 UPI */}
+          {/* UPI */}
           <input
             type="text"
             placeholder="Enter UPI ID"
             value={upiId}
             onChange={(e) => setUpiId(e.target.value.toLowerCase())}
-            className="w-full p-4 rounded-xl bg-white/10 border border-white/10 focus:ring-2 focus:ring-blue-500 outline-none text-lg"
+            className="w-full p-4 rounded-xl bg-white/10 border border-white/10 focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* ⚡ UPI Apps */}
+          {/* Apps */}
           <div className="grid grid-cols-3 gap-4">
-            {/* GPay */}
-            <button
-              onClick={() => openApp("tez://upi/pay", "GPay")}
-              disabled={!isValid}
-              className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
-                selectedApp === "GPay"
-                  ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/10"
-              } disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              <Image src="/icons/gpay.png" alt="GPay" width={32} height={32} />
-              <span className="text-xs text-white">GPay</span>
-            </button>
+            {UPI_APPS.map((app) => (
+              <button
+                key={app.key}
+                onClick={() => openApp(app.key)}
+                disabled={!isValid}
+                className={`group flex flex-col items-center justify-center gap-3 p-4 rounded-2xl 
+                  transition-all duration-300 min-h-[100px]
+                  ${
+                    selectedApp === app.key
+                      ? "bg-white/20 scale-105 shadow-lg"
+                      : "bg-white/10 hover:bg-white/10"
+                  } disabled:opacity-40`}
+              >
+                <div className="w-12 h-12 flex items-center justify-center">
+                  <Image
+                    src={app.icon}
+                    alt={app.name}
+                    width={32}
+                    height={32}
+                    className="object-contain"
+                  />
+                </div>
 
-            {/* PhonePe */}
-            <button
-              onClick={() => openApp("upi://pay", "PhonePe")}
-              disabled={!isValid}
-              className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
-                selectedApp === "PhonePe"
-                  ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/10"
-              } disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              <Image
-                src="/icons/phonepe.png"
-                alt="PhonePe"
-                width={32}
-                height={32}
-              />
-              <span className="text-xs text-white">PhonePe</span>
-            </button>
-
-            {/* Paytm */}
-            <button
-              onClick={() => openApp("paytmmp://pay", "Paytm")}
-              disabled={!isValid}
-              className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
-                selectedApp === "Paytm"
-                  ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/10"
-              } disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              <Image
-                src="/icons/paytm.png"
-                alt="Paytm"
-                width={32}
-                height={32}
-              />
-              <span className="text-xs text-white">Paytm</span>
-            </button>
+                <span className="text-xs text-white/90">{app.name}</span>
+              </button>
+            ))}
           </div>
 
-          {/* 🔁 Fallback */}
+          {/* Fallback */}
           <button
-            onClick={() => openApp("upi://pay", "Other")}
+            onClick={() => {
+              window.location.href = `upi://pay?${buildParams()}`;
+            }}
             disabled={!isValid}
-            className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 active:scale-95 transition disabled:opacity-40"
+            className="w-full bg-green-500 py-3 rounded-xl"
           >
             Other UPI Apps
           </button>
 
-          {/* ✅ Confirm */}
+          {/* Confirm */}
           <button
             onClick={handleConfirm}
             disabled={loading || !isValid}
-            className={`w-full py-3 rounded-xl transition ${
-              loading
-                ? "bg-blue-500/50"
-                : "bg-blue-500 hover:bg-blue-600 active:scale-95"
-            }`}
+            className="w-full bg-blue-500 py-3 rounded-xl"
           >
             {loading ? "Processing..." : "I’ve Paid ✅"}
           </button>
         </div>
       </div>
-      {/* 🔔 Toast */}
+
       {toast && (
-        <div className="absolute bottom-6 bg-white text-black px-4 py-2 rounded-xl shadow-lg animate-bounce">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-xl">
           {toast}
         </div>
       )}
