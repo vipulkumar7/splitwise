@@ -121,13 +121,8 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
             whileHover={{ scale: 1.05 }}
             disabled={loading}
             onClick={handleSettle}
-            // className={`relative px-4 py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
-            //   loading
-            //     ? "bg-green-500/40 cursor-not-allowed"
-            //     : "bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg active:scale-95"
-            // }`}
             className="px-4 py-2 text-xs font-semibold rounded-lg 
-              bg-darkcyan 
+              bg-green-500 hover:bg-green-600 active:scale-95 transition-all duration-200 
               text-white shadow-md 
               hover:shadow-lg hover:from-green-600 hover:to-emerald-700 
               active:scale-95 transition-all duration-200 
