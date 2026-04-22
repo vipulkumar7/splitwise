@@ -1,6 +1,7 @@
 "use client";
 
 import { IExpense, IExpenseFormData, IToast, ToastType } from "@/types";
+import { NextResponse } from "next/server";
 import { useState, useCallback } from "react";
 import { mutate } from "swr";
 
@@ -27,7 +28,7 @@ export const useGroupPage = (
       id: Date.now(),
     });
   };
-  const handleError = async (res: Response) => {
+  const handleError = async (res: NextResponse) => {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error || "Something went wrong");
   };
@@ -42,7 +43,7 @@ export const useGroupPage = (
         method: "DELETE",
       });
 
-      if (!res.ok) await handleError(res);
+      if (!res.ok) await handleError(res as NextResponse);
 
       await mutate(key);
 
@@ -73,7 +74,7 @@ export const useGroupPage = (
           }),
         });
 
-        if (!res.ok) await handleError(res);
+        if (!res.ok) await handleError(res as NextResponse);
 
         await mutate(key);
 
@@ -107,7 +108,7 @@ export const useGroupPage = (
           }),
         });
 
-        if (!res.ok) await handleError(res);
+        if (!res.ok) await handleError(res as NextResponse);
 
         await mutate(key);
 
