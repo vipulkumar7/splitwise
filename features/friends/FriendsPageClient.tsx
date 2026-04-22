@@ -16,63 +16,90 @@ interface IFriend {
 export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
   const [query, setQuery] = useState("");
 
+  // 🔍 Filtered friends (safe + optimized)
   const filtered = useMemo(() => {
-    return friends.filter((f) =>
-      f.name.toLowerCase().includes(query.toLowerCase()),
+    const q = query.toLowerCase().trim();
+
+    return friends.filter(
+      (f) =>
+        f && typeof f.balance === "number" && f.name?.toLowerCase().includes(q),
     );
   }, [friends, query]);
 
+  // 💰 Totals calculation (optimized)
   const totals = useMemo(() => {
-    let owe = 0;
-    let owed = 0;
+    return friends.reduce(
+      (acc, f) => {
+        if (!f || typeof f.balance !== "number") return acc;
 
-    friends.forEach((f) => {
-      if (f.balance < 0) owe += Math.abs(f.balance);
-      else owed += f.balance;
-    });
+        if (f.balance < 0) acc.owe += Math.abs(f.balance);
+        else acc.owed += f.balance;
 
-    return { owe, owed, net: owed - owe };
+        return acc;
+      },
+      { owe: 0, owed: 0 },
+    );
   }, [friends]);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-black text-white px-4 py-6">
-      <div className="max-w-3xl mx-auto">
-        {/* HEADER */}
-        <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
-        <p className="text-gray-400 text-sm mb-6">
-          Track balances with your friends
-        </p>
+  const net = totals.owed - totals.owe;
 
-        {/* SUMMARY */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <SummaryCard label="You owe" value={parseInt(totals.owe.toFixed(2))} type="owe" />
-          <SummaryCard label="You are owed" value={parseInt(totals.owed.toFixed(2))} type="owed" />
-          <SummaryCard label="Net" value={parseInt(totals.net.toFixed(2))} type="net" />
+  return (
+    <div className="min-h-screen bg-zinc-950 to-black text-white px-4 py-8">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* 🔥 HEADER */}
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight mt-4">
+            Friends 👥
+          </h1>
+          <p className="text-gray-400 text-sm">
+            Track balances with your friends
+          </p>
         </div>
 
-        {/* SEARCH */}
-        <div className="relative mb-6">
-          <FiSearch className="absolute top-3 left-3 text-gray-400" />
+        {/* 💎 SUMMARY CARDS */}
+        <div className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible no-scrollbar pb-1 w-full">
+          <div className="min-w-[220px] sm:min-w-0 w-full">
+            <SummaryCard label="You owe" value={totals.owe} type="owe" />
+          </div>
+
+          <div className="min-w-[220px] sm:min-w-0 w-full">
+            <SummaryCard label="You are owed" value={totals.owed} type="owed" />
+          </div>
+
+          <div className="min-w-[220px] sm:min-w-0 w-full">
+            <SummaryCard label="Net balance" value={net} type="net" />
+          </div>
+        </div>
+
+        {/* 🔍 SEARCH */}
+        <div className="relative group">
+          <FiSearch className="absolute top-3.5 left-3 text-gray-400 group-focus-within:text-green-400 transition" />
+
           <Input
             name="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search friends..."
-            className="w-full rounded-xl bg-white/5 border border-white/10 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="text-white w-full pl-10 pr-4 py-3 rounded-xl 
+            bg-zinc-950 border border-white/10 backdrop-blur-xl 
+            focus:outline-none focus:ring-2 focus:ring-green-500 
+            transition-all duration-300"
           />
         </div>
 
-        {/* LIST */}
-        <div className="space-y-3">
-          {filtered.length === 0 && (
-            <div className="text-center text-gray-400 py-10">
-              No friends found 👥
-            </div>
-          )}
-
-          {filtered.map((friend) => (
-            <FriendCard key={friend.id} friend={friend} />
-          ))}
+        {/* 📋 LIST */}
+        <div className="flex flex-col h-[calc(100vh-260px)]">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar">
+            {filtered.length === 0 ? (
+              <div className="text-center text-gray-400 py-12 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-sm">No friends found 👥</p>
+              </div>
+            ) : (
+              filtered.map((friend) => (
+                <FriendCard key={friend.id} friend={friend} />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
