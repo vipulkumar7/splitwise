@@ -49,7 +49,6 @@ export default function SettlePage() {
 
   // 🚀 Open app
   const openApp = (scheme: string, app: string) => {
-    console.log('first')
     if (!isMobile) {
       showToast("Use mobile device 📱");
       return;
