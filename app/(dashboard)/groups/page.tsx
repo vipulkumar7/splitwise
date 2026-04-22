@@ -29,7 +29,11 @@ export default async function Page() {
       members: {
         include: { user: true },
       },
-      expenses: true,
+      expenses: {
+        include: {
+          splits: true,
+        },
+      },
     },
     orderBy: {
       updatedAt: "desc",

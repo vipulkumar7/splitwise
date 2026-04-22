@@ -18,8 +18,8 @@ export interface IGroup {
   name: string;
   members: IGroupMember[];
   expenses: IExpense[];
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   isTemp?: boolean;
 }
 

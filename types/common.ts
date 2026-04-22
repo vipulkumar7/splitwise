@@ -99,3 +99,9 @@ export type TStatus = "loading" | "success" | "error";
 export interface IInviteProps {
   token: string;
 }
+
+export interface ISettlePageProps {
+  params: {
+    friendId: any;
+  };
+}
