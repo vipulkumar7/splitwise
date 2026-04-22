@@ -39,7 +39,7 @@ export default function Navbar() {
     <div className="flex justify-between items-center px-4 sm:px-6 py-3 border-b backdrop-blur-md sticky top-0 z-50 bg-zinc-950 text-white">
       {/* LOGO */}
       <button
-        onClick={() => router.push("/groups")}
+        onClick={() => router.push("/friends")}
         aria-label="Logo"
         className="font-bold text-xl sm:text-2xl text-white"
       >
