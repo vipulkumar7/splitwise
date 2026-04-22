@@ -64,3 +64,32 @@ export interface IToastProps {
 export interface IDashboardLayoutProps {
   children: ReactNode;
 }
+
+export interface ISendEmailParams {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+export interface INotification {
+  id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationState {
+  notifications: INotification[];
+  count: number;
+  lastFetched: number;
+
+  setNotifications: (data: INotification[]) => void;
+  setCount: (count: number) => void;
+
+  markAllReadOptimistic: () => void;
+}
+
+export interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}

@@ -1,51 +1,47 @@
 import { prisma } from "@/lib/db/prisma";
-import { IGroup } from "@/types";
+import { GroupWithRelations } from "@/types";
+import { IFriend } from "@/types/models/friend";
 
 export function buildFriendsFromBalances(
-  groups: IGroup[],
-  balanceMap: Map<string, number>,
-  currentUserId?: string | undefined,
-) {
-  const userMap = new Map<
-    string,
-    {
-      id: string;
-      name: string;
-      email: string;
-      image?: string | null;
-      balance: number;
-    }
-  >();
+  groups: GroupWithRelations[],
+  balanceMap: Record<string, number>,
+  currentUserId?: string,
+): IFriend[] {
+  const userMap = new Map<string, IFriend>();
 
-  groups.forEach((group) => {
-    group.members.forEach((member) => {
+  for (const group of groups) {
+    for (const member of group.members) {
       const user = member.user;
 
-      if (!user || user.id === currentUserId) return;
+      // ✅ Safety checks
+      if (!user) continue;
+      if (currentUserId && user.id === currentUserId) continue;
 
-      if (!userMap.has(user.id as any)) {
-        userMap.set(user.id as any, {
-          id: user.id as any,
+      // ✅ Prevent duplicates
+      if (!userMap.has(user.id)) {
+        userMap.set(user.id, {
+          id: user.id,
           name: user.name ?? "Unknown",
-          email: user.email as any,
-          image: user.image,
-          balance: balanceMap.get(user.id as any) ?? 0, // ✅ key fix
+          email: user.email,
+          image: user.image ?? null,
+          balance: balanceMap[user.id] ?? 0,
         });
-      } else {
-        const existing = userMap.get(user.id as any)!;
-        existing.balance += balanceMap.get(user.id as any) ?? 0;
       }
-    });
-  });
+    }
+  }
 
   return Array.from(userMap.values());
 }
 
-export async function getGroups(userId: string | undefined) {
+export async function getGroups(userId: string) {
+  if (!userId) return [];
+
   return prisma.group.findMany({
     where: {
       members: {
-        some: { userId },
+        some: {
+          userId: userId, // explicit
+        },
       },
     },
     include: {

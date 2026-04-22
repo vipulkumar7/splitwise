@@ -4,13 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { FiArrowUpRight, FiArrowDownLeft } from "react-icons/fi";
 import { useState, useMemo } from "react";
-
-interface IFriend {
-  id: string;
-  name: string;
-  email: string;
-  balance: number;
-}
+import { IFriend } from "@/types";
 
 export default function FriendCard({ friend }: { friend: IFriend }) {
   const router = useRouter();

@@ -2,6 +2,7 @@ import { RefObject } from "react";
 import { IExpense, IExpenseFormData } from "./expense";
 import { IUser } from "./user";
 import { IToast } from "../common";
+import { Prisma } from "@prisma/client";
 
 export interface IPageProps {
   params: Promise<{ id: string }>;
@@ -107,3 +108,18 @@ export interface IPosition {
   top: number;
   left: number;
 }
+
+export type GroupWithRelations = Prisma.GroupGetPayload<{
+  include: {
+    members: {
+      include: {
+        user: true;
+      };
+    };
+    expenses: {
+      include: {
+        splits: true;
+      };
+    };
+  };
+}>;

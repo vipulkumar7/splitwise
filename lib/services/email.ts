@@ -1,3 +1,4 @@
+import { ISendEmailParams } from "@/types";
 import nodemailer from "nodemailer";
 
 // ✅ Create transporter (ONLY ONCE)
@@ -18,13 +19,6 @@ if (process.env.NODE_ENV === "development") {
       console.log("✅ Email server ready");
     }
   });
-}
-
-// ✅ Reusable email sender
-interface ISendEmailParams {
-  to: string;
-  subject: string;
-  html: string;
 }
 
 export const sendEmail = async ({ to, subject, html }: ISendEmailParams) => {

@@ -5,17 +5,10 @@ import SummaryCard from "./SummaryCard";
 import FriendCard from "./FriendCard";
 import { FiSearch } from "react-icons/fi";
 import Input from "@/components/ui/form/Input";
-
-interface IFriend {
-  id: string;
-  name: string;
-  email: string;
-  balance: number;
-}
+import { IFriend } from "@/types";
 
 export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
   const [query, setQuery] = useState("");
-
   // 🔍 Filtered friends (safe + optimized)
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -91,7 +84,7 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
         <div className="flex flex-col h-[calc(100vh-260px)]">
           <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar">
             {filtered.length === 0 ? (
-              <div className="text-center text-gray-400 py-12 bg-white/5 rounded-xl border border-white/10">
+              <div className="text-center text-white py-12 rounded-xl">
                 <p className="text-sm">No friends found 👥</p>
               </div>
             ) : (

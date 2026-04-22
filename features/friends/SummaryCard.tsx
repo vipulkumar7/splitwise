@@ -1,12 +1,7 @@
+import { ISummaryCardProps } from "@/types";
 import { motion } from "framer-motion";
 
-interface Props {
-  label: string;
-  value: number;
-  type: "owe" | "owed" | "net";
-}
-
-export default function SummaryCard({ label, value, type }: Props) {
+export default function SummaryCard({ label, value, type }: ISummaryCardProps) {
   const config = {
     owe: {
       text: "text-red-400",

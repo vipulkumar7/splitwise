@@ -1,22 +1,5 @@
+import { NotificationState } from "@/types";
 import { create } from "zustand";
-
-export interface INotification {
-  id: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-}
-
-interface NotificationState {
-  notifications: INotification[];
-  count: number;
-  lastFetched: number;
-
-  setNotifications: (data: INotification[]) => void;
-  setCount: (count: number) => void;
-
-  markAllReadOptimistic: () => void;
-}
 
 export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],

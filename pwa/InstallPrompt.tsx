@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiDownload, FiX } from "react-icons/fi";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import { BeforeInstallPromptEvent } from "@/types";
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
