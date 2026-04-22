@@ -93,3 +93,9 @@ export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
+
+export type TStatus = "loading" | "success" | "error";
+
+export interface IInviteProps {
+  token: string;
+}

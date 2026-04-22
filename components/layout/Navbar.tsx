@@ -12,36 +12,46 @@ export default function Navbar() {
   const { data: session } = useSession();
 
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
+  const ref = useRef<HTMLDivElement>(null);
   const user = session?.user;
 
-  const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (ref.current && !ref.current.contains(e.target as Node)) {
-      setOpen(false);
-    }
-  }, []);
-
+  // 🔥 Close on outside click (optimized)
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [handleClickOutside]);
+  }, []);
 
+  // 🚀 Navigation with double-click prevention
   const navigate = useCallback(
     (path: string) => {
-      router.push(path);
+      if (loadingPath) return; // ❌ prevent double click
+
+      setLoadingPath(path);
       setOpen(false);
+
+      router.push(path);
     },
-    [router],
+    [router, loadingPath],
   );
 
   return (
     <div className="flex justify-between items-center px-4 sm:px-6 py-3 border-b backdrop-blur-md sticky top-0 z-50 bg-zinc-950 text-white">
       {/* LOGO */}
       <button
-        onClick={() => router.push("/friends")}
+        onClick={() => navigate("/friends")}
+        disabled={!!loadingPath}
         aria-label="Logo"
-        className="font-bold text-xl sm:text-2xl text-white"
+        className={`font-bold text-xl sm:text-2xl transition ${
+          loadingPath ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
         Splitwise
       </button>
@@ -56,7 +66,8 @@ export default function Navbar() {
             {/* AVATAR */}
             <button
               onClick={() => setOpen((prev) => !prev)}
-              className="focus:outline-none"
+              disabled={!!loadingPath}
+              className="focus:outline-none disabled:opacity-50"
               aria-label="User menu"
             >
               {user.image ? (
@@ -86,12 +97,12 @@ export default function Navbar() {
                 {/* PROFILE */}
                 <button
                   onClick={() => navigate("/profile")}
-                  aria-label="Profile"
-                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-100 active:scale-95 transition"
+                  disabled={!!loadingPath}
+                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-100 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CgProfile className="text-lg text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">
-                    Profile
+                    {loadingPath === "/profile" ? "Opening..." : "Profile"}
                   </span>
                 </button>
 
