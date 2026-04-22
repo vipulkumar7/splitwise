@@ -42,9 +42,12 @@ export default function SettlePage() {
   // 🔥 Build UPI params
   const buildParams = () => {
     const txnRef = `TXN${Date.now()}`;
-    return `pa=${upiId}&pn=Friend&am=${Number(amount).toFixed(
-      2,
-    )}&cu=INR&tn=Split&tr=${txnRef}`;
+
+    return `pa=${upiId}&pn=${encodeURIComponent(
+      "Friend",
+    )}&am=${Number(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(
+      "Split Payment",
+    )}&tr=${txnRef}`;
   };
 
   // 🚀 Open app
@@ -139,7 +142,7 @@ export default function SettlePage() {
               className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
                 selectedApp === "GPay"
                   ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/500"
+                  : "bg-white/10 hover:bg-white/10"
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <Image src="/icons/gpay.png" alt="GPay" width={32} height={32} />
@@ -148,12 +151,12 @@ export default function SettlePage() {
 
             {/* PhonePe */}
             <button
-              onClick={() => openApp("phonepe://pay", "PhonePe")}
+              onClick={() => openApp("upi://pay", "PhonePe")}
               disabled={!isValid}
               className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
                 selectedApp === "PhonePe"
                   ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/500"
+                  : "bg-white/10 hover:bg-white/10"
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <Image
@@ -172,7 +175,7 @@ export default function SettlePage() {
               className={`group flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 cursor-pointer ${
                 selectedApp === "Paytm"
                   ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/500"
+                  : "bg-white/10 hover:bg-white/10"
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <Image
