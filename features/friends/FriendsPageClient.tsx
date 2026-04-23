@@ -50,7 +50,7 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
         </div>
 
         {/* 💎 SUMMARY CARDS */}
-        <div className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible no-scrollbar pb-1 w-full">
+        <div className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible no-scrollbar pb-1 w-full mt-4 mb-2">
           <div className="min-w-[220px] sm:min-w-0 w-full">
             <SummaryCard label="You owe" value={totals.owe} type="owe" />
           </div>
@@ -66,14 +66,14 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
 
         {/* 🔍 SEARCH */}
         <div className="relative group">
-          <FiSearch className="absolute top-3.5 left-3 text-gray-400 group-focus-within:text-green-400 transition" />
+          {/* <FiSearch className="absolute top-3.5 left-3 text-gray-400 group-focus-within:text-green-400 transition" /> */}
 
           <Input
             name="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search friends..."
-            className="text-white w-full pl-10 pr-4 py-3 rounded-xl 
+            className="text-white w-full pl-10 pr-4 py-3 mt-2 mb-2 rounded-xl 
             bg-zinc-950 border border-white/10 backdrop-blur-xl 
             focus:outline-none focus:ring-2 focus:ring-green-500 
             transition-all duration-300"
@@ -82,7 +82,7 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
 
         {/* 📋 LIST */}
         <div className="flex flex-col h-[calc(100vh-260px)]">
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar mt-4">
             {filtered.length === 0 ? (
               <div className="text-center text-white py-12 rounded-xl">
                 <p className="text-sm">No friends found 👥</p>

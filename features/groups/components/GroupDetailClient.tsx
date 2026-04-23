@@ -171,7 +171,7 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
 
       {group.expenses?.length > 0 ? (
         <>
-          <h2 className="my-2 font-semibold text-lg">Balances</h2>
+          <h2 className="mt-2 mb-2 font-semibold text-lg">Balances</h2>
           <BalanceList
             members={members}
             expenses={group.expenses}
@@ -181,7 +181,7 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
             }
           />
 
-          <h2 className="my-2 font-semibold text-lg">Expenses</h2>
+          <h2 className="mt-2 font-semibold text-lg">Expenses</h2>
           <div className="flex-1 overflow-y-auto no-scrollbar px-2 pb-32">
             <ExpenseList
               expenses={group.expenses}

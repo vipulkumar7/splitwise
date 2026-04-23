@@ -1,7 +1,7 @@
-import ProfileClient from "@/features/profile/ProfileClient";
-import { authOptions } from "@/lib/auth/auth";
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
+import Profile from "@/features/profile/Profile";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -9,6 +9,5 @@ export default async function ProfilePage() {
   if (!session?.user) {
     redirect("/login");
   }
-
-  return <ProfileClient user={session.user} />;
+  return <Profile user={session?.user} />;
 }

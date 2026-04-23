@@ -6,7 +6,3 @@ export interface IProfile {
   };
 }
 
-export interface DetailRowProps {
-  label: string;
-  value?: string | null;
-}

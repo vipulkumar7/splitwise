@@ -83,10 +83,10 @@ export default function ExpenseFormModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl p-6 border"
+        className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl p-6 border rounded-2xl"
       >
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-semibold text-black">
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </h2>

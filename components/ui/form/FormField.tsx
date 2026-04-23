@@ -9,7 +9,7 @@ export default function FormField({
   className = "",
 }: IFormFieldProps) {
   return (
-    <div className={`relative mb-4 ${className}`}>
+    <div className={`relative mt-3 mb-3 ${className}`}>
       {/* LEFT ICON */}
       {Icon && (
         <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 pointer-events-none" />

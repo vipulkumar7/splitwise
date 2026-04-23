@@ -93,12 +93,16 @@ export default function GroupsClient({
   return (
     <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4 bg-zinc-950 text-white">
       {/* CREATE */}
-      <div className="mt-3 flex gap-3 bg-zinc-900 p-3 rounded-2xl border border-zinc-700">
+      <div className="mt-3 flex gap-4 bg-zinc-900 rounded-2xl">
         <input
+          style={{ padding: "12px" }}
+          type="text"
+          name="group"
+          id="group"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Create a new group..."
-          className="flex-1 bg-transparent outline-none"
+          className="flex-1 rounded-xl border border-red-400 text-black px-4 outline-none"
         />
 
         <button
@@ -106,20 +110,19 @@ export default function GroupsClient({
           disabled={!name.trim() || creating}
           className="px-5 py-2 rounded-xl bg-green-500 disabled:opacity-50"
         >
-          {creating ? "..." : "+ Add"}
+          {creating ? "Adding..." : "+ Add"}
         </button>
       </div>
 
       {/* LIST */}
-      <div className="flex-1 overflow-y-auto space-y-4 mt-4 mb-36 no-scrollbar">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-36 no-scrollbar">
         {groups.length === 0 && <GroupSkeleton />}
 
         {groups.map((group) => (
-          <button
+          <div
             key={group.id}
             onClick={() => handleNavigate(group.id)}
-            disabled={loading}
-            className="w-full p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60"
+            className="w-full mt-3 mb-3 p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
           >
             <div className="flex items-center gap-4">
               {/* AVATAR */}
@@ -145,7 +148,7 @@ export default function GroupsClient({
             <p className="text-green-600 font-semibold">
               ₹{getTotalAmount(group)}
             </p>
-          </button>
+          </div>
         ))}
       </div>
 
