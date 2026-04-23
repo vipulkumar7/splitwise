@@ -9,7 +9,6 @@ export default function LoginClient() {
 
   const handleLogin = async () => {
     if (loading) return;
-
     setLoading(true);
 
     await signIn("google", {
@@ -20,10 +19,16 @@ export default function LoginClient() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 px-4">
-      <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl text-center mb-40">
-        <h1 className="text-3xl font-bold text-white mb-2">Splitwise</h1>
-        <p className="text-gray-400 mb-6 text-sm">
+    <div className="min-h-screen flex items-center justify-center px-4">
+      {/* CARD */}
+      <div
+        style={{ padding: "32px", borderRadius: "12px" }}
+        className="w-full max-w-md text-center bg-white/95 backdrop-blur-xl border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.4)] p-8"
+      >
+        {/* TITLE */}
+        <h1 className="text-2xl font-semibold text-white mb-2">Splitwise</h1>
+
+        <p className="text-gray-400 text-sm mb-6">
           Split expenses with friends easily 💸
         </p>
 
@@ -31,35 +36,35 @@ export default function LoginClient() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          aria-label="Login"
-          className={`w-full flex items-center justify-center gap-3 font-medium py-3 rounded-xl transition-all duration-200
+          className={`w-full flex items-center justify-center gap-3 py-3 rounded-xl font-medium transition-all duration-200
             ${
               loading
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-white text-black hover:scale-[1.02] hover:shadow-lg"
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-white text-black hover:scale-[1.02] hover:shadow-lg active:scale-95"
             }`}
         >
           {loading ? (
             <>
-              {/* Spinner */}
               <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
               Logging in...
             </>
           ) : (
             <>
-              <FcGoogle size={22} />
+              <FcGoogle size={20} />
               Continue with Google
             </>
           )}
         </button>
 
-        <div className="my-6 flex items-center gap-2 text-gray-500 text-xs">
-          <div className="flex-1 h-px bg-gray-700" />
+        {/* DIVIDER */}
+        <div className="flex items-center gap-3 text-gray-500 text-xs">
+          <div className="flex-1 h-px bg-white/10 mt-4 mb-4" />
           Secure login
-          <div className="flex-1 h-px bg-gray-700" />
+          <div className="flex-1 h-px bg-white/10 mt-4 mb-4" />
         </div>
 
-        <p className="text-xs text-gray-500">
+        {/* FOOTER */}
+        <p className="text-xs text-gray-500 mt-4">
           Powered by NextAuth + Google OAuth
         </p>
       </div>

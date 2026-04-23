@@ -3,24 +3,12 @@
 import { usePathname, useRouter } from "next/navigation";
 import { FiHome, FiUser } from "react-icons/fi";
 import { FaUserFriends } from "react-icons/fa";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 const NAV_ITEMS = [
-  {
-    icon: <FaUserFriends size={22} />,
-    label: "Friends",
-    path: "/friends",
-  },
-  {
-    icon: <FiHome size={22} />,
-    label: "Groups",
-    path: "/groups",
-  },
-  {
-    icon: <FiUser size={22} />,
-    label: "Profile",
-    path: "/profile",
-  },
+  { icon: <FaUserFriends size={22} />, label: "Friends", path: "/friends" },
+  { icon: <FiHome size={22} />, label: "Groups", path: "/groups" },
+  { icon: <FiUser size={22} />, label: "Profile", path: "/profile" },
 ];
 
 export default function BottomNav() {
@@ -29,9 +17,14 @@ export default function BottomNav() {
 
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
+  // ✅ RESET after navigation
+  useEffect(() => {
+    setLoadingPath(null);
+  }, [pathname]);
+
   const handleNavigate = useCallback(
     (path: string) => {
-      if (pathname === path || loadingPath) return;
+      if (pathname.startsWith(path) || loadingPath) return;
 
       setLoadingPath(path);
       router.replace(path);
@@ -52,12 +45,10 @@ export default function BottomNav() {
                 key={item.path}
                 onClick={() => handleNavigate(item.path)}
                 disabled={isLoading}
-                className={`flex flex-col items-center justify-center gap-1 relative transition-transform
+                className={`flex flex-col items-center gap-1 relative transition-transform
                   ${isLoading ? "opacity-50 cursor-not-allowed" : "active:scale-95"}
                 `}
-                aria-label={item.label}
               >
-                {/* ICON */}
                 <div
                   className={`transition-all duration-200 ${
                     isActive ? "text-green-500 scale-110" : "text-gray-400"
@@ -66,7 +57,6 @@ export default function BottomNav() {
                   {item.icon}
                 </div>
 
-                {/* LABEL */}
                 <span
                   className={`text-xs ${
                     isActive ? "text-green-500 font-medium" : "text-gray-400"
@@ -75,7 +65,6 @@ export default function BottomNav() {
                   {item.label}
                 </span>
 
-                {/* ACTIVE DOT */}
                 {isActive && !isLoading && (
                   <div className="absolute -bottom-1 w-1.5 h-1.5 bg-green-500 rounded-full" />
                 )}

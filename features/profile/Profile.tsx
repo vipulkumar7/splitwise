@@ -3,11 +3,8 @@ import { IProfile } from "@/types/models/profile";
 export default function Profile({ user }: IProfile) {
   return (
     <div className="text-white px-4">
-      <div
-        className="min-h-screen flex items-center justify-center py-20"
-        style={{ marginTop: "160px" }}
-      >
-        <div className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-md" style={{ marginBottom: "100px" }}>
           {/* CARD */}
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl mb-4">
             {/* HEADER */}
