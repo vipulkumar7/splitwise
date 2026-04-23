@@ -5,9 +5,10 @@ import Profile from "@/features/profile/Profile";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
+  const { user } = session || {};
 
-  if (!session?.user) {
+  if (!user) {
     redirect("/login");
   }
-  return <Profile user={session?.user} />;
+  return <Profile user={user} />;
 }
