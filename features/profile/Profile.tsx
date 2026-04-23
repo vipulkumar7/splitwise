@@ -2,62 +2,62 @@ import { IProfile } from "@/types/models/profile";
 
 export default function Profile({ user }: IProfile) {
   return (
-    <div className="min-h-screen bg-gradient-to-br p-6 bg-zinc-950 text-white">
-      {/* CENTER CARD */}
-      <div className="max-w-xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg border p-6 bg-zinc-950">
-          {/* HEADER */}
-          <div className="flex items-center gap-4">
-            {/* AVATAR */}
-            {user?.image ? (
-              <img
-                src={user.image}
-                alt="profile"
-                className="w-20 h-20 rounded-full border shadow"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center text-2xl font-bold shadow">
+    <div className="text-white px-4">
+      <div
+        className="min-h-screen flex items-center justify-center py-20"
+        style={{ marginTop: "160px" }}
+      >
+        <div className="w-full max-w-md">
+          {/* CARD */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl mb-4">
+            {/* HEADER */}
+            <div className="flex items-center gap-4">
+              {/* AVATAR */}
+              <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-xl font-semibold text-white">
                 {user?.name?.[0] || user?.email?.[0]}
               </div>
-            )}
 
-            {/* NAME + EMAIL */}
-            <div>
-              <h1 className="text-xl font-semibold text-white">{user?.name}</h1>
-              <p className="text-sm text-white">{user?.email}</p>
-            </div>
-          </div>
-
-          {/* DIVIDER */}
-          <div className="my-6 border-t" />
-
-          {/* DETAILS */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-              <span className="text-sm text-black">Name</span>
-              <span className="font-medium text-black">{user?.name}</span>
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold text-black truncate">
+                  {user?.name}
+                </h1>
+                <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-              <span className="text-black text-sm">Email</span>
-              <span className="font-medium text-black">{user?.email}</span>
-            </div>
-          </div>
+            {/* DIVIDER */}
+            <div className="my-5 h-px bg-gray-200" />
 
-          {/* ACTION BUTTON */}
-          <div className="mt-6">
+            {/* DETAILS */}
+            <div className="space-y-3 mt-2">
+              <div className="bg-gray-50 border border-gray-200 px-4 py-3 rounded-lg">
+                <p className="text-xs text-gray-500">Full Name</p>
+                <p className="text-sm font-medium mt-1 text-black break-all">
+                  {user?.name}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 px-4 py-3 rounded-lg">
+                <p className="text-xs text-gray-500">Email</p>
+                <p className="text-sm font-medium mt-1 text-black break-all">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+
+            {/* BUTTON */}
             <button
-              aria-label="Edit"
-              className="w-full py-2 rounded-lg bg-green-500 text-white font-medium hover:bg-green-600 transition shadow-sm"
+              disabled
+              className="mt-6 w-full p-3 rounded-lg border border-gray-300 text-gray-400 text-sm font-medium cursor-not-allowed bg-gray-100"
             >
-              Edit Profile (Coming Soon)
+              Edit Profile
             </button>
           </div>
-        </div>
 
-        {/* EXTRA CARD (OPTIONAL FUTURE USE) */}
-        <div className="mt-6 bg-white rounded-xl border p-4 shadow-sm text-sm text-gray-500 text-center">
-          More features like profile edit, password, and settings coming soon 🚀
+          {/* FOOTER */}
+          <p className="text-center text-sm text-white/40">
+            Profile settings, security & preferences coming soon
+          </p>
         </div>
       </div>
     </div>
