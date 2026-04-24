@@ -1,6 +1,6 @@
 export default function GroupDetailsSkeleton() {
   return (
-    <div className="p-4 max-w-2xl mx-auto animate-pulse">
+    <div className="w-full max-w-2xl p-4 mx-auto animate-pulse">
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
         {/* Avatar stack */}

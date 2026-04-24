@@ -12,8 +12,8 @@ function GroupHeader({
   buttonRef,
 }: IGroupHeader) {
   return (
-    <div className="m-2">
-      <div className="flex justify-between items-center relative">
+    <>
+      <div className="flex justify-between items-center relative mt-2 mb-2">
         {/* TITLE */}
         <h1 className="text-xl font-semibold text-white truncate">
           {groupName}
@@ -32,7 +32,7 @@ function GroupHeader({
 
       {/* MEMBERS */}
       <AvatarGroup members={groupMembers} />
-    </div>
+    </>
   );
 }
 

@@ -144,20 +144,22 @@ export default function GroupModals({
             onClick={() => setUI((p) => ({ ...p, showEditGroup: false }))}
           />
 
-          <div className="relative w-[90%] max-w-md rounded-3xl bg-zinc-950 p-6 border border-white/20">
-            <h2 className="text-xl font-semibold text-white mb-4">
+          <div className="relative w-[90%] max-w-md rounded-2xl bg-white p-6 border border-black/90">
+            <h2 className="text-xl font-semibold text-black mb-4">
               Edit Group Name
             </h2>
 
             <input
+              type="text"
+              name="groupName"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-4 py-3 text-black rounded-xl"
+              className="w-full px-4 py-3 text-black rounded-xl border border-zinc-950"
             />
 
             <div className="flex gap-3 mt-6">
               <button
-                className="flex-1 py-3 border rounded-xl text-white"
+                className="flex-1 py-3 border rounded-xl text-black"
                 onClick={() => setUI((p) => ({ ...p, showEditGroup: false }))}
               >
                 Cancel
