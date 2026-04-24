@@ -9,7 +9,7 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
 
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -75,47 +75,46 @@ export default function InstallPrompt() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4"
+          className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4"
         >
-          <div className="relative w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-5 flex items-center gap-4 mb-16">
-            {/* ICON */}
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold">
-              💸
-            </div>
+          <div className="relative w-full max-w-md bg-zinc-950 border border-white/20 shadow-xl rounded-2xl p-4 flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full">
+              {/* ICON */}
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold">
+                💸
+              </div>
 
-            {/* TEXT */}
-            <div className="flex-1">
-              <p className="text-gray-200 font-semibold text-sm">
-                Install Splitwise
-              </p>
+              {/* TEXT */}
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm">
+                  Install Splitwise
+                </p>
+                <p className="text-gray-400 text-xs truncate">
+                  {isIOS
+                    ? "Tap Share → Add to Home Screen"
+                    : "Get faster access & app-like experience"}
+                </p>
+              </div>
 
-              <p className="text-gray-400 text-xs">
-                {isIOS
-                  ? "Tap Share → Add to Home Screen"
-                  : "Get faster access & app-like experience"}
-              </p>
-            </div>
+              {/* INSTALL BUTTON */}
+              {!isIOS && deferredPrompt && (
+                <button
+                  onClick={handleInstall}
+                  className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition"
+                >
+                  <FiDownload size={16} />
+                  Install
+                </button>
+              )}
 
-            {/* ACTION */}
-            {!isIOS && deferredPrompt && (
+              {/* CLOSE */}
               <button
-                onClick={handleInstall}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition active:scale-95"
-                aria-label="Install app"
+                onClick={handleClose}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition"
               >
-                <FiDownload size={16} />
-                Install
+                <FiX size={14} />
               </button>
-            )}
-
-            {/* CLOSE */}
-            <button
-              onClick={handleClose}
-              className="absolute top-2 right-2 text-gray-300 hover:text-white"
-              aria-label="Close"
-            >
-              <FiX size={16} />
-            </button>
+            </div>
           </div>
         </motion.div>
       )}
