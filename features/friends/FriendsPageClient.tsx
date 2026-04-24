@@ -1,33 +1,39 @@
 "use client";
 
+import useSWR from "swr";
 import { useMemo, useState } from "react";
 import SummaryCard from "./SummaryCard";
 import FriendCard from "./FriendCard";
-import { FiSearch } from "react-icons/fi";
 import Input from "@/components/ui/form/Input";
 import { IFriend } from "@/types";
 
-export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function FriendsPageClient({
+  fallbackData,
+}: {
+  fallbackData?: IFriend[];
+}) {
   const [query, setQuery] = useState("");
-  // 🔍 Filtered friends (safe + optimized)
+
+  const { data: friends = [], isLoading } = useSWR("/api/friends", fetcher, {
+    fallbackData,
+    revalidateOnFocus: true,
+    dedupingInterval: 5000,
+  });
+
+  // 🔍 Filter
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-
-    return friends.filter(
-      (f) =>
-        f && typeof f.balance === "number" && f.name?.toLowerCase().includes(q),
-    );
+    return friends.filter((f: IFriend) => f.name?.toLowerCase().includes(q));
   }, [friends, query]);
 
-  // 💰 Totals calculation (optimized)
+  // 💰 Totals
   const totals = useMemo(() => {
     return friends.reduce(
-      (acc, f) => {
-        if (!f || typeof f.balance !== "number") return acc;
-
+      (acc: { owe: number; owed: number }, f: IFriend) => {
         if (f.balance < 0) acc.owe += Math.abs(f.balance);
         else acc.owed += f.balance;
-
         return acc;
       },
       { owe: 0, owed: 0 },
@@ -35,6 +41,10 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
   }, [friends]);
 
   const net = totals.owed - totals.owe;
+
+  if (isLoading && !friends.length) {
+    return <div className="text-white p-6">Loading...</div>;
+  }
 
   return (
     <div className="h-full w-full max-w-md mx-auto text-white px-4 py-8">
@@ -64,37 +74,34 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
           </div>
         </div>
 
-        {/* 🔍 SEARCH */}
-        <div className="relative group">
-          {/* <FiSearch className="absolute top-3.5 left-3 text-gray-400 group-focus-within:text-green-400 transition" /> */}
-
-          <Input
-            name="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search friends..."
-            className="text-white w-full pl-10 pr-4 py-3 mt-2 mb-2 rounded-xl 
+        {/* SEARCH */}
+        <Input
+          name="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search friends..."
+          className="text-white w-full pl-10 pr-4 py-3 mt-2 mb-2 rounded-xl 
             bg-zinc-950 border border-white/10 backdrop-blur-xl 
             focus:outline-none focus:ring-2 focus:ring-green-500 
             transition-all duration-300"
-          />
-        </div>
+        />
+      </div>
 
-        {/* 📋 LIST */}
-        <div className="flex flex-col h-[calc(100vh-260px)]">
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar mt-4">
-            {filtered.length === 0 ? (
-              <div className="text-center text-white py-12 rounded-xl">
-                <p className="text-sm">No friends found 👥</p>
-              </div>
-            ) : (
-              filtered.map((friend) => (
-                <FriendCard key={friend.id} friend={friend} />
-              ))
-            )}
-          </div>
+      {/* 📋 LIST */}
+      <div className="flex flex-col h-[calc(100vh-260px)]">
+        <div className="flex-1 overflow-y-auto pr-1 space-y-3 no-scrollbar mt-4">
+          {filtered.length === 0 ? (
+            <div className="text-center text-white py-12 rounded-xl">
+              <p className="text-sm">No friends found 👥</p>
+            </div>
+          ) : (
+            filtered.map((friend: IFriend) => (
+              <FriendCard key={friend.id} friend={friend} />
+            ))
+          )}
         </div>
       </div>
     </div>
+    // </div>
   );
 }
