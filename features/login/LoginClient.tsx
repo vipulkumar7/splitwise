@@ -19,7 +19,7 @@ export default function LoginClient() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="w-full max-w-md">
       {/* CARD */}
       <div
         style={{ padding: "32px", borderRadius: "12px" }}

@@ -79,16 +79,15 @@ export default function SettleClient({ friendId }: { friendId: string }) {
   };
 
   return (
-    <div
-      className="min-h-[100dvh] text-white px-4"
-      style={{ paddingTop: "140px" }}
-    >
-      <div className="w-full max-w-md mx-auto p-5 sm:p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
-        <h1 className="text-xl font-semibold text-center mb-4">
+    <div className="flex flex-1 items-center justify-center px-4 py-6 text-white">
+      {/* CARD */}
+      <div className="w-full max-w-md rounded-2xl p-6 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.6)]">
+        {/* HEADER */}
+        <h1 className="text-xl font-semibold text-center mb-6 tracking-wide">
           Settle Payment 💸
         </h1>
 
-        {/* Amount */}
+        {/* AMOUNT */}
         <input
           value={amount}
           onChange={(e) => {
@@ -96,7 +95,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
             if (/^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
           }}
           placeholder="₹ Enter amount"
-          className="w-full p-4 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500 mt-2 mb-2"
+          className="w-full p-4 rounded-xl bg-white/90 text-black outline-none focus:ring-2 focus:ring-green-500 transition"
         />
 
         {/* UPI */}
@@ -104,27 +103,30 @@ export default function SettleClient({ friendId }: { friendId: string }) {
           value={upiId}
           onChange={(e) => setUpiId(e.target.value.toLowerCase())}
           placeholder="Enter UPI ID"
-          className="w-full p-4 text-black rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 mb-2"
+          className="w-full mt-4 p-4 rounded-xl bg-white/90 text-black outline-none focus:ring-2 focus:ring-green-500 transition"
         />
 
-        {/* Apps */}
-        <div className="grid grid-cols-3 gap-4 flex justify-around items-center mt-2">
+        {/* UPI APPS */}
+        <div className="grid grid-cols-3 gap-4 flex justify-between items-center mt-6">
           {UPI_APPS.map((app) => (
             <button
               key={app.key}
               onClick={() => openApp(app.key as UPIApp)}
               disabled={!isValid || selectedApp !== null}
-              className={`p-4 rounded-2xl bg-white/10 transition ${
+              className={`p-4 rounded-2xl backdrop-blur-md border border-white/10 transition-all duration-200
+              ${
                 selectedApp === app.key
-                  ? "bg-white/20 scale-105"
-                  : "bg-white/10 hover:bg-white/20"
-              } disabled:opacity-40`}
+                  ? "bg-white/20 scale-105 shadow-lg"
+                  : "bg-white/10 hover:bg-white/20 hover:scale-[1.05]"
+              }
+              disabled:opacity-40
+            `}
             >
               <Image
                 src={app.icon}
                 alt=""
-                width={32}
-                height={32}
+                width={34}
+                height={34}
                 className="mx-auto"
               />
               <p className="text-xs mt-2">{app.name}</p>
@@ -132,28 +134,28 @@ export default function SettleClient({ friendId }: { friendId: string }) {
           ))}
         </div>
 
-        {/* 🔥 Other UPI Button */}
+        {/* OTHER UPI */}
         <button
           onClick={openAnyUPI}
           disabled={!isValid}
-          className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition disabled:opacity-40 mt-4 mb-4"
+          className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md transition disabled:opacity-40"
         >
           Other UPI Apps
         </button>
 
-        {/* Confirm */}
+        {/* CONFIRM */}
         <button
           onClick={handleConfirm}
           disabled={!isValid || loading}
-          className="w-full bg-blue-500 py-3 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
+          className="w-full mt-4 py-3 rounded-xl font-semibold bg-white/10 hover:bg-white/20 hover:opacity-90 transition shadow-lg"
         >
           {loading ? "Processing..." : "I’ve Paid ✅"}
         </button>
       </div>
 
-      {/* Toast */}
+      {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-xl shadow-lg">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 text-black px-4 py-2 rounded-xl shadow-xl">
           {toast}
         </div>
       )}

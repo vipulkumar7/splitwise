@@ -11,7 +11,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="w-full sm:w-[80%] md:w-[60%] lg:w-[40%] xl:w-[30%] px-4 mx-auto">
+    <div className="w-full sm:w-[80%] md:w-[60%] lg:w-[40%] xl:w-[30%] mx-auto">
       <LoginClient />
     </div>
   );

@@ -37,7 +37,7 @@ export default function FriendsPageClient({ friends }: { friends: IFriend[] }) {
   const net = totals.owed - totals.owe;
 
   return (
-    <div className="min-h-screen bg-zinc-950 to-black text-white px-4 py-8">
+    <div className="h-full w-full max-w-md mx-auto text-white px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* 🔥 HEADER */}
         <div className="space-y-1">

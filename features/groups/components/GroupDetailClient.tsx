@@ -138,14 +138,14 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
   if (!group) return <div className="p-6 text-white">Group not found</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4 h-screen flex flex-col bg-zinc-950 text-white">
+    <div className="w-full max-w-2xl mx-auto h-full min-h-0 flex flex-col px-4 text-white">
+      {" "}
       <GroupHeader
         groupName={group.name}
         onMenuClick={() => setUI((p) => ({ ...p, showMenu: !p.showMenu }))}
         groupMembers={members}
         buttonRef={buttonRef}
       />
-
       <GroupMenu
         show={ui.showMenu}
         onClose={() => setUI((p) => ({ ...p, showMenu: false }))}
@@ -168,7 +168,6 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
           setUI((p) => ({ ...p, showMenu: false, showDelete: true }))
         }
       />
-
       {group.expenses?.length > 0 ? (
         <>
           <h2 className="mt-2 mb-2 font-semibold text-lg">Balances</h2>
@@ -180,9 +179,9 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
               members.find((m) => m.user.id === id)?.user.name ?? "User"
             }
           />
-
-          <h2 className="mt-2 font-semibold text-lg">Expenses</h2>
-          <div className="flex-1 overflow-y-auto no-scrollbar px-2 pb-32">
+          <h2 className="mt-2 mb-2 font-semibold text-lg">Expenses</h2>
+          {/* LIST */}
+          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-4">
             <ExpenseList
               expenses={group.expenses}
               members={members}
@@ -207,14 +206,14 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
           </p>
         </div>
       )}
-
-      <AddExpenseButton
-        onClick={() => {
-          setEditingExpense(null);
-          setUI((p) => ({ ...p, showModal: true }));
-        }}
-      />
-
+      <div className="fixed bottom-20 left-0 right-0 max-w-2xl mx-auto px-4 z-40">
+        <AddExpenseButton
+          onClick={() => {
+            setEditingExpense(null);
+            setUI((p) => ({ ...p, showModal: true }));
+          }}
+        />
+      </div>
       {/* ✅ Lazy Modals */}
       {(ui.showModal ||
         ui.showEditGroup ||
@@ -241,7 +240,6 @@ export default function GroupDetailClient({ groupId }: { groupId: string }) {
           exitingGroup={exitingGroup}
         />
       )}
-
       {/* ✅ Toast fix */}
       {toast && <Toast key={toast.id} {...toast} duration={3000} />}
     </div>

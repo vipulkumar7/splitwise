@@ -91,9 +91,9 @@ export default function GroupsClient({
   );
 
   return (
-    <div className="max-w-2xl mx-auto h-screen flex flex-col overflow-hidden px-4 bg-zinc-950 text-white">
+    <div className="w-full max-w-2xl mx-auto h-full min-h-0 flex flex-col px-4 text-white">
       {/* CREATE */}
-      <div className="mt-3 flex gap-4 bg-zinc-900 rounded-2xl">
+      <div className="mt-4 mb-2 flex gap-4 rounded-2xl">
         <input
           style={{ padding: "12px" }}
           type="text"
@@ -113,16 +113,14 @@ export default function GroupsClient({
           {creating ? "Adding..." : "+ Add"}
         </button>
       </div>
-
       {/* LIST */}
-      <div className="flex-1 overflow-y-auto space-y-4 mb-36 no-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 no-scrollbar">
         {groups.length === 0 && <GroupSkeleton />}
-
         {groups.map((group) => (
           <div
             key={group.id}
             onClick={() => handleNavigate(group.id)}
-            className="w-full mt-3 mb-3 p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
+            className="w-full mt-2 mb-2 p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
           >
             <div className="flex items-center gap-4">
               {/* AVATAR */}
@@ -151,7 +149,6 @@ export default function GroupsClient({
           </div>
         ))}
       </div>
-
       {/* TOAST */}
       {toast && <Toast key={toast.id} {...toast} duration={3000} />}
     </div>

@@ -1,8 +1,7 @@
+import { JSX } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
-import { JSX } from "react";
-
 import Navbar from "@/components/layout/Navbar";
 import BottomNav from "@/components/layout/BottomNav";
 import { IDashboardLayoutProps } from "@/types";
@@ -18,17 +17,15 @@ export default async function DashboardLayout({
   }
 
   return (
-    <>
-      {/* TOP NAV */}
+    <div className="flex flex-col h-screen">
       <Navbar />
 
-      {/* MAIN CONTENT */}
-      <div className="pb-20">{children}</div>
+      {/* ✅ MUST HAVE flex-1 */}
+      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom)+4px)]">
+        {children}
+      </main>
 
-      {/* BOTTOM NAV */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-zinc-950 border-t z-50">
-        <BottomNav />
-      </div>
-    </>
+      <BottomNav />
+    </div>
   );
 }

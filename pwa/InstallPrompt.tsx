@@ -9,7 +9,7 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
 
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -75,17 +75,17 @@ export default function InstallPrompt() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4"
+          className="fixed bottom-20 w-full flex flex-1 items-center justify-center px-4 py-6 text-white"
         >
           <div className="relative w-full max-w-md bg-zinc-950 border border-white/20 shadow-xl rounded-2xl p-4 flex items-center gap-3">
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex gap-3 w-full">
               {/* ICON */}
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold">
                 💸
               </div>
 
               {/* TEXT */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 mt-2 ">
                 <p className="text-white font-semibold text-sm">
                   Install Splitwise
                 </p>
@@ -110,9 +110,9 @@ export default function InstallPrompt() {
               {/* CLOSE */}
               <button
                 onClick={handleClose}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition"
+                className="w-7 h-7 rounded-full transition flex items-start justify-center text-gray-400 hover:text-gray-200"
               >
-                <FiX size={14} />
+                <FiX size={18} className="bg-white rounded-md text-black" />
               </button>
             </div>
           </div>
