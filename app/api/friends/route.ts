@@ -1,9 +1,8 @@
-// app/api/friends/route.ts
-
 import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
+import { IFriend } from "@/types";
 
 export async function GET() {
   try {
@@ -15,27 +14,29 @@ export async function GET() {
 
     const currentUserId = session.user.id;
 
-    // 1️⃣ Get all friends (users in same groups except self)
+    // 🔹 Get friends
     const memberships = await prisma.groupMember.findMany({
       where: { userId: currentUserId },
       include: {
         group: {
           include: {
             members: {
-              include: {
-                user: true,
-              },
+              include: { user: true },
             },
           },
         },
       },
     });
 
-    // Flatten + remove self
-    const friendMap = new Map();
+    type Membership = Awaited<typeof memberships>[number];
+    type SplitWithExpense = Awaited<typeof splits>[number];
+    type Settlement = Awaited<typeof settlements>[number];
+    type Member = Membership["group"]["members"][number];
 
-    memberships.forEach((m) => {
-      m.group.members.forEach((member) => {
+    const friendMap = new Map<string, any>();
+
+    memberships.forEach((m: Membership) => {
+      m.group.members.forEach((member: Member) => {
         if (member.user.id !== currentUserId) {
           friendMap.set(member.user.id, member.user);
         }
@@ -43,62 +44,64 @@ export async function GET() {
     });
 
     const friends = Array.from(friendMap.values());
+    const friendIds = friends.map((f) => f.id);
 
-    // 2️⃣ Compute balances (YOUR LOGIC HERE ✅)
-    const balances = await Promise.all(
-      friends.map(async (friend) => {
-        const friendOwes = await prisma.split.aggregate({
-          _sum: { amount: true },
-          where: {
-            userId: friend.id,
-            expense: {
-              paidById: currentUserId,
-            },
-          },
-        });
+    // 🔹 Batch fetch splits
+    const splits = await prisma.split.findMany({
+      where: {
+        OR: [
+          { userId: { in: friendIds }, expense: { paidById: currentUserId } },
+          { userId: currentUserId, expense: { paidById: { in: friendIds } } },
+        ],
+      },
+      include: { expense: true },
+    });
 
-        const youOwe = await prisma.split.aggregate({
-          _sum: { amount: true },
-          where: {
-            userId: currentUserId,
-            expense: {
-              paidById: friend.id,
-            },
-          },
-        });
+    // 🔹 Batch fetch settlements
+    const settlements = await prisma.settlement.findMany({
+      where: {
+        OR: [
+          { fromUserId: currentUserId, toUserId: { in: friendIds } },
+          { fromUserId: { in: friendIds }, toUserId: currentUserId },
+        ],
+      },
+    });
 
-        const paidToFriend = await prisma.settlement.aggregate({
-          _sum: { amount: true },
-          where: {
-            fromUserId: currentUserId,
-            toUserId: friend.id,
-          },
-        });
+    // 🔹 Compute balances (in-memory)
+    const balanceMap = new Map<string, number>();
+    friendIds.forEach((id) => balanceMap.set(id, 0));
 
-        const receivedFromFriend = await prisma.settlement.aggregate({
-          _sum: { amount: true },
-          where: {
-            fromUserId: friend.id,
-            toUserId: currentUserId,
-          },
-        });
+    splits.forEach((s: SplitWithExpense) => {
+      const paidBy = s.expense.paidById;
 
-        const balance =
-          (friendOwes._sum.amount || 0) -
-          (youOwe._sum.amount || 0) -
-          (paidToFriend._sum.amount || 0) +
-          (receivedFromFriend._sum.amount || 0);
+      if (paidBy === currentUserId && balanceMap.has(s.userId)) {
+        balanceMap.set(s.userId, balanceMap.get(s.userId)! + s.amount);
+      }
 
-        return {
-          id: friend.id,
-          name: friend.name,
-          email: friend.email,
-          balance,
-        };
-      }),
-    );
+      if (s.userId === currentUserId && balanceMap.has(paidBy)) {
+        balanceMap.set(paidBy, balanceMap.get(paidBy)! - s.amount);
+      }
+    });
 
-    return NextResponse.json(balances);
+    settlements.forEach((s: Settlement) => {
+      if (s.fromUserId === currentUserId) {
+        balanceMap.set(s.toUserId, balanceMap.get(s.toUserId)! - s.amount);
+      }
+
+      if (s.toUserId === currentUserId) {
+        balanceMap.set(s.fromUserId, balanceMap.get(s.fromUserId)! + s.amount);
+      }
+    });
+
+    const result = friends.map((f: IFriend) => ({
+      id: f.id,
+      name: f.name,
+      email: f.email,
+      image: f.image ?? null,
+      balance: Number((balanceMap.get(f.id as string) || 0).toFixed(2)),
+    }));
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
-import { UPI_APPS, UPIApp } from "./constants";
+import { mutate } from "swr";
 import { isValidUPI, buildUPIParams, getUPIUrl } from "./utils";
+import { IFriend } from "@/types";
+import { UPI_APPS, UPIApp } from "./constants";
 
 export default function SettleClient({ friendId }: { friendId: string }) {
   const router = useRouter();
@@ -26,7 +28,23 @@ export default function SettleClient({ friendId }: { friendId: string }) {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // 🔥 Open Specific UPI App
+  // 🔥 Optimistic balance update
+  const updateBalanceOptimistically = (
+    friends: IFriend[],
+    friendId: string,
+    amount: number,
+  ) => {
+    return friends.map((f) => {
+      if (f.id !== friendId) return f;
+
+      return {
+        ...f,
+        balance: Number((f.balance - amount).toFixed(2)),
+      };
+    });
+  };
+
+  // 🔥 Open specific UPI app
   const openApp = (app: UPIApp) => {
     if (!isMobile) return showToast("Use mobile 📱");
     if (!isValid) return showToast("Invalid details");
@@ -45,7 +63,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
     }, 1200);
   };
 
-  // 🔥 Open ANY UPI APP (intent picker)
+  // 🔥 Open any UPI app
   const openAnyUPI = () => {
     if (!isMobile) return showToast("Use mobile 📱");
     if (!isValid) return showToast("Invalid details");
@@ -54,25 +72,52 @@ export default function SettleClient({ friendId }: { friendId: string }) {
     window.location.href = `upi://pay?${params}`;
   };
 
-  // ✅ Confirm settlement
+  // ✅ Confirm settlement (OPTIMISTIC + SWR)
   const handleConfirm = async () => {
     if (!isValid || loading) return;
+
+    const amt = Number(amount);
 
     try {
       setLoading(true);
 
-      await fetch("/api/settle", {
+      // ⚡ OPTIMISTIC UPDATE (instant UI)
+      await mutate(
+        "/api/friends",
+        (current: IFriend[] = []) =>
+          updateBalanceOptimistically(current, friendId, amt),
+        false,
+      );
+
+      // 🔁 API CALL
+      const res = await fetch("/api/settle", {
         method: "POST",
         body: JSON.stringify({
           friendId,
-          amount: Number(amount),
+          amount: amt,
         }),
       });
 
+      if (!res.ok) throw new Error("Failed");
+
+      // 🔄 Revalidate (sync with backend)
+      mutate("/api/friends");
+
       showToast("Settled 🎉");
-      setTimeout(() => router.push("/friends"), 1200);
-    } catch {
-      showToast("Error occurred");
+
+      // 🔁 Reset state (clean UX)
+      setAmount("");
+      setUpiId("");
+      setSelectedApp(null);
+
+      setTimeout(() => router.push("/friends"), 800);
+    } catch (err) {
+      console.error(err);
+
+      // 🔙 Rollback
+      mutate("/api/friends");
+
+      showToast("Error occurred ❌");
     } finally {
       setLoading(false);
     }
@@ -113,14 +158,13 @@ export default function SettleClient({ friendId }: { friendId: string }) {
               key={app.key}
               onClick={() => openApp(app.key as UPIApp)}
               disabled={!isValid || selectedApp !== null}
-              className={`p-4 rounded-2xl backdrop-blur-md border border-white/10 transition-all duration-200
-              ${
-                selectedApp === app.key
-                  ? "bg-white scale-105 shadow-lg"
-                  : "bg-white hover:bg-white/20 hover:scale-[1.05]"
-              }
-              disabled:opacity-40
-            `}
+              className={`p-4 rounded-2xl border border-white/10 transition-all duration-200
+                ${
+                  selectedApp === app.key
+                    ? "bg-white scale-105 shadow-lg"
+                    : "bg-white hover:bg-white/20 hover:scale-[1.05]"
+                }
+                disabled:opacity-40`}
             >
               <Image
                 src={app.icon}
@@ -138,7 +182,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
         <button
           onClick={openAnyUPI}
           disabled={!isValid}
-          className="w-full mt-6 py-3 rounded-xl font-semibold bg-white text-black hover:bg-white/20 backdrop-blur-md transition disabled:opacity-40"
+          className="w-full mt-6 py-3 rounded-xl font-semibold bg-white text-black hover:bg-white/20 transition disabled:opacity-40"
         >
           Other UPI Apps
         </button>
@@ -147,7 +191,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
         <button
           onClick={handleConfirm}
           disabled={!isValid || loading}
-          className="w-full mt-4 py-3 rounded-xl font-semibold bg-white text-black hover:bg-white/20 hover:opacity-90 transition shadow-lg"
+          className="w-full mt-4 py-3 rounded-xl font-semibold bg-green-500 text-white hover:opacity-90 transition shadow-lg disabled:opacity-50"
         >
           {loading ? "Processing..." : "I’ve Paid ✅"}
         </button>
@@ -155,7 +199,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
 
       {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 text-black px-4 py-2 rounded-xl shadow-xl">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-xl shadow-xl">
           {toast}
         </div>
       )}
