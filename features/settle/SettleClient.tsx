@@ -116,8 +116,8 @@ export default function SettleClient({ friendId }: { friendId: string }) {
               className={`p-4 rounded-2xl backdrop-blur-md border border-white/10 transition-all duration-200
               ${
                 selectedApp === app.key
-                  ? "bg-white/20 scale-105 shadow-lg"
-                  : "bg-white/10 hover:bg-white/20 hover:scale-[1.05]"
+                  ? "bg-white scale-105 shadow-lg"
+                  : "bg-white hover:bg-white/20 hover:scale-[1.05]"
               }
               disabled:opacity-40
             `}
@@ -129,7 +129,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
                 height={34}
                 className="mx-auto"
               />
-              <p className="text-xs mt-2">{app.name}</p>
+              <p className="text-sm text-black mt-2">{app.name}</p>
             </button>
           ))}
         </div>
@@ -138,7 +138,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
         <button
           onClick={openAnyUPI}
           disabled={!isValid}
-          className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md transition disabled:opacity-40"
+          className="w-full mt-6 py-3 rounded-xl font-semibold bg-white text-black hover:bg-white/20 backdrop-blur-md transition disabled:opacity-40"
         >
           Other UPI Apps
         </button>
@@ -147,7 +147,7 @@ export default function SettleClient({ friendId }: { friendId: string }) {
         <button
           onClick={handleConfirm}
           disabled={!isValid || loading}
-          className="w-full mt-4 py-3 rounded-xl font-semibold bg-white/10 hover:bg-white/20 hover:opacity-90 transition shadow-lg"
+          className="w-full mt-4 py-3 rounded-xl font-semibold bg-white text-black hover:bg-white/20 hover:opacity-90 transition shadow-lg"
         >
           {loading ? "Processing..." : "I’ve Paid ✅"}
         </button>
