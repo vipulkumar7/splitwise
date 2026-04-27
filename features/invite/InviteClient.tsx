@@ -49,14 +49,14 @@ export default function InviteClient({ token }: IInviteProps) {
   }, [token, joinGroup]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-zinc-950 to-black px-4">
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 w-full max-w-sm text-center">
-        <h1 className="text-2xl font-semibold text-white mb-6">Splitwise</h1>
+    <div className="flex min-h-[100dvh] items-center justify-center px-4">
+      <div className="backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 w-full max-w-sm text-center">
+        <h1 className="text-2xl font-semibold text-white mt-4">Splitwise</h1>
 
         <StatusUI status={status} />
 
         {redirecting && (
-          <p className="text-xs text-gray-500 mt-4">Redirecting...</p>
+          <p className="text-xs text-gray-500 mt-4 mb-4">Redirecting...</p>
         )}
       </div>
     </div>
@@ -70,7 +70,7 @@ function StatusUI({ status }: { status: TStatus }) {
         <div className="flex justify-center mb-6">
           <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
         </div>
-        <p className="text-gray-400 text-sm">Joining group...</p>
+        <p className="text-gray-400 text-sm mb-4">Joining group...</p>
       </>
     );
   }

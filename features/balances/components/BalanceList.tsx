@@ -1,6 +1,7 @@
 "use client";
 
 import { IBalanceList } from "@/types";
+import { formatEmail } from "@/utils/utils";
 import { useMemo } from "react";
 
 export default function BalanceList({
@@ -14,7 +15,6 @@ export default function BalanceList({
 
     const result: Record<string, number> = {};
 
-    // init
     members.forEach((m) => {
       result[m.user.id as string] = 0;
     });
@@ -43,59 +43,93 @@ export default function BalanceList({
   );
 
   return (
-    <div className="space-y-3">
-      {sortedBalances.map(([userId, amount]) => {
-        const safeAmount = Number.isFinite(amount) ? amount : 0;
+    <div className="relative w-full">
+      {/* RIGHT FADE (scroll hint) */}
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-10 z-10" />
 
-        const isPositive = safeAmount > 0;
-        const isNegative = safeAmount < 0;
-        const isYou = userId === currentUserId;
+      <div className="flex gap-4 overflow-x-auto no-scrollbar px-2 py-3 scroll-smooth">
+        {sortedBalances.map(([userId, amount]) => {
+          const safeAmount = Number.isFinite(amount) ? amount : 0;
 
-        const name = isYou ? "You" : getName(userId);
+          const isPositive = safeAmount > 0;
+          const isNegative = safeAmount < 0;
+          const isYou = userId === currentUserId;
 
-        const status = isPositive
-          ? "gets back"
-          : isNegative
-            ? "owes"
-            : "settled";
+          const name = isYou ? "You" : getName(userId);
+          const email = members.find((m) => m.user.id === userId)?.user.email;
 
-        const amountColor = isPositive
-          ? "text-green-600"
-          : isNegative
-            ? "text-red-500"
-            : "text-gray-500";
+          const status = isPositive ? "gets" : isNegative ? "owes" : "settled";
 
-        const bgColor = isPositive
-          ? "bg-green-50"
-          : isNegative
-            ? "bg-red-50"
-            : "bg-gray-50";
+          const amountColor = isPositive
+            ? "text-green-400"
+            : isNegative
+              ? "text-red-400"
+              : "text-gray-400";
 
-        return (
-          <div
-            key={userId}
-            className={`flex items-center justify-between p-4 rounded-xl border shadow-sm ${bgColor}`}
-          >
-            {/* LEFT */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-black">
-                {name?.charAt(0)?.toUpperCase() || "?"}
+          const bgGlow = isPositive
+            ? "shadow-[0_0_30px_rgba(34,197,94,0.15)]"
+            : isNegative
+              ? "shadow-[0_0_30px_rgba(239,68,68,0.15)]"
+              : "";
+
+          return (
+            <div
+              key={userId}
+              className={`
+              min-w-[200px] flex-shrink-0
+              p-4 rounded-2xl
+              border border-white/10
+              backdrop-blur-xl
+              transition-all duration-300
+              hover:scale-[1.03]
+              ${bgGlow}
+            `}
+            >
+              {/* USER */}
+              <div className="flex items-center gap-3 mb-3">
+                {/* Avatar */}
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white
+                ${isYou ? "bg-green-500" : "bg-white/20"}`}
+                >
+                  {name?.charAt(0)?.toUpperCase()}
+                </div>
+
+                {/* Name */}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate flex items-center gap-1">
+                    {name}
+                    {isYou && (
+                      <span className="text-[10px] px-2 py-[2px] text-green-400 rounded-full">
+                        You
+                      </span>
+                    )}
+                  </p>
+
+                  {/* subtle id hint (optional but recommended) */}
+                  {!isYou && (
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {formatEmail(email as string)}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <p className="font-medium text-white">{name}</p>
+              {/* STATUS */}
+              <p className={`text-xs uppercase tracking-wide ${amountColor}`}>
+                {status}
+              </p>
 
-                <p className={`text-sm ${amountColor}`}>{status}</p>
-              </div>
+              {/* AMOUNT */}
+              <p
+                className={`text-xl font-bold mt-1 tracking-tight ${amountColor}`}
+              >
+                ₹{Math.abs(safeAmount).toFixed(0)}
+              </p>
             </div>
-
-            {/* RIGHT */}
-            <p className={`text-lg font-semibold ${amountColor}`}>
-              ₹{Math.abs(safeAmount).toFixed(0)}
-            </p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

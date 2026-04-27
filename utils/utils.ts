@@ -56,3 +56,15 @@ export async function getGroups(userId: string) {
     },
   });
 }
+
+export const formatEmail = (email?: string) => {
+  if (!email) return "";
+
+  const [name, domain] = email.split("@");
+
+  if (!name || !domain) return email;
+
+  const shortName = name.length > 6 ? name.slice(0, 5) + "…" : name;
+
+  return `${shortName}@${domain}`;
+};
