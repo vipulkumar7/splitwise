@@ -24,9 +24,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-[100dvh] bg-zinc-950">
         <AuthProvider>
-          {children}
+          {/* 🔥 IMPORTANT WRAPPER */}
+          <div className="min-h-[100dvh] flex flex-col">
+            {children}
+          </div>
+
           <Analytics />
           <InstallPrompt />
         </AuthProvider>

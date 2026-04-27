@@ -6,6 +6,7 @@ import SummaryCard from "./SummaryCard";
 import FriendCard from "./FriendCard";
 import Input from "@/components/ui/form/Input";
 import { IFriend } from "@/types";
+import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -25,7 +26,7 @@ export default function FriendsPageClient({
   // 🔍 Filter
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return friends.filter((f: IFriend) => f.name?.toLowerCase().includes(q));
+    return friends?.filter((f: IFriend) => f.name?.toLowerCase().includes(q));
   }, [friends, query]);
 
   // 💰 Totals
@@ -43,7 +44,7 @@ export default function FriendsPageClient({
   const net = totals.owed - totals.owe;
 
   if (isLoading && !friends.length) {
-    return <div className="text-white p-6">Loading...</div>;
+    return <GroupDetailSkeleton />;
   }
 
   return (
