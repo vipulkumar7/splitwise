@@ -6,7 +6,7 @@ import SummaryCard from "./SummaryCard";
 import FriendCard from "./FriendCard";
 import Input from "@/components/ui/form/Input";
 import { IFriend } from "@/types";
-import GroupDetailSkeleton from "@/components/ui/GroupDetailSkeleton";
+import FriendsPageSkeleton from "@/components/ui/FriendsPageSkeleton";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -43,9 +43,7 @@ export default function FriendsPageClient({
 
   const net = totals.owed - totals.owe;
 
-  if (isLoading && !friends.length) {
-    return <GroupDetailSkeleton />;
-  }
+  if (isLoading) return <FriendsPageSkeleton />;
 
   return (
     <div className="h-full w-full max-w-md mx-auto text-white px-4 py-8">
