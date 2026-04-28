@@ -14,6 +14,7 @@ import Input from "@/components/ui/form/Input";
 import Select from "@/components/ui/form/Select";
 import Button from "@/components/ui/form/Button";
 import { IExpenseFormData, IExpenseFormModalProps } from "@/types";
+import { BsFillCalendar2DateFill, BsFillCalendarDateFill } from "react-icons/bs";
 
 const schema = z.object({
   description: z.string().trim().min(1, "Description is required"),
@@ -22,6 +23,7 @@ const schema = z.object({
     .min(1, "Amount is required")
     .refine((val) => Number(val) > 0, "Amount must be greater than 0"),
   payerId: z.string().min(1, "Select a payer"),
+  date: z.string().min(1, "Date is required"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -46,6 +48,7 @@ export default function ExpenseFormModal({
       description: "",
       amount: "",
       payerId: "",
+      date: new Date().toISOString().split("T")[0],
     },
   });
 
@@ -60,12 +63,14 @@ export default function ExpenseFormModal({
         description: editingExpense.description ?? "",
         amount: String(editingExpense.amount ?? ""),
         payerId: editingExpense.paidById ?? "",
+        date: new Date(editingExpense.createdAt).toISOString().split("T")[0],
       });
     } else {
       reset({
         description: "",
         amount: "",
         payerId: currentUserId ?? "",
+        date: new Date().toISOString().split("T")[0],
       });
     }
   }, [show, editingExpense, currentUserId, reset]);
@@ -136,6 +141,24 @@ export default function ExpenseFormModal({
         {errors.amount && (
           <p className="text-sm text-red-500 mb-2 ml-1">
             {errors.amount.message}
+          </p>
+        )}
+
+        <FormField icon={BsFillCalendar2DateFill}>
+          <Input
+            type="date"
+            disabled={loading}
+            isExpenseForm
+            {...register("date")}
+            className={
+              errors.date ? "border-red-400 focus:ring-red-400" : "text-black"
+            }
+          />
+        </FormField>
+
+        {errors.date && (
+          <p className="text-sm text-red-500 mb-2 ml-1">
+            {errors.date.message}
           </p>
         )}
 

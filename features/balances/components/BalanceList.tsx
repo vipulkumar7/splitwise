@@ -47,7 +47,7 @@ export default function BalanceList({
       {/* RIGHT FADE (scroll hint) */}
       <div className="pointer-events-none absolute right-0 top-0 h-full w-10 z-10" />
 
-      <div className="flex gap-4 overflow-x-auto no-scrollbar px-2 py-3 scroll-smooth">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar px-2 scroll-smooth">
         {sortedBalances.map(([userId, amount]) => {
           const safeAmount = Number.isFinite(amount) ? amount : 0;
 

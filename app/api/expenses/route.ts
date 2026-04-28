@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { IMember, ISplit, ISplitsInput } from "@/types";
 import { Prisma } from "@prisma/client";
 
+// ======================
+// Create EXPENSE
+// ======================
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,6 +20,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
 
     const amount = Number(body?.amount);
+    const date = body?.date ? new Date(body.date) : new Date();
     const description = body?.description || "";
     const groupId = body?.groupId;
     const payerId = body?.payerId;
@@ -43,6 +47,7 @@ export async function POST(req: NextRequest) {
             description,
             groupId,
             paidById: payerId,
+            createdAt: date,
           },
           select: { id: true },
         });
