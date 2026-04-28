@@ -36,7 +36,8 @@ export interface IExpenseList {
 }
 
 export interface IExpenseFormData {
-  description?: string;
+  description: string;
   amount: string;
   payerId: string;
+  date: string;
 }

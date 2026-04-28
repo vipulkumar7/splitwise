@@ -40,6 +40,7 @@ export async function PUT(
           description,
           amount: Number(amount),
           paidById: payerId,
+          createdAt: new Date(body.date),
         },
       });
 

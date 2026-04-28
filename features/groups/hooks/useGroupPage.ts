@@ -71,6 +71,7 @@ export const useGroupPage = (
             description: data.description,
             amount: Number(data.amount),
             payerId: data.payerId,
+            date: data.date,
           }),
         });
 
@@ -105,6 +106,7 @@ export const useGroupPage = (
             amount: Number(data.amount || 0),
             payerId: data.payerId,
             groupId,
+            date: data.date,
           }),
         });
 
