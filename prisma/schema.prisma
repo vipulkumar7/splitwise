@@ -18,15 +18,15 @@ model User {
 
   createdAt DateTime @default(now())
 
-  // ✅ REQUIRED FOR NEXTAUTH
   accounts Account[]
   sessions Session[]
 
-  // App relations
   memberships  GroupMember[]
   expensesPaid Expense[]      @relation("PaidBy")
   splits       Split[]
   notification Notification[]
+
+  expenseParticipants ExpenseParticipant[]
 }
 
 //////////////////////////////
@@ -38,9 +38,9 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members   GroupMember[]
-  expenses  Expense[]
-  invites   GroupInvite[]
+  members  GroupMember[]
+  expenses Expense[]
+  invites  GroupInvite[]
 
   // 🔥 THIS LINE IS REQUIRED
   notifications Notification[]
@@ -54,6 +54,8 @@ model GroupMember {
 
   userId  String
   groupId String
+
+  joinedAt DateTime @default(now()) // ✅ IMPORTANT
 
   user  User  @relation(fields: [userId], references: [id])
   group Group @relation(fields: [groupId], references: [id])
@@ -74,9 +76,12 @@ model Expense {
 
   createdAt DateTime @default(now())
 
-  group  Group   @relation(fields: [groupId], references: [id])
-  paidBy User    @relation("PaidBy", fields: [paidById], references: [id])
+  group  Group @relation(fields: [groupId], references: [id])
+  paidBy User  @relation("PaidBy", fields: [paidById], references: [id])
+
   splits Split[]
+
+  participants ExpenseParticipant[] // 🔥 ADD THIS
 }
 
 //////////////////////////////
@@ -133,9 +138,9 @@ model VerificationToken {
 }
 
 model GroupInvite {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   email   String?
-  token   String @unique
+  token   String  @unique
   groupId String
 
   group Group @relation(fields: [groupId], references: [id])
@@ -154,16 +159,16 @@ enum NotificationType {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  groupId   String?
+  id      String  @id @default(cuid())
+  userId  String
+  groupId String?
 
   message   String
   type      NotificationType @default(GENERAL)
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
 
-  user  User  @relation(fields: [userId], references: [id])
+  user  User   @relation(fields: [userId], references: [id])
   group Group? @relation(fields: [groupId], references: [id])
 }
 
@@ -173,4 +178,15 @@ model Settlement {
   toUserId   String
   amount     Float
   createdAt  DateTime @default(now())
+}
+
+model ExpenseParticipant {
+  id        String @id @default(cuid())
+  expenseId String
+  userId    String
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
 }

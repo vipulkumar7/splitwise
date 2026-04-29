@@ -14,6 +14,7 @@ export interface IExpense {
   paidById: string;
   createdAt: Date;
   splits: ISplit[];
+  participants?: { userId: string }[];
 }
 
 export interface IExpenseFormModalProps {

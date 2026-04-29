@@ -2,9 +2,10 @@ import { prisma } from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 // =========================
-// GET GROUPS
+// GET GROUPS (OPTIMIZED)
 // =========================
 export async function GET() {
   try {
@@ -14,20 +15,14 @@ export async function GET() {
       return NextResponse.json([], { status: 200 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
-
-    if (!user) {
-      return NextResponse.json([], { status: 200 });
-    }
-
+    // ✅ Single query (no separate user fetch)
     const groups = await prisma.group.findMany({
       where: {
         members: {
           some: {
-            userId: user.id,
+            user: {
+              email: session.user.email,
+            },
           },
         },
       },
@@ -80,77 +75,85 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.upsert({
-      where: { email: session.user.email! },
-      update: {},
-      create: {
-        email: session.user.email!,
-        name: session.user.name || "User",
-      },
-    });
+    // 🚀 TRANSACTION (atomic + fast)
+    const result = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        // 1️⃣ Upsert user
+        const user = await tx.user.upsert({
+          where: { email: session.user.email! },
+          update: {},
+          create: {
+            email: session.user.email!,
+            name: session.user.name || "User",
+          },
+          select: { id: true, name: true },
+        });
 
-    const userId = dbUser.id;
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // ✅ Create group first
-    const group = await prisma.group.create({
-      data: {
-        name,
-      },
-    });
-
-    // ✅ Add user as member
-    await prisma.groupMember.create({
-      data: {
-        userId: userId,
-        groupId: group.id,
-      },
-    });
-
-    // ✅ Fetch complete group data
-    const completeGroup = await prisma.group.findUnique({
-      where: { id: group.id },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
-        members: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
+        // 2️⃣ Create group + member in ONE go
+        const group = await tx.group.create({
+          data: {
+            name,
+            members: {
+              create: {
+                userId: user.id,
               },
             },
           },
-        },
-        expenses: {
           select: {
             id: true,
-            amount: true,
-            paidById: true,
+            name: true,
+            createdAt: true,
+            updatedAt: true,
           },
-        },
-      },
-    });
+        });
 
-    // 🔔 Create notification
-    await prisma.notification.create({
-      data: {
-        userId: userId,
-        groupId: group.id,
-        type: "GROUP_CREATED",
-        message: `You created group "${group.name}"`,
-      },
-    });
+        // 3️⃣ Notification (no extra query needed)
+        await tx.notification.create({
+          data: {
+            userId: user.id,
+            groupId: group.id,
+            type: "GROUP_CREATED",
+            message: `You created group "${name}"`,
+          },
+        });
 
-    return NextResponse.json(completeGroup);
+        // 4️⃣ Return full group (single read)
+        const completeGroup = await tx.group.findUnique({
+          where: { id: group.id },
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            updatedAt: true,
+            members: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+            expenses: {
+              select: {
+                id: true,
+                amount: true,
+                paidById: true,
+              },
+            },
+          },
+        });
+
+        return completeGroup;
+      },
+    );
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("CREATE GROUP ERROR:", error);
+
     return NextResponse.json(
       {
         error: "Failed",

@@ -21,15 +21,28 @@ export default function BalanceList({
 
     expenses.forEach((exp) => {
       const amount = Number(exp.amount) || 0;
-      const split = members.length ? amount / members.length : 0;
 
-      members.forEach((m) => {
-        const id = m.user.id;
+      // ✅ Use participants (source of truth) or fallback to splits
+      const participantIds = new Set<string>(
+        (exp as any).participants?.map((p: { userId: string }) => p.userId) || []
+      );
+      const hasParticipants = participantIds.size > 0;
 
-        if (id === exp.paidById) {
-          result[id] += amount - split;
+      // Get users who have splits (fallback for old data)
+      const splitUserIds = new Set<string>(exp.splits.map((s) => s.userId));
+      const userIds: Set<string> = hasParticipants ? participantIds : splitUserIds;
+      const participantCount = userIds.size || members.length;
+
+      const split = amount / participantCount;
+
+      userIds.forEach((userId: string) => {
+        // Skip if using participants and user not in that set
+        if (hasParticipants && !participantIds.has(userId)) return;
+
+        if (userId === exp.paidById) {
+          result[userId] = (result[userId] || 0) + amount - split;
         } else {
-          result[id as string] -= split;
+          result[userId] = (result[userId] || 0) - split;
         }
       });
     });

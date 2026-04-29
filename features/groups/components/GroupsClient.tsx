@@ -7,6 +7,7 @@ import GroupSkeleton from "@/components/ui/GroupSkeleton";
 import Toast from "@/components/ui/Toast";
 import { IGroup, IToast } from "@/types";
 import { getTotalAmount, getMemberCount } from "./utils";
+import EmptyState from "./EmptyState";
 
 export default function GroupsClient({
   initialGroups,
@@ -115,39 +116,44 @@ export default function GroupsClient({
       </div>
       {/* LIST */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-4 no-scrollbar">
-        {groups.length === 0 && <GroupSkeleton />}
-        {groups.map((group) => (
-          <div
-            key={group.id}
-            onClick={() => handleNavigate(group.id)}
-            className="w-full mt-2 mb-2 p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              {/* AVATAR */}
-              <div className="flex -space-x-2">
-                {group.members?.slice(0, 3).map((m, i) => (
-                  <div
-                    key={i}
-                    className="w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center text-sm border-2 border-white"
-                  >
-                    {m.user.name?.[0]}
-                  </div>
-                ))}
+        {loading ? (
+          <GroupSkeleton />
+        ) : groups.length === 0 ? (
+          <EmptyState />
+        ) : (
+          groups.map((group) => (
+            <div
+              key={group.id}
+              onClick={() => handleNavigate(group.id)}
+              className="w-full mt-2 mb-2 p-4 rounded-2xl bg-white text-black flex justify-between hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                {/* AVATAR */}
+                <div className="flex -space-x-2">
+                  {group.members?.slice(0, 3).map((m, i) => (
+                    <div
+                      key={i}
+                      className="w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center text-sm border-2 border-white"
+                    >
+                      {m.user.name?.[0]}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-left">
+                  <h2 className="font-semibold">{group.name}</h2>
+                  <p className="text-sm text-gray-500">
+                    {getMemberCount(group)} members
+                  </p>
+                </div>
               </div>
 
-              <div className="text-left">
-                <h2 className="font-semibold">{group.name}</h2>
-                <p className="text-sm text-gray-500">
-                  {getMemberCount(group)} members
-                </p>
-              </div>
+              <p className="text-green-600 font-semibold">
+                ₹{getTotalAmount(group)}
+              </p>
             </div>
-
-            <p className="text-green-600 font-semibold">
-              ₹{getTotalAmount(group)}
-            </p>
-          </div>
-        ))}
+          ))
+        )}
       </div>
       {/* TOAST */}
       {toast && <Toast key={toast.id} {...toast} duration={3000} />}

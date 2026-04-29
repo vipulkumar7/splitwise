@@ -1,6 +1,6 @@
 export interface IFriend {
   id: string | null;
-  name: string;
+  name: string | null;
   email: string;
   balance: number;
   image?: string | null;

@@ -119,6 +119,7 @@ export type GroupWithRelations = Prisma.GroupGetPayload<{
     expenses: {
       include: {
         splits: true;
+        participants: true;
       };
     };
   };

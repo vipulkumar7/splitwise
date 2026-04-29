@@ -10,6 +10,9 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  const displayName = friend.name || friend.email || "User";
+  const initial = displayName.charAt(0).toUpperCase();
+
   // 🔥 Derived state (optimized)
   const { isOwe, isOwed, label, color } = useMemo(() => {
     const isOwe = friend.balance < 0;
@@ -22,6 +25,13 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
       color: isOwe ? "red" : isOwed ? "green" : "gray",
     };
   }, [friend.balance]);
+
+  const avatarColor =
+    color === "red"
+      ? "from-red-500 to-red-600"
+      : color === "green"
+        ? "from-green-500 to-emerald-600"
+        : "from-gray-500 to-gray-600";
 
   const amount = Math.abs(friend.balance);
 
@@ -55,19 +65,15 @@ export default function FriendCard({ friend }: { friend: IFriend }) {
         {/* Avatar */}
         <div
           className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md ${
-            color === "red"
-              ? "bg-gradient-to-br from-red-500 to-red-600"
-              : color === "green"
-                ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                : "bg-gray-600"
+            avatarColor
           }`}
         >
-          {friend.name.charAt(0).toUpperCase()}
+          {initial}
         </div>
 
         {/* Info */}
         <div className="space-y-0.5">
-          <p className="font-medium tracking-tight">{friend.name}</p>
+          <p className="font-medium tracking-tight">{displayName}</p>
 
           <p
             className={`text-xs ${
