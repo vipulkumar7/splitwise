@@ -32,6 +32,7 @@ export default async function Page() {
       expenses: {
         include: {
           splits: true,
+          participants: true,
         },
       },
     },

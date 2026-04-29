@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeDate } from "@/utils/utils";
 
 // ======================
 // ✏️ UPDATE EXPENSE
@@ -12,7 +13,7 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { description, amount, payerId } = body;
+    const { description, amount, payerId, date } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -21,47 +22,99 @@ export async function PUT(
       );
     }
 
-    // 🔍 get existing expense (needed for groupId)
+    const normalizedDate = date ? normalizeDate(date) : new Date();
+
+    // 🔥 Fetch participants FIRST
     const existing = await prisma.expense.findUnique({
       where: { id },
-      select: { groupId: true },
+      select: {
+        groupId: true,
+        participants: {
+          select: { userId: true },
+        },
+      },
     });
 
     if (!existing) {
       return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
 
-    // 🚀 TRANSACTION (update + notification)
-    const result = await prisma.$transaction(async (tx: any) => {
-      // ✅ update expense
+    // =========================
+    // 👥 USERS (SAFE SOURCE)
+    // =========================
+    let users = existing.participants.map((p) => p.userId);
+
+    // 🔥 Fallback for OLD expenses (no participants)
+    if (users.length === 0) {
+      const oldSplits = await prisma.split.findMany({
+        where: { expenseId: id },
+        select: { userId: true },
+      });
+
+      users = oldSplits.map((s) => s.userId);
+    }
+
+    if (!users.length) {
+      return NextResponse.json(
+        { error: "No participants found" },
+        { status: 400 },
+      );
+    }
+
+    // =========================
+    // 🚀 TRANSACTION
+    // =========================
+    const result = await prisma.$transaction(async (tx) => {
+      // 1️⃣ Update expense
       const updated = await tx.expense.update({
         where: { id },
         data: {
           description,
           amount: Number(amount),
           paidById: payerId,
-          createdAt: new Date(body.date),
+          createdAt: normalizedDate,
         },
       });
 
-      // 👥 get members
-      const members = await tx.groupMember.findMany({
-        where: { groupId: existing.groupId },
-        select: { userId: true },
+      // 2️⃣ Replace splits (STRICTLY SAME USERS)
+      await tx.split.deleteMany({
+        where: { expenseId: id },
       });
 
-      // 👤 payer name
+      const splitAmount = Number((Number(amount) / users.length).toFixed(2));
+
+      await tx.split.createMany({
+        data: users.map((userId) => ({
+          userId,
+          expenseId: id,
+          amount: splitAmount,
+        })),
+      });
+
+      // 3️⃣ Ensure participants exist (important for old data)
+      await tx.expenseParticipant.deleteMany({
+        where: { expenseId: id },
+      });
+
+      await tx.expenseParticipant.createMany({
+        data: users.map((userId) => ({
+          userId,
+          expenseId: id,
+        })),
+      });
+
+      // 4️⃣ Fetch payer (single call)
       const payer = await tx.user.findUnique({
         where: { id: payerId },
         select: { name: true },
       });
 
-      // 🔔 notifications
+      // 5️⃣ Notifications
       await tx.notification.createMany({
-        data: members.map((m: any) => ({
-          userId: m.userId,
+        data: users.map((userId) => ({
+          userId,
           groupId: existing.groupId,
-          type: "EXPENSE_UPDATED" as const,
+          type: "EXPENSE_UPDATED",
           message: `${payer?.name || "Someone"} updated ₹${amount} for ${description}`,
         })),
       });
@@ -70,10 +123,10 @@ export async function PUT(
     });
 
     return NextResponse.json(result);
-  } catch (error: unknown) {
-    console.error("UPDATE ERROR:", error);
+  } catch (error: any) {
+    console.error("PUT ERROR:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Update failed" },
+      { error: error.message || "Update failed" },
       { status: 500 },
     );
   }
@@ -89,13 +142,16 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
-    // 🔍 get existing expense (needed for notification)
+    // 🔥 Fetch participants (SOURCE OF TRUTH)
     const existing = await prisma.expense.findUnique({
       where: { id },
       select: {
         groupId: true,
         description: true,
         paidById: true,
+        participants: {
+          select: { userId: true },
+        },
       },
     });
 
@@ -106,39 +162,44 @@ export async function DELETE(
       );
     }
 
-    // 🚀 TRANSACTION
-    await prisma.$transaction(async (tx: any) => {
-      // 👥 members
-      const members = await tx.groupMember.findMany({
-        where: { groupId: existing.groupId },
+    // =========================
+    // 👥 USERS (SAFE SOURCE)
+    // =========================
+    let users = existing.participants.map((p) => p.userId);
+
+    // 🔥 Fallback (old data)
+    if (users.length === 0) {
+      const oldSplits = await prisma.split.findMany({
+        where: { expenseId: id },
         select: { userId: true },
       });
 
-      // 👤 payer
+      users = oldSplits.map((s) => s.userId);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1️⃣ Fetch payer once
       const payer = await tx.user.findUnique({
         where: { id: existing.paidById },
         select: { name: true },
       });
 
-      // 🔔 notifications BEFORE delete
+      // 2️⃣ Notifications
       await tx.notification.createMany({
-        data: members.map((m: any) => ({
-          userId: m.userId,
+        data: users.map((userId) => ({
+          userId,
           groupId: existing.groupId,
-          type: "EXPENSE_DELETED" as const,
+          type: "EXPENSE_DELETED",
           message: `${payer?.name || "Someone"} deleted expense "${existing.description}"`,
         })),
       });
 
-      // 🗑 delete splits
-      await tx.split.deleteMany({
-        where: { expenseId: id },
-      });
-
-      // 🗑 delete expense
-      await tx.expense.delete({
-        where: { id },
-      });
+      // 3️⃣ Delete everything safely
+      await Promise.all([
+        tx.split.deleteMany({ where: { expenseId: id } }),
+        tx.expenseParticipant.deleteMany({ where: { expenseId: id } }),
+        tx.expense.delete({ where: { id } }),
+      ]);
     });
 
     return NextResponse.json({ success: true });

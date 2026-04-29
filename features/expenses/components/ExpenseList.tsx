@@ -96,7 +96,7 @@ export default function ExpenseList({
   );
 
   // =========================
-  // MENU HANDLER (PORTAL)
+  // MENU HANDLER
   // =========================
   const toggleMenu = useCallback(
     (id: string) => {
@@ -112,7 +112,7 @@ export default function ExpenseList({
 
       setMenuPos({
         top: rect.bottom - 4,
-        left: rect.right - 110, // align right
+        left: rect.right - 110,
       });
 
       setOpenMenuId(id);
@@ -170,8 +170,7 @@ export default function ExpenseList({
     <div className="space-y-8 mt-3">
       {Object.entries(groupedExpenses).map(([date, items]) => (
         <div key={date}>
-          {/* DATE HEADER */}
-          <p className="text-xs font-semibold text-gray-400 mt-2 mb-2 uppercase">
+          <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
             {date}
           </p>
 
@@ -180,21 +179,26 @@ export default function ExpenseList({
               const payerName = getPayerName(exp.paidById as string);
               const isYou = exp.paidById === currentUserId;
 
+              const participants = exp.participants || [];
+              const isPartial = participants.length < members.length;
+
               return (
                 <div
                   key={exp.id}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center relative"
+                  className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center relative hover:border-white/20 transition"
                 >
                   {/* LEFT */}
                   <div className="flex items-center gap-3">
+                    {/* Avatar */}
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white ${
                         isYou ? "bg-green-500" : "bg-red-500"
                       }`}
                     >
-                      {payerName.charAt(0).toUpperCase()}
+                      {(payerName || "U")[0].toUpperCase()}
                     </div>
 
+                    {/* TEXT */}
                     <div>
                       <p className="text-white font-semibold">
                         {exp.description}
@@ -204,6 +208,42 @@ export default function ExpenseList({
                         {isYou ? "You paid" : `${payerName} paid`} •{" "}
                         {formatTime(exp.createdAt)}
                       </p>
+
+                      {/* 👇 PARTICIPANTS */}
+                      {participants.length > 0 && (
+                        <div className="flex items-center">
+                          {/* AVATARS */}
+                          <div className="flex items-center gap-1">
+                            {participants.map((p) => {
+                              const user = memberMap.get(p.userId);
+                              const isCurrent = p.userId === currentUserId;
+
+                              return (
+                                <div
+                                  key={p.userId}
+                                  className={`w-9 h-6 rounded-full flex items-center justify-center text-[11px] font-medium border border-black shadow-sm ${
+                                    isCurrent
+                                      ? "bg-green-500 text-white"
+                                      : "bg-zinc-600 text-white"
+                                  }`}
+                                >
+                                  {(user?.name || "U")[0].toUpperCase()}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* TEXT */}
+                          <span
+                            className="text-xs text-gray-400 leading-none"
+                            style={{ marginLeft: "4px" }}
+                          >
+                            {isPartial
+                              ? `Split between ${participants.length}`
+                              : "All members"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -244,7 +284,7 @@ export default function ExpenseList({
               top: menuPos.top,
               left: menuPos.left,
             }}
-            className="z-[9999] bg-white border border-white/10 rounded-xl shadow-xl w-24"
+            className="z-[9999] bg-white border border-white/10 rounded-xl shadow-xl w-28"
           >
             <button
               onClick={() => {
@@ -252,7 +292,7 @@ export default function ExpenseList({
                 if (exp) onEdit(exp);
                 setOpenMenuId(null);
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-white/10 rounded-lg"
+              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-black hover:bg-gray-100 rounded-lg"
             >
               <FiEdit2 size={14} />
               Edit
@@ -263,7 +303,7 @@ export default function ExpenseList({
                 onDelete(openMenuId);
                 setOpenMenuId(null);
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-400 hover:bg-red-500/10 rounded-lg"
+              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-red-500 hover:bg-red-50 rounded-lg"
             >
               <FiTrash2 size={14} />
               Delete

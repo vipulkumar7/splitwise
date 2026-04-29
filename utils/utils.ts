@@ -51,6 +51,7 @@ export async function getGroups(userId: string) {
       expenses: {
         include: {
           splits: true,
+          participants: true,
         },
       },
     },
@@ -68,3 +69,15 @@ export const formatEmail = (email?: string) => {
 
   return `${shortName}@${domain}`;
 };
+
+export function normalizeDate(dateStr: string) {
+  const date = new Date(dateStr);
+
+  // 🔥 force LOCAL time instead of UTC
+  date.setHours(new Date().getHours());
+  date.setMinutes(new Date().getMinutes());
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+
+  return date;
+}
