@@ -125,7 +125,7 @@ export default function FriendsPageClient({
         {friends.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <p className="text-sm">No friends yet 👥</p>
-            <p className="text-xs mt-1">Start by adding friends</p>
+            <p className="text-xs mt-1">Start by splitting expenses</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
